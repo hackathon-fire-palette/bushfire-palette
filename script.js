@@ -211,8 +211,9 @@ document.addEventListener('DOMContentLoaded', function() {
   if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
     renderAlertsList();
     setTimeout(renderMap, 0); // Ensure Leaflet is loaded
-    renderRosterDashboard();
   } else if (window.location.pathname.endsWith('alert.html')) {
     renderAlertDetails();
+  } else if (window.location.pathname.endsWith('roster.html')) {
+    renderRosterDashboard();
   }
 });
