@@ -1,3 +1,169 @@
+/* === Moved from index.html for shared use === */
+.dashboard-flex {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.alerts-list-section {
+  flex: 0 0 270px;
+  min-width: 200px;
+  max-width: 405px;
+  margin-bottom: 2rem;
+  transition: width 0.3s, min-width 0.3s, max-width 0.3s;
+  position: relative;
+}
+.alerts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+#toggle-alerts {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.3em;
+  width: 2em;
+  height: 2em;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 0.5em;
+}
+#toggle-alerts:hover {
+  background: #e74c3c;
+}
+.alerts-list-section.collapsed {
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+  overflow: hidden;
+}
+.alerts-list-section.collapsed h2,
+.alerts-list-section.collapsed .alerts-list {
+  display: none;
+}
+.map-medical-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 300px;
+  min-width: 300px;
+  /* max-width removed to allow full width */
+  gap: 1rem;
+}
+.map-section, .medical-emergency-section {
+  margin-bottom: 0;
+}
+.card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+}
+.medical-emergency-section h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  color: #c0392b;
+  letter-spacing: 0.5px;
+}
+.med-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.med-tabs button {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.med-tabs button:hover, .med-tabs button.active {
+  background: #e74c3c;
+}
+.med-content {
+  border: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  border-radius: 7px;
+  padding: 1em;
+  min-height: 120px;
+  font-size: 1em;
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+header, footer {
+  padding: 1rem 2rem;
+}
+.logo-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+nav {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+nav a {
+  text-decoration: none;
+  color: #333;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  transition: background 0.2s;
+}
+nav a.active, nav a:hover {
+  background: #c0392b;
+  color: #fff;
+}
+@media (max-width: 900px) {
+  .dashboard-flex {
+    flex-direction: column-reverse;
+    gap: 1.5rem;
+  }
+  .alerts-list-section,
+  .map-medical-stack {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .alerts-list-section {
+    flex: 1 1 100%;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+@media (max-width: 600px) {
+  header, footer {
+    padding: 1rem;
+  }
+  .logo-title h1 {
+    font-size: 1.1rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+  .med-tabs button {
+    font-size: 0.95em;
+    padding: 0.4em 0.7em;
+  }
+  .med-content {
+    font-size: 0.95em;
+    padding: 0.7em;
+  }
+  nav {
+    gap: 0.5rem;
+  }
+}
 /* Enhanced dashboard appearance */
 .dashboard-flex {
   margin-top: 2rem;
