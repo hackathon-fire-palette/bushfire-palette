@@ -165,12 +165,15 @@ const severityIcons = {
 function renderAlertsList() {
   const list = document.getElementById('alertsList');
   if (!list) return;
-  list.innerHTML = alerts.map(alert => {
+  list.innerHTML = alerts.map((alert, idx) => {
     const iconUrl = incidentIcons[alert.type] || severityIcons[alert.severity] || 'assets/icon-advice.svg';
     return `
-      <div class="alert-card alert-severity-${alert.severity}">
+      <div class="alert-card alert-severity-${alert.severity} collapsed" data-alert-idx="${idx}">
         <img src="${iconUrl}" alt="${alert.severity} icon" class="alert-icon" />
-        <div class="alert-info">
+        <div class="alert-info-collapsed">
+          <div class="alert-title">${alert.title}</div>
+        </div>
+        <div class="alert-info-full">
           <div class="alert-title">${alert.title}</div>
           <div class="alert-location">${alert.location}</div>
           <div class="alert-summary">${alert.summary}</div>
@@ -181,6 +184,25 @@ function renderAlertsList() {
       </div>
     `;
   }).join('');
+  // Add click handlers for collapse/expand
+  setTimeout(() => {
+    const cards = list.querySelectorAll('.alert-card');
+    cards.forEach(card => {
+      card.addEventListener('click', function(e) {
+        // Only expand/collapse if not clicking a link
+        if (e.target.tagName === 'A') return;
+        cards.forEach(c => c.classList.add('collapsed'));
+        cards.forEach(c => c.classList.remove('expanded'));
+        this.classList.remove('collapsed');
+        this.classList.add('expanded');
+      });
+    });
+    // Expand the first card by default
+    if (cards[0]) {
+      cards[0].classList.remove('collapsed');
+      cards[0].classList.add('expanded');
+    }
+  }, 10);
 }
 
 

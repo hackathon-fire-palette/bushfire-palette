@@ -25,7 +25,9 @@
   <main>
     <div class="dashboard-flex">
       <section class="alerts-list-section">
-        <h2>Active Alerts</h2>
+        <div class="alerts-header">
+          <h2>Active Alerts</h2>
+        </div>
         <div id="alertsList" class="alerts-list"></div>
       </section>
       <div class="map-medical-stack">
@@ -63,17 +65,52 @@
       justify-content: space-between;
     }
     .alerts-list-section {
-      flex: 1 1 300px;
-      min-width: 300px;
-      max-width: 450px;
+      flex: 0 0 270px;
+      min-width: 200px;
+      max-width: 405px;
       margin-bottom: 2rem;
+      transition: width 0.3s, min-width 0.3s, max-width 0.3s;
+      position: relative;
+    }
+    .alerts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5em;
+    }
+    #toggle-alerts {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.3em;
+      width: 2em;
+      height: 2em;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-left: 0.5em;
+    }
+    #toggle-alerts:hover {
+      background: #e74c3c;
+    }
+    .alerts-list-section.collapsed {
+      width: 36px !important;
+      min-width: 36px !important;
+      max-width: 36px !important;
+      padding-left: 0.2em;
+      padding-right: 0.2em;
+      overflow: hidden;
+    }
+    .alerts-list-section.collapsed h2,
+    .alerts-list-section.collapsed .alerts-list {
+      display: none;
     }
     .map-medical-stack {
       display: flex;
       flex-direction: column;
       flex: 1 1 300px;
       min-width: 300px;
-      max-width: 450px;
+  /* max-width removed to allow full width */
       gap: 1rem;
     }
     .map-section, .medical-emergency-section {
@@ -157,6 +194,12 @@
         max-width: 100%;
         min-width: 0;
       }
+      .alerts-list-section {
+        flex: 1 1 100%;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+      }
     }
     @media (max-width: 600px) {
       header, footer {
@@ -183,6 +226,16 @@
   </style>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
+  <script>
+    // Collapsible alerts section
+    const alertsSection = document.querySelector('.alerts-list-section');
+    const toggleBtn = document.getElementById('toggle-alerts');
+    if (alertsSection && toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        alertsSection.classList.toggle('collapsed');
+      });
+    }
+  </script>
   <script>
     // Medical Integration Dashboard Interactivity
     const medIntegrationDetails = [

@@ -29,23 +29,41 @@
   margin-bottom: 1.2rem;
   letter-spacing: 0.01em;
 }
+/* Collapsible alert cards */
 .alert-card {
   border-left: 8px solid #b71c1c;
   background: #fff3e0;
   border-radius: 8px;
-  padding: 1rem 1.2rem;
+  padding: 0.7rem 1.2rem;
   box-shadow: 0 1px 6px rgba(183,28,28,0.07);
   display: flex;
   align-items: center;
   gap: 1.2rem;
   margin-bottom: 1.2rem;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, background 0.2s;
+  cursor: pointer;
 }
 .alert-card:last-child {
   margin-bottom: 0;
 }
-.alert-card:hover {
+.alert-card:hover, .alert-card.expanded {
   box-shadow: 0 4px 16px rgba(183,28,28,0.13);
+  background: #ffe0b2;
+}
+.alert-info-collapsed {
+  display: none;
+}
+.alert-card.collapsed .alert-info-collapsed {
+  display: block;
+}
+.alert-card.collapsed .alert-info-full {
+  display: none;
+}
+.alert-card.expanded .alert-info-collapsed {
+  display: none;
+}
+.alert-card.expanded .alert-info-full {
+  display: block;
 }
 .alert-title {
   font-size: 1.1rem;
