@@ -18,6 +18,11 @@ export default async function handler(req, res) {
     if (!response.ok) {
       return res.status(response.status).json({ error: 'Failed to fetch Emergency WA data' });
     }
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await response.text();
+      return res.status(502).json({ error: 'Upstream did not return JSON', contentType, preview: text.slice(0, 200) });
+    }
     const data = await response.json();
     // Normalize to bushfire incident format expected by frontend
     const bushfireTypes = ['bushfire', 'fire', 'bush fire', 'scrub fire', 'grass fire'];
