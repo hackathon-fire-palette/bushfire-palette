@@ -8,17 +8,34 @@ var vehicles = [
 
 function renderVehicleTrackingDashboard() {
   let html = '<div class="vehicle-map-container"><div id="vehicleMap" class="map-embed" style="height:350px;margin-bottom:1.5rem;"></div></div>';
-  html += '<table class="roster-table"><thead><tr><th>Callsign</th><th>Type</th><th>Status</th><th>Crew</th><th>Last Check-In</th></tr></thead><tbody>';
-  vehicles.forEach(v => {
+  html += '<table class="roster-table" id="vehicleTable"><thead><tr><th>Callsign</th><th>Type</th><th>Status</th><th>Crew</th><th>Last Check-In</th></tr></thead><tbody>';
+  vehicles.forEach((v, idx) => {
     const crewNames = v.crew.map(cid => {
       const p = (typeof personnel !== 'undefined') ? personnel.find(x => x.id === cid) : null;
       return p ? p.name : 'Unknown';
     }).join(', ') || '-';
-    html += `<tr><td>${v.callsign}</td><td>${v.type}</td><td class="${v.status}">${v.status.replace(/-/g,' ')}</td><td>${crewNames}</td><td>${v.lastCheckIn}</td></tr>`;
+    html += `<tr data-vid="${v.id}" tabindex="0"><td>${v.callsign}</td><td>${v.type}</td><td class=\"${v.status}\">${v.status.replace(/-/g,' ')}</td><td>${crewNames}</td><td>${v.lastCheckIn}</td></tr>`;
   });
   html += '</tbody></table>';
   document.getElementById('vehicleTrackingDashboard').innerHTML = html;
   renderVehicleMap();
+  // Interactivity: click row to focus marker
+  setTimeout(() => {
+    const table = document.getElementById('vehicleTable');
+    if (!table || !window._vehicleMarkers) return;
+    table.querySelectorAll('tbody tr').forEach(row => {
+      row.addEventListener('click', function() {
+        const vid = parseInt(this.getAttribute('data-vid'));
+        const marker = window._vehicleMarkers[vid];
+        if (marker) {
+          marker.openPopup();
+          marker._map.setView(marker.getLatLng(), 7, { animate: true });
+        }
+        table.querySelectorAll('tr').forEach(r => r.classList.remove('highlight'));
+        this.classList.add('highlight');
+      });
+    });
+  }, 300);
 }
 
 function renderVehicleMap() {
@@ -37,7 +54,7 @@ function renderVehicleMap() {
   // Vehicle markers
   vehicles.forEach(v => {
     const icon = L.icon({
-      iconUrl: v.status === 'active' ? 'assets/firetruck-active.svg' : v.status === 'standby' ? 'assets/firetruck-standby.svg' : 'assets/firetruck-oos.svg',
+      iconUrl: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
       iconSize: [36, 36],
       iconAnchor: [18, 36],
       popupAnchor: [0, -30],
@@ -85,9 +102,9 @@ const alerts = [
 
 // Severity icon mapping for list and map
 const severityIcons = {
-  low: 'assets/advice-icon.svg',
-  medium: 'assets/watch-icon.svg',
-  critical: 'assets/emergency-icon.svg',
+  low: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
+  medium: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
+  critical: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
 };
 
 // Render alerts list on dashboard
@@ -207,17 +224,14 @@ function renderRosterDashboard() {
 function renderMap() {
   const mapDiv = document.getElementById('map');
   if (!mapDiv) return;
-  // Remove any previous map instance
   if (mapDiv._leaflet_id) {
     mapDiv._leaflet_id = null;
     mapDiv.innerHTML = '';
   }
-  // Center on Australia
   const map = L.map(mapDiv).setView([-25.2744, 133.7751], 4);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
-
   // Example polygon covering major bush/forest regions (rough demo, not accurate)
   const bushPolygonCoords = [
     [-10, 142], // Cape York
@@ -238,6 +252,44 @@ function renderMap() {
     fillOpacity: 0.25,
     weight: 2
   }).addTo(map);
+  // Add alert markers
+  alerts.forEach(alert => {
+    const icon = L.icon({
+      iconUrl: severityIcons[alert.severity],
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -35],
+    });
+    L.marker(alert.coordinates, { icon })
+      .addTo(map)
+      .bindPopup(
+        `<b>${alert.title}</b><br>${alert.location}<br><span style='color:#b71c1c;font-weight:bold;'>${alert.severity.toUpperCase()}</span><br>${alert.summary}`
+      );
+  });
+  setTimeout(() => { map.invalidateSize(); }, 200);
+// Simulate live vehicle data updates every 10 seconds
+if (window.location.pathname.endsWith('vehicle.html')) {
+  setInterval(() => {
+    // Simulate random vehicle movement and status change
+    vehicles.forEach(v => {
+      // Move location slightly
+      v.location = [
+        v.location[0] + (Math.random() - 0.5) * 0.02,
+        v.location[1] + (Math.random() - 0.5) * 0.02
+      ];
+      // Randomly change status
+      if (Math.random() < 0.2) {
+        const statuses = ['active', 'standby', 'out-of-service'];
+        v.status = statuses[Math.floor(Math.random() * statuses.length)];
+      }
+      // Update lastCheckIn
+      v.lastCheckIn = new Date().toISOString().slice(0,16).replace('T',' ');
+    });
+    renderVehicleTrackingDashboard();
+  }, 10000);
+}
+
+// (restore bushPolygonCoords assignment in renderMap, not here)
 
   // Add alert markers
   alerts.forEach(alert => {
