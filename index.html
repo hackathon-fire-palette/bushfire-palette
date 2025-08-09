@@ -30,6 +30,26 @@
         </div>
         <div id="alertsList" class="alerts-list"></div>
       </section>
+      <section class="weather-chat-section">
+        <h2>🤖 AI Weather Predictor</h2>
+        <div class="quick-questions">
+          <h4>Quick Questions:</h4>
+          <button class="quick-question-btn" onclick="askWeatherQuestion('What will the weather be like in Perth next week?')">Perth Next Week</button>
+          <button class="quick-question-btn" onclick="askWeatherQuestion('What are the fire risk conditions for next week?')">Fire Risk Analysis</button>
+          <button class="quick-question-btn" onclick="askWeatherQuestion('Should we pre-position resources based on predicted conditions?')">Resource Planning</button>
+        </div>
+        <div class="chat-container">
+          <div id="chatMessages" class="chat-messages">
+            <div class="message ai">
+              Hello! I'm your AI Weather Predictor. Ask me about weather conditions, fire risk assessments, or operational planning for Perth and surrounding areas. How can I help you today?
+            </div>
+          </div>
+          <div class="chat-input-container">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500">
+            <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </section>
       <div class="map-medical-stack">
         <section class="map-section">
           <h2>Current Bushfire Alerts</h2>
@@ -247,6 +267,109 @@
     }
     // Show first tab by default
     showMedIntegration(0);
+  </script>
+  <script>
+    // AI Weather Chat Functionality
+    let isLoading = false;
+
+    function addMessage(content, isUser = false) {
+      const messagesContainer = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+      
+      if (isUser) {
+        messageDiv.textContent = content;
+      } else {
+        // Convert markdown-like formatting to HTML
+        const formattedContent = content
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br>');
+        messageDiv.innerHTML = formattedContent;
+      }
+      
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function addLoadingMessage() {
+      const messagesContainer = document.getElementById('chatMessages');
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message loading';
+      loadingDiv.id = 'loading-message';
+      loadingDiv.textContent = '🤖 Analyzing weather patterns...';
+      messagesContainer.appendChild(loadingDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function removeLoadingMessage() {
+      const loadingMsg = document.getElementById('loading-message');
+      if (loadingMsg) {
+        loadingMsg.remove();
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const sendBtn = document.getElementById('chatSendBtn');
+      const message = input.value.trim();
+      
+      if (!message || isLoading) return;
+      
+      // Add user message
+      addMessage(message, true);
+      
+      // Clear input and disable button
+      input.value = '';
+      sendBtn.disabled = true;
+      isLoading = true;
+      
+      // Add loading message
+      addLoadingMessage();
+      
+      try {
+        const response = await fetch('/api/weather-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to get weather prediction');
+        }
+        
+        const data = await response.json();
+        removeLoadingMessage();
+        addMessage(data.response);
+        
+      } catch (error) {
+        console.error('Chat error:', error);
+        removeLoadingMessage();
+        addMessage('Sorry, I encountered an error while processing your request. Please try again later.');
+      } finally {
+        sendBtn.disabled = false;
+        isLoading = false;
+        input.focus();
+      }
+    }
+
+    function askWeatherQuestion(question) {
+      document.getElementById('chatInput').value = question;
+      sendMessage();
+    }
+
+    // Enter key support
+    document.getElementById('chatInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !isLoading) {
+        sendMessage();
+      }
+    });
+
+    // Auto-focus on input when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('chatInput').focus();
+    });
   </script>
 </body>
 </html>
