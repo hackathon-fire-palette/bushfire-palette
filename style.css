@@ -515,9 +515,6 @@ nav a.active, nav a:hover {
   height: 400px !important;
 }
 
-.alerts-list-section {
-  margin-top: 2rem;
-}
 .alerts-list {
   display: flex;
   flex-direction: column;
