@@ -59,6 +59,61 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
   <script>
+    // --- Weather Overlay for Major Australian Cities ---
+    // Uses Open-Meteo free API (no key required)
+    const majorCities = [
+  { name: 'Sydney', coords: [-33.8688, 151.2093] },
+  { name: 'Melbourne', coords: [-37.8136, 144.9631] },
+  { name: 'Brisbane', coords: [-27.4698, 153.0251] },
+  { name: 'Perth', coords: [-31.9505, 115.8605] },
+  { name: 'Adelaide', coords: [-34.9285, 138.6007] },
+  { name: 'Canberra', coords: [-35.2809, 149.1300] },
+  { name: 'Hobart', coords: [-42.8821, 147.3272] },
+  { name: 'Darwin', coords: [-12.4634, 130.8456] },
+  { name: 'Alice Springs', coords: [-23.6980, 133.8807] },
+  { name: 'Cairns', coords: [-16.9203, 145.7703] }
+    ];
+    // Weather code to icon mapping (Open-Meteo standard)
+    const weatherIcons = {
+      0: '☀️', // Clear
+      1: '🌤️', 2: '⛅', 3: '☁️', // Mainly clear, partly cloudy, overcast
+      45: '🌫️', 48: '🌫️', // Fog
+      51: '🌦️', 53: '🌦️', 55: '🌦️', // Drizzle
+      61: '🌧️', 63: '🌧️', 65: '🌧️', // Rain
+      71: '🌨️', 73: '🌨️', 75: '🌨️', // Snow
+      80: '🌦️', 81: '🌦️', 82: '🌦️', // Showers
+      95: '⛈️', 96: '⛈️', 99: '⛈️' // Thunderstorm
+    };
+    function getWeatherIcon(code) {
+      return weatherIcons[code] || '❓';
+    }
+    function addWeatherToMap() {
+      if (!window.L || !window.map) return;
+      majorCities.forEach(city => {
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.coords[0]}&longitude=${city.coords[1]}&current_weather=true`)
+          .then(r => r.json())
+          .then(data => {
+            if (!data.current_weather) return;
+            const icon = getWeatherIcon(data.current_weather.weathercode);
+            const temp = Math.round(data.current_weather.temperature);
+            const marker = L.marker(city.coords, {
+              icon: L.divIcon({
+                className: 'weather-city-icon',
+                html: `<div style="font-size:2em;line-height:1;">${icon}</div><div style="font-size:1em;font-weight:bold;">${temp}&deg;C</div><div style="font-size:0.9em;">${city.name}</div>`,
+                iconAnchor: [20, 40]
+              })
+            }).addTo(window.map);
+            marker.bindPopup(`<b>${city.name}</b><br>Weather: ${icon} ${temp}&deg;C`);
+          });
+      });
+    }
+    // Wait for map to be ready
+    (function waitForMap() {
+      if (window.L && window.map) { addWeatherToMap(); }
+      else setTimeout(waitForMap, 400);
+    })();
+  </script>
+  <script>
     // Collapsible alerts section
     const alertsSection = document.querySelector('.alerts-list-section');
     const toggleBtn = document.getElementById('toggle-alerts');

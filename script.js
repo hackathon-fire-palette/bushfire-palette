@@ -308,6 +308,7 @@ function renderMap() {
     mapDiv.innerHTML = '';
   }
   const map = L.map(mapDiv).setView([-25.2744, 133.7751], 4);
+  window.map = map; // Expose dashboard map for weather overlay
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
