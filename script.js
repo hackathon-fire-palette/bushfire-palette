@@ -307,8 +307,8 @@ function renderMap() {
     mapDiv._leaflet_id = null;
     mapDiv.innerHTML = '';
   }
-  // Center on Perth, WA
-  const map = L.map(mapDiv).setView([-31.9505, 115.8605], 6);
+  // Center on Perth, WA (zoomed in)
+  const map = L.map(mapDiv).setView([-31.9505, 115.8605], 11);
   window.map = map; // Expose dashboard map for weather overlay
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

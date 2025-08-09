@@ -59,19 +59,19 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
   <script>
-    // --- Weather Overlay for Major Australian Cities ---
+    // --- Weather & Wind Overlay for Major Australian Cities ---
     // Uses Open-Meteo free API (no key required)
     const majorCities = [
-  { name: 'Sydney', coords: [-33.8688, 151.2093] },
-  { name: 'Melbourne', coords: [-37.8136, 144.9631] },
-  { name: 'Brisbane', coords: [-27.4698, 153.0251] },
-  { name: 'Perth', coords: [-31.9505, 115.8605] },
-  { name: 'Adelaide', coords: [-34.9285, 138.6007] },
-  { name: 'Canberra', coords: [-35.2809, 149.1300] },
-  { name: 'Hobart', coords: [-42.8821, 147.3272] },
-  { name: 'Darwin', coords: [-12.4634, 130.8456] },
-  { name: 'Alice Springs', coords: [-23.6980, 133.8807] },
-  { name: 'Cairns', coords: [-16.9203, 145.7703] }
+      { name: 'Sydney', coords: [-33.8688, 151.2093] },
+      { name: 'Melbourne', coords: [-37.8136, 144.9631] },
+      { name: 'Brisbane', coords: [-27.4698, 153.0251] },
+      { name: 'Perth', coords: [-31.9505, 115.8605] },
+      { name: 'Adelaide', coords: [-34.9285, 138.6007] },
+      { name: 'Canberra', coords: [-35.2809, 149.1300] },
+      { name: 'Hobart', coords: [-42.8821, 147.3272] },
+      { name: 'Darwin', coords: [-12.4634, 130.8456] },
+      { name: 'Alice Springs', coords: [-23.6980, 133.8807] },
+      { name: 'Cairns', coords: [-16.9203, 145.7703] }
     ];
     // Weather code to icon mapping (Open-Meteo standard)
     const weatherIcons = {
@@ -87,6 +87,10 @@
     function getWeatherIcon(code) {
       return weatherIcons[code] || '❓';
     }
+    function getWindArrow(deg) {
+      // Unicode arrow, rotate with CSS
+      return `<span style="display:inline-block;transform:rotate(${deg}deg);font-size:1.5em;">➤</span>`;
+    }
     function addWeatherToMap() {
       if (!window.L || !window.map) return;
       majorCities.forEach(city => {
@@ -96,14 +100,37 @@
             if (!data.current_weather) return;
             const icon = getWeatherIcon(data.current_weather.weathercode);
             const temp = Math.round(data.current_weather.temperature);
+            const windSpeed = Math.round(data.current_weather.windspeed);
+            const windDir = Math.round(data.current_weather.winddirection);
+            // Draw multiple dashed lines to simulate wind
+            const numLines = 5;
+            const spread = 18; // degrees, total spread
+            const length = 0.18 + 0.01 * windSpeed; // degrees, proportional to speed
+            const lat1 = city.coords[0];
+            const lon1 = city.coords[1];
+            for (let i = 0; i < numLines; i++) {
+              const offset = (i - (numLines - 1) / 2) * (spread / (numLines - 1));
+              const dir = windDir + offset;
+              const rad = (dir - 90) * Math.PI / 180;
+              const lat2 = lat1 + length * Math.sin(rad);
+              const lon2 = lon1 + length * Math.cos(rad);
+              L.polyline([[lat1, lon1], [lat2, lon2]], {
+                color: '#1976d2',
+                weight: 2,
+                dashArray: '6, 8',
+                opacity: 0.7
+              }).addTo(window.map);
+            }
+            // Weather/City marker
+            const windArrow = getWindArrow(windDir);
             const marker = L.marker(city.coords, {
               icon: L.divIcon({
                 className: 'weather-city-icon',
-                html: `<div style="font-size:2em;line-height:1;">${icon}</div><div style="font-size:1em;font-weight:bold;">${temp}&deg;C</div><div style="font-size:0.9em;">${city.name}</div>`,
-                iconAnchor: [20, 40]
+                html: `<div style=\"font-size:2em;line-height:1;\">${icon}</div><div style=\"font-size:1em;font-weight:bold;\">${temp}&deg;C</div><div style=\"font-size:1em;\">${windArrow} <span style='font-size:0.95em;'>${windSpeed} km/h</span></div><div style=\"font-size:0.9em;\">${city.name}</div>`,
+                iconAnchor: [20, 48]
               })
             }).addTo(window.map);
-            marker.bindPopup(`<b>${city.name}</b><br>Weather: ${icon} ${temp}&deg;C`);
+            marker.bindPopup(`<b>${city.name}</b><br>Weather: ${icon} ${temp}&deg;C<br>Wind: ${windArrow} ${windSpeed} km/h (${windDir}&deg;)`);
           });
       });
     }
