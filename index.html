@@ -59,11 +59,11 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
   <script>
-    // --- Bushfire.io Live Incidents Overlay ---
-    // Fetches and displays live bushfire incidents from bushfire.io
+    // --- Bushfire Incidents Overlay (via serverless function) ---
+    // Fetches and displays live bushfire incidents from your serverless API endpoint
     function addBushfireIoIncidents() {
       if (!window.L || !window.map) return;
-      fetch('https://api.bushfire.io/incidents')
+      fetch('/api/bushfireio')
         .then(r => r.json())
         .then(data => {
           if (!Array.isArray(data)) return;
@@ -77,12 +77,15 @@
               iconAnchor: [18, 36],
               popupAnchor: [0, -30],
             });
-            const popup = `<b>${incident.title || 'Bushfire Incident'}</b><br>
-              <b>Status:</b> ${incident.status || 'Unknown'}<br>
-              <b>Location:</b> ${incident.locationDesc || ''}<br>
-              <b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`;
+            const popup = `<b>${incident.title || 'Bushfire Incident'}</b><br>` +
+              `<b>Status:</b> ${incident.status || 'Unknown'}<br>` +
+              `<b>Location:</b> ${incident.locationDesc || ''}<br>` +
+              `<b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`;
             L.marker([lat, lng], { icon }).addTo(window.map).bindPopup(popup);
           });
+        })
+        .catch(err => {
+          console.error('Failed to fetch bushfire incidents:', err);
         });
     }
     // Wait for map to be ready
