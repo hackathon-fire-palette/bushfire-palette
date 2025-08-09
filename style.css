@@ -1,0 +1,150 @@
+/* Australian Bushfire Alert System Styles */
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f7f7f7;
+  margin: 0;
+  padding: 0;
+  color: #222;
+}
+header {
+  background: rgba(255,255,255,0.95);
+  border-bottom: 2px solid #b71c1c;
+  padding: 0.5rem 0 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(183,28,28,0.07);
+}
+.logo-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.logo {
+  height: 48px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(183,28,28,0.12);
+}
+nav {
+  margin-top: 0.5rem;
+}
+nav a {
+  color: #b71c1c;
+  text-decoration: none;
+  margin: 0 1rem;
+  font-weight: bold;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+  transition: border 0.2s;
+}
+nav a.active, nav a:hover {
+  border-bottom: 2px solid #b71c1c;
+}
+main {
+  max-width: 1000px;
+  margin: 2rem auto;
+  background: rgba(255,255,255,0.98);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(183,28,28,0.10);
+  padding: 2rem;
+  position: relative;
+}
+.map-section {
+  margin-bottom: 2rem;
+}
+.map-embed {
+.map-embed {
+  width: 100%;
+  height: 400px;
+  min-height: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 1rem;
+  box-shadow: 0 2px 12px rgba(183,28,28,0.10);
+}
+.alerts-list-section {
+  margin-top: 2rem;
+}
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.alert-card {
+  border-left: 8px solid #b71c1c;
+  background: rgba(255,243,224,0.97);
+  border-radius: 10px;
+  padding: 1.2rem 1.7rem;
+  box-shadow: 0 2px 12px rgba(183,28,28,0.07);
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.alert-card:hover {
+  box-shadow: 0 8px 32px rgba(183,28,28,0.16);
+  transform: translateY(-2px) scale(1.01);
+}
+.alert-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(183,28,28,0.10);
+}
+.alert-info {
+  flex: 1;
+}
+.alert-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+.alert-location {
+  color: #b71c1c;
+  font-weight: bold;
+}
+.alert-severity-advice { border-left-color: #1976d2; }
+.alert-severity-watch { border-left-color: #fbc02d; }
+.alert-severity-emergency { border-left-color: #b71c1c; }
+.alert-severity-advice .alert-title { color: #1976d2; }
+.alert-severity-watch .alert-title { color: #fbc02d; }
+.alert-severity-emergency .alert-title { color: #b71c1c; }
+.alert-actions {
+  margin-top: 0.5rem;
+  font-size: 0.98rem;
+  color: #333;
+}
+footer {
+  text-align: center;
+  margin: 2rem 0 1rem 0;
+  color: #888;
+  font-size: 0.95rem;
+  background: rgba(255,255,255,0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(183,28,28,0.07);
+}
+/* Hero image for main page */
+.hero-img {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(183,28,28,0.13);
+}
+footer a {
+  color: #b71c1c;
+  text-decoration: underline;
+}
+@media (max-width: 700px) {
+  main {
+    padding: 1rem;
+  }
+  .alert-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

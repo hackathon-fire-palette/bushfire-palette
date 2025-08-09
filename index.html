@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Australian Bushfire Alert System</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo-title">
+  <img src="assets/aus-warning-logo.png" alt="Australian Warning System Logo" class="logo" />
+      <h1>Australian Bushfire Alert System</h1>
+    </div>
+    <nav>
+      <a href="index.html" class="active">Dashboard</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+  <main>
+    <section class="map-section">
+      <h2>Current Bushfire Alerts</h2>
+  <div id="map" class="map-embed"></div>
+    </section>
+    <section class="alerts-list-section">
+      <h2>Active Alerts</h2>
+      <div id="alertsList" class="alerts-list"></div>
+    </section>
+  </main>
+  <footer>
+    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
+  </footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
