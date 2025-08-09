@@ -190,6 +190,9 @@
               `<b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`;
             L.marker([lat, lng], { icon }).addTo(window.map).bindPopup(popup);
           });
+        })
+        .catch(err => {
+          console.error('Failed to fetch bushfire incidents:', err);
         });
     }
     (function waitForMap() {
