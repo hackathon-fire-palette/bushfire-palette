@@ -85,14 +85,16 @@ function renderRosterDashboard() {
   const todayRoster = roster.filter(r => r.date === today);
 
   let html = '<h3>Today\'s Roster</h3>';
-  html += '<table class="roster-table"><thead><tr><th>Shift</th><th>Assigned Members</th><th>Status</th></tr></thead><tbody>';
+  html += '<table class="roster-table"><thead><tr><th>Shift</th><th>Assigned Members</th><th>Location</th><th>Emergency Contact</th><th>Availability</th><th>Status</th></tr></thead><tbody>';
   todayRoster.forEach(r => {
     const members = r.assigned.map(id => {
       const p = personnel.find(x => x.id === id);
       if (!p) return 'Unknown';
       return `${p.name} <span style=\"font-size:0.9em;color:#888;\">(${p.role})</span>`;
     }).join('<br>');
-    html += `<tr><td>${r.shift}</td><td>${members}</td><td class="${r.status}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</td></tr>`;
+    // For demo, use first assigned member's info for location/contact/availability
+    const first = personnel.find(x => x.id === r.assigned[0]);
+    html += `<tr><td>${r.shift}</td><td>${members}</td><td>${first ? (first.location || 'Station') : '-'}</td><td>${first ? first.phone : '-'}</td><td class="${first ? first.availability : ''}">${first ? first.availability.replace('-', ' ') : '-'}</td><td class="${r.status}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</td></tr>`;
   });
   html += '</tbody></table>';
 
