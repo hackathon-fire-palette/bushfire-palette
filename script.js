@@ -1,3 +1,52 @@
+// --- Vehicle & Crew Tracking System ---
+// Dummy data for vehicles and crew assignments
+var vehicles = [
+  { id: 1, callsign: 'DFES201', type: 'Fire Truck', status: 'active', location: [-33.7, 150.3], crew: [1, 2], lastCheckIn: '2025-08-09 13:10' },
+  { id: 2, callsign: 'DFES305', type: 'Tanker', status: 'standby', location: [-37.6, 143.8], crew: [3], lastCheckIn: '2025-08-09 12:55' },
+  { id: 3, callsign: 'DFES112', type: 'Support', status: 'out-of-service', location: [-31.9, 116.1], crew: [], lastCheckIn: '2025-08-09 11:40' },
+];
+
+function renderVehicleTrackingDashboard() {
+  let html = '<div class="vehicle-map-container"><div id="vehicleMap" class="map-embed" style="height:350px;margin-bottom:1.5rem;"></div></div>';
+  html += '<table class="roster-table"><thead><tr><th>Callsign</th><th>Type</th><th>Status</th><th>Crew</th><th>Last Check-In</th></tr></thead><tbody>';
+  vehicles.forEach(v => {
+    const crewNames = v.crew.map(cid => {
+      const p = (typeof personnel !== 'undefined') ? personnel.find(x => x.id === cid) : null;
+      return p ? p.name : 'Unknown';
+    }).join(', ') || '-';
+    html += `<tr><td>${v.callsign}</td><td>${v.type}</td><td class="${v.status}">${v.status.replace(/-/g,' ')}</td><td>${crewNames}</td><td>${v.lastCheckIn}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('vehicleTrackingDashboard').innerHTML = html;
+  renderVehicleMap();
+}
+
+function renderVehicleMap() {
+  const mapDiv = document.getElementById('vehicleMap');
+  if (!mapDiv) return;
+  if (mapDiv._leaflet_id) {
+    mapDiv._leaflet_id = null;
+    mapDiv.innerHTML = '';
+  }
+  const map = L.map(mapDiv).setView([-25.2744, 133.7751], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+  // Fix for blank/grey tiles: force map to recalculate size after short delay
+  setTimeout(() => { map.invalidateSize(); }, 200);
+  // Vehicle markers
+  vehicles.forEach(v => {
+    const icon = L.icon({
+      iconUrl: v.status === 'active' ? 'assets/firetruck-active.svg' : v.status === 'standby' ? 'assets/firetruck-standby.svg' : 'assets/firetruck-oos.svg',
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -30],
+    });
+    L.marker(v.location, { icon })
+      .addTo(map)
+      .bindPopup(`<b>${v.callsign}</b><br>Type: ${v.type}<br>Status: <span style='color:#b71c1c;font-weight:bold;'>${v.status.replace(/-/g,' ').toUpperCase()}</span><br>Crew: ${v.crew.map(cid => (typeof personnel !== 'undefined' ? (personnel.find(x => x.id === cid)?.name || 'Unknown') : 'Unknown')).join(', ') || '-'}`);
+  });
+}
 // Australian Bushfire Alert System - Mock Data & Logic
 
 // Bushfire alert data (replace with real data as needed)
@@ -215,5 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAlertDetails();
   } else if (window.location.pathname.endsWith('roster.html')) {
     renderRosterDashboard();
+  } else if (window.location.pathname.endsWith('vehicle.html')) {
+    renderVehicleTrackingDashboard();
   }
 });

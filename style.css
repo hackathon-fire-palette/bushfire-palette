@@ -1,3 +1,23 @@
+/* Vehicle Tracking Styles */
+.vehicle-section {
+  margin-top: 2.5rem;
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(183,28,28,0.06);
+}
+.vehicle-section h2 {
+  color: #b71c1c;
+  margin-bottom: 1.2rem;
+}
+.vehicle-map-container {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+.roster-table td.active { background: #e8f5e9; }
+.roster-table td.standby { background: #fffde7; }
+.roster-table td.out-of-service { background: #ffebee; }
+.roster-table th, .roster-table td { vertical-align: middle; }
 /* Enhanced Roster Management Styles */
 .roster-section {
   margin-top: 2.5rem;
@@ -168,6 +188,17 @@ nav a.active, nav a:hover {
   border: 2px solid #b71c1c;
   box-sizing: border-box;
   display: block !important;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Ensure Leaflet controls and popups display above map */
+.leaflet-container {
+  z-index: 1 !important;
+  min-height: 400px !important;
+  height: 400px !important;
+}
 }
 .alerts-list-section {
   margin-top: 2rem;
@@ -176,17 +207,6 @@ nav a.active, nav a:hover {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-.alert-card {
-  border-left: 8px solid #b71c1c;
-  background: #fff3e0;
-  border-radius: 6px;
-  padding: 1rem 1.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  transition: box-shadow 0.2s;
 }
 .alert-card:hover {
   box-shadow: 0 4px 16px rgba(183,28,28,0.12);

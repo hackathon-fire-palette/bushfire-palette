@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Roster Management | Australian Bushfire Alert System</title>
+  <title>Vehicle Tracking | Australian Bushfire Alert System</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,23 +14,24 @@
       <h1>Australian Bushfire Alert System</h1>
     </div>
     <nav>
-  <a href="index.html">Dashboard</a>
-  <a href="about.html">About</a>
-  <a href="roster.html" class="active">Roster</a>
-  <a href="vehicle.html">Vehicle Tracking</a>
+      <a href="index.html">Dashboard</a>
+      <a href="about.html">About</a>
+      <a href="roster.html">Roster</a>
+      <a href="vehicle.html" class="active">Vehicle Tracking</a>
     </nav>
   </header>
   <main>
     <div id="content">
-      <section class="roster-section">
-        <h2>Roster Management</h2>
-        <div id="rosterDashboard"></div>
+      <section class="vehicle-section">
+        <h2>Vehicle & Crew Tracking</h2>
+        <div id="vehicleTrackingDashboard"></div>
       </section>
     </div>
   </main>
   <footer>
     <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
   </footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
