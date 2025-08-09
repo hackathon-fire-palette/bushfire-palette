@@ -307,31 +307,55 @@ function renderMap() {
     mapDiv._leaflet_id = null;
     mapDiv.innerHTML = '';
   }
-  const map = L.map(mapDiv).setView([-25.2744, 133.7751], 4);
+  // Center on Perth, WA
+  const map = L.map(mapDiv).setView([-31.9505, 115.8605], 6);
   window.map = map; // Expose dashboard map for weather overlay
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
-  // Example polygon covering major bush/forest regions (rough demo, not accurate)
-  const bushPolygonCoords = [
-    [-10, 142], // Cape York
-    [-17, 145],
-    [-23, 150],
-    [-28, 153], // SE QLD/NSW
-    [-38, 146], // VIC
-    [-42, 147], // TAS
-    [-35, 138], // SA
-    [-30, 122], // WA
-    [-15, 125],
-    [-10, 130],
-    [-10, 142],
+  // Polygons for each state/territory (very rough, demo only)
+  const statePolygons = [
+    // Queensland (QLD)
+    { name: 'Queensland', coords: [
+      [-11, 142], [-13, 143], [-17, 144.5], [-21, 147], [-24, 150], [-27, 148], [-28, 145], [-25, 141], [-20, 139], [-15, 139], [-12, 140], [-11, 142]
+    ], color: '#388e3c' },
+    // New South Wales (NSW)
+    { name: 'New South Wales', coords: [
+      [-28, 153], [-29, 150], [-32, 148], [-34, 147], [-36, 149], [-37, 150], [-37, 147], [-35, 145], [-32, 146], [-29, 147], [-28, 153]
+    ], color: '#1976d2' },
+    // Victoria (VIC)
+    { name: 'Victoria', coords: [
+      [-37, 150], [-38, 146], [-38.5, 144], [-37.5, 142], [-36, 143], [-36, 146], [-37, 150]
+    ], color: '#fbc02d' },
+    // Tasmania (TAS)
+    { name: 'Tasmania', coords: [
+      [-42, 148], [-43, 147.5], [-43, 146.5], [-42, 146], [-41.5, 147], [-42, 148]
+    ], color: '#b71c1c' },
+    // South Australia (SA)
+    { name: 'South Australia', coords: [
+      [-26, 140], [-29, 138], [-32, 137], [-35, 138], [-36, 140], [-34, 141], [-30, 141], [-26, 140]
+    ], color: '#8d6e63' },
+    // Western Australia (WA) - expanded to cover Perth
+    { name: 'Western Australia', coords: [
+      [-14, 128], [-18, 126], [-25, 122], [-30, 123], [-33, 124], [-34, 126], [-34, 115], [-32, 115.5], [-31.5, 115.8], [-31, 116.2], [-29, 117], [-25, 129], [-20, 130], [-16, 130], [-14, 128]
+    ], color: '#388e3c' },
+    // Northern Territory (NT)
+    { name: 'Northern Territory', coords: [
+      [-11, 132], [-13, 131], [-16, 132], [-20, 134], [-23, 135], [-25, 133], [-23, 131], [-18, 130], [-13, 130], [-11, 132]
+    ], color: '#ff9800' },
+    // ACT (tiny, just a dot)
+    { name: 'ACT', coords: [
+      [-35.3, 149.1], [-35.4, 149.2], [-35.3, 149.2], [-35.3, 149.1]
+    ], color: '#7b1fa2' }
   ];
-  L.polygon(bushPolygonCoords, {
-    color: '#388e3c',
-    fillColor: '#388e3c',
-    fillOpacity: 0.25,
-    weight: 2
-  }).addTo(map);
+  statePolygons.forEach(state => {
+    L.polygon(state.coords, {
+      color: state.color,
+      fillColor: state.color,
+      fillOpacity: 0.18,
+      weight: 2
+    }).addTo(map).bindPopup(state.name);
+  });
   // Add alert markers
   alerts.forEach(alert => {
     const iconUrl = incidentIcons[alert.type] || severityIcons[alert.severity] || 'assets/icon-advice.svg';
