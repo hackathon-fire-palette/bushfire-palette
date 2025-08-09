@@ -59,6 +59,39 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
   <script>
+    // --- Bushfire.io Live Incidents Overlay ---
+    // Fetches and displays live bushfire incidents from bushfire.io
+    function addBushfireIoIncidents() {
+      if (!window.L || !window.map) return;
+      fetch('https://api.bushfire.io/incidents')
+        .then(r => r.json())
+        .then(data => {
+          if (!Array.isArray(data)) return;
+          data.forEach(incident => {
+            if (!incident.location || !incident.location.lat || !incident.location.lng) return;
+            const lat = incident.location.lat;
+            const lng = incident.location.lng;
+            const icon = L.icon({
+              iconUrl: 'assets/icon-bushfire.svg',
+              iconSize: [36, 36],
+              iconAnchor: [18, 36],
+              popupAnchor: [0, -30],
+            });
+            const popup = `<b>${incident.title || 'Bushfire Incident'}</b><br>
+              <b>Status:</b> ${incident.status || 'Unknown'}<br>
+              <b>Location:</b> ${incident.locationDesc || ''}<br>
+              <b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`;
+            L.marker([lat, lng], { icon }).addTo(window.map).bindPopup(popup);
+          });
+        });
+    }
+    // Wait for map to be ready
+    (function waitForBushfireIo() {
+      if (window.L && window.map) { addBushfireIoIncidents(); }
+      else setTimeout(waitForBushfireIo, 400);
+    })();
+  </script>
+  <script>
     // --- Weather & Wind Overlay for Major Australian Cities ---
     // Uses Open-Meteo free API (no key required)
     const majorCities = [
@@ -135,9 +168,35 @@
       });
     }
     // Wait for map to be ready
+    function addBushfireIoIncidents() {
+      if (!window.L || !window.map) return;
+      fetch('/api/bushfireio')
+        .then(r => r.json())
+        .then(data => {
+          if (!Array.isArray(data)) return;
+          data.forEach(incident => {
+            if (!incident.location || !incident.location.lat || !incident.location.lng) return;
+            const lat = incident.location.lat;
+            const lng = incident.location.lng;
+            const icon = L.icon({
+              iconUrl: 'assets/icon-bushfire.svg',
+              iconSize: [36, 36],
+              iconAnchor: [18, 36],
+              popupAnchor: [0, -30],
+            });
+            const popup = `<b>${incident.title || 'Bushfire Incident'}</b><br>` +
+              `<b>Status:</b> ${incident.status || 'Unknown'}<br>` +
+              `<b>Location:</b> ${incident.locationDesc || ''}<br>` +
+              `<b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`;
+            L.marker([lat, lng], { icon }).addTo(window.map).bindPopup(popup);
+          });
+        });
+    }
     (function waitForMap() {
-      if (window.L && window.map) { addWeatherToMap(); }
-      else setTimeout(waitForMap, 400);
+      if (window.L && window.map) {
+        addWeatherToMap();
+        addBushfireIoIncidents();
+      } else setTimeout(waitForMap, 400);
     })();
   </script>
   <script>
