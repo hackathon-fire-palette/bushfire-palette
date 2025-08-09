@@ -60,30 +60,95 @@ function renderAlertsList() {
   `).join('');
 }
 
-// Render alert details on alert.html
-function renderAlertDetails() {
-  const details = document.getElementById('alertDetails');
-  if (!details) return;
-  const params = new URLSearchParams(window.location.search);
-  const id = parseInt(params.get('id'), 10);
-  const alert = alerts.find(a => a.id === id);
-  if (!alert) {
-    details.innerHTML = '<p>Alert not found.</p>';
-    return;
-  }
-  details.innerHTML = `
-    <div class="alert-card alert-severity-${alert.severity}">
-      <img src="${severityIcons[alert.severity]}" alt="${alert.severity} icon" class="alert-icon" />
-      <div class="alert-info">
-        <div class="alert-title">${alert.title}</div>
-        <div class="alert-location">${alert.location}</div>
-        <div class="alert-summary">${alert.summary}</div>
-        <div class="alert-actions">${alert.actions}</div>
-        <div class="alert-updated">Last updated: ${alert.updated}</div>
-        <a href="index.html">Back to Dashboard</a>
-      </div>
-    </div>
-  `;
+
+// Interactive Roster Management System UI
+// Dummy data in global variables for easy replacement
+var personnel = [
+  { id: 1, name: 'Alice Smith', role: 'Firefighter', skills: ['driver'], contact: 'alice@example.com', phone: '0400000001', availability: 'on-duty' },
+  { id: 2, name: 'Bob Jones', role: 'Firefighter', skills: ['paramedic'], contact: 'bob@example.com', phone: '0400000002', availability: 'off-duty' },
+  { id: 3, name: 'Carol Lee', role: 'Station Officer', skills: ['crew leader'], contact: 'carol@example.com', phone: '0400000003', availability: 'on-duty' },
+  { id: 4, name: 'David Kim', role: 'Firefighter', skills: ['driver', 'paramedic'], contact: 'david@example.com', phone: '0400000004', availability: 'holiday' },
+  { id: 5, name: 'Eve Brown', role: 'Firefighter', skills: [], contact: 'eve@example.com', phone: '0400000005', availability: 'sick' },
+];
+var roster = [
+  { date: '2025-08-09', shift: 'Day', assigned: [1, 3], status: 'confirmed' },
+  { date: '2025-08-09', shift: 'Night', assigned: [2, 4], status: 'pending' },
+];
+var leave = [
+  { memberId: 4, start: '2025-08-08', end: '2025-08-12', reason: 'Holiday', approved: true },
+  { memberId: 5, start: '2025-08-09', end: '2025-08-10', reason: 'Sick', approved: true },
+];
+
+function renderRosterDashboard() {
+  // Today's date
+  const today = '2025-08-09';
+  const todayRoster = roster.filter(r => r.date === today);
+
+  let html = '<h3>Today\'s Roster</h3>';
+  html += '<table class="roster-table"><thead><tr><th>Shift</th><th>Assigned Members</th><th>Status</th></tr></thead><tbody>';
+  todayRoster.forEach(r => {
+    const members = r.assigned.map(id => {
+      const p = personnel.find(x => x.id === id);
+      if (!p) return 'Unknown';
+      return `${p.name} <span style=\"font-size:0.9em;color:#888;\">(${p.role})</span>`;
+    }).join('<br>');
+    html += `<tr><td>${r.shift}</td><td>${members}</td><td class="${r.status}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</td></tr>`;
+  });
+  html += '</tbody></table>';
+
+  html += '<h3>Personnel Availability</h3>';
+  html += '<table class="roster-table"><thead><tr><th>Name</th><th>Role</th><th>Skills</th><th>Contact</th><th>Status</th><th>Edit</th></tr></thead><tbody>';
+  personnel.forEach(p => {
+    html += `<tr><td>${p.name}</td><td>${p.role}</td><td>${p.skills.join(', ') || '-'}</td><td>${p.contact}<br>${p.phone}</td><td class="${p.availability}">${p.availability.replace('-', ' ')}</td><td><select data-id="${p.id}" class="edit-availability"><option value="on-duty"${p.availability==='on-duty'?' selected':''}>On Duty</option><option value="off-duty"${p.availability==='off-duty'?' selected':''}>Off Duty</option><option value="holiday"${p.availability==='holiday'?' selected':''}>Holiday</option><option value="sick"${p.availability==='sick'?' selected':''}>Sick</option></select></td></tr>`;
+  });
+  html += '</tbody></table>';
+
+  html += '<h3>Current Leave</h3>';
+  html += '<ul class="leave-list">';
+  leave.forEach((l, idx) => {
+    const p = personnel.find(x => x.id === l.memberId);
+    if (!p) return;
+    html += `<li>${p.name} (${l.reason}) &mdash; ${l.start} to ${l.end} <button data-leave="${idx}" class="remove-leave">Remove</button></li>`;
+  });
+  html += '</ul>';
+
+  // Add leave form
+  html += '<h4>Add Leave</h4>';
+  html += '<form id="addLeaveForm">';
+  html += '<select id="leaveMember">' + personnel.map(p => `<option value="${p.id}">${p.name}</option>`).join('') + '</select> ';
+  html += '<input type="date" id="leaveStart" required> to <input type="date" id="leaveEnd" required> ';
+  html += '<input type="text" id="leaveReason" placeholder="Reason" required> ';
+  html += '<button type="submit">Add Leave</button>';
+  html += '</form>';
+
+  document.getElementById('rosterDashboard').innerHTML = html;
+
+  // Add interactivity
+  document.querySelectorAll('.edit-availability').forEach(sel => {
+    sel.addEventListener('change', function() {
+      const id = parseInt(this.getAttribute('data-id'));
+      const val = this.value;
+      const p = personnel.find(x => x.id === id);
+      if (p) p.availability = val;
+      renderRosterDashboard();
+    });
+  });
+  document.querySelectorAll('.remove-leave').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const idx = parseInt(this.getAttribute('data-leave'));
+      leave.splice(idx, 1);
+      renderRosterDashboard();
+    });
+  });
+  document.getElementById('addLeaveForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const memberId = parseInt(document.getElementById('leaveMember').value);
+    const start = document.getElementById('leaveStart').value;
+    const end = document.getElementById('leaveEnd').value;
+    const reason = document.getElementById('leaveReason').value;
+    leave.push({ memberId, start, end, reason, approved: true });
+    renderRosterDashboard();
+  });
 }
 
 
@@ -144,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
     renderAlertsList();
     setTimeout(renderMap, 0); // Ensure Leaflet is loaded
+    renderRosterDashboard();
   } else if (window.location.pathname.endsWith('alert.html')) {
     renderAlertDetails();
   }
