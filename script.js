@@ -53,13 +53,13 @@ function renderVehicleMap() {
   setTimeout(() => { map.invalidateSize(); }, 200);
   // Vehicle markers
   vehicles.forEach(v => {
-    // Use incident type if available, else fallback to fire ban icon
+    // Use a more descriptive icon for each vehicle type
     let iconUrl = 'assets/fire_ban.png';
-    // Use PNG fallback for all vehicle icons for compatibility
-    if (v.type === 'bushfire') iconUrl = 'assets/fire_ban.png';
-    else if (v.type === 'burn off') iconUrl = 'assets/aus-map-placeholder.png';
-    else if (v.type === 'road crash') iconUrl = 'assets/aus-map-placeholder.png';
-    // (Add more PNGs for other types as needed)
+    if (v.type === 'bushfire') iconUrl = 'assets/icon-bushfire.svg';
+    else if (v.type === 'burn off') iconUrl = 'assets/icon-burnoff.svg';
+    else if (v.type === 'road crash') iconUrl = 'assets/icon-roadcrash.svg';
+    else if (v.type === 'storm') iconUrl = 'assets/icon-storm.svg';
+    // fallback to aus-map-placeholder.png if icon not found
     const icon = L.icon({
       iconUrl,
       iconSize: [36, 36],

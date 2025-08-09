@@ -127,11 +127,11 @@ nav a.active, nav a:hover {
 }
 @media (max-width: 900px) {
   .dashboard-flex {
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 1.5rem;
   }
-  .alerts-list-section,
   .map-medical-stack {
+    order: -1;
     max-width: 100%;
     min-width: 0;
   }
@@ -140,6 +140,7 @@ nav a.active, nav a:hover {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
+    order: 0;
   }
 }
 @media (max-width: 600px) {
@@ -162,6 +163,20 @@ nav a.active, nav a:hover {
   }
   nav {
     gap: 0.5rem;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    margin-top: 0.7rem;
+  }
+  nav a {
+    width: 100%;
+    text-align: center;
+    margin: 0.2rem 0;
+    border-radius: 6px;
+    padding: 0.7em 0;
+    font-size: 1.08em;
   }
 }
 /* Enhanced dashboard appearance */
