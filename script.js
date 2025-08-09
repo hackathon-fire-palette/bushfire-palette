@@ -54,7 +54,7 @@ function renderVehicleMap() {
   // Vehicle markers
   vehicles.forEach(v => {
     const icon = L.icon({
-      iconUrl: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
+  iconUrl: 'assets/fire_ban.png',
       iconSize: [36, 36],
       iconAnchor: [18, 36],
       popupAnchor: [0, -30],
@@ -73,6 +73,7 @@ const alerts = [
     title: 'Bushfire Emergency Warning',
     location: 'Blue Mountains, NSW',
     severity: 'critical',
+    type: 'bushfire',
     summary: 'A fast-moving bushfire is threatening homes and lives. Leave immediately if safe to do so.',
     actions: 'Follow your bushfire survival plan. Leave now if not prepared. Stay tuned to emergency services.',
     coordinates: [-33.7, 150.3],
@@ -80,31 +81,77 @@ const alerts = [
   },
   {
     id: 2,
-    title: 'Bushfire Watch and Act',
-    location: 'Ballarat, VIC',
-    severity: 'medium',
-    summary: 'Conditions are changing. Monitor the situation and be ready to act.',
-    actions: 'Prepare to leave. Keep informed via local radio and emergency services.',
-    coordinates: [-37.6, 143.8],
-    updated: '2025-08-09 12:30',
+    title: 'Burn Off - Planned',
+    location: 'Wagga Wagga, NSW',
+    severity: 'low',
+    type: 'burn off',
+    summary: 'A planned burn off is scheduled in this area. Smoke may be visible.',
+    actions: 'No action required. Stay informed.',
+    coordinates: [-35.1, 147.4],
+    updated: '2025-08-09 12:50',
   },
   {
     id: 3,
+    title: 'Storm Advice',
+    location: 'Mandurah, WA',
+    severity: 'medium',
+    type: 'storm advice',
+    summary: 'Severe weather is expected. Prepare for possible power outages and flooding.',
+    actions: 'Secure loose items and stay indoors during the storm.',
+    coordinates: [-32.5, 115.7],
+    updated: '2025-08-09 12:40',
+  },
+  {
+    id: 4,
     title: 'Bushfire Advice',
     location: 'Perth Hills, WA',
     severity: 'low',
+    type: 'bushfire advice',
     summary: 'Smoke may be visible. No immediate threat, but stay informed.',
     actions: 'Stay up to date. Review your bushfire plan.',
     coordinates: [-31.9, 116.1],
-    updated: '2025-08-09 12:00',
+    updated: '2025-08-09 12:30',
+  },
+  {
+    id: 5,
+    title: 'Active Alarm',
+    location: 'Adelaide CBD, SA',
+    severity: 'critical',
+    type: 'active alarm',
+    summary: 'An active fire alarm has been triggered in a commercial building.',
+    actions: 'Evacuate the building and follow emergency services instructions.',
+    coordinates: [-34.9285, 138.6007],
+    updated: '2025-08-09 12:20',
+  },
+  {
+    id: 6,
+    title: 'Road Crash',
+    location: 'Pacific Hwy, NSW',
+    severity: 'medium',
+    type: 'road crash',
+    summary: 'A multi-vehicle crash has occurred. Emergency services are on scene.',
+    actions: 'Avoid the area and follow detour signs.',
+    coordinates: [-33.2, 151.5],
+    updated: '2025-08-09 12:10',
   },
 ];
 
 // Severity icon mapping for list and map
+
+// Custom icons for each incident type
+const incidentIcons = {
+  'bushfire': 'assets/icon-bushfire.svg',
+  'burn off': 'assets/icon-burnoff.svg',
+  'storm advice': 'assets/icon-storm.svg',
+  'bushfire advice': 'assets/icon-advice.svg',
+  'active alarm': 'assets/icon-alarm.svg',
+  'road crash': 'assets/icon-roadcrash.svg',
+};
+
 const severityIcons = {
-  low: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
-  medium: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
-  critical: 'https://www.emergency.wa.gov.au/assets/fire_ban-BkbVSJ0b.png',
+  low: 'assets/icon-advice.svg',
+  medium: 'assets/icon-storm.svg',
+  critical: 'assets/icon-alarm.svg',
 };
 
 // Render alerts list on dashboard
@@ -254,8 +301,9 @@ function renderMap() {
   }).addTo(map);
   // Add alert markers
   alerts.forEach(alert => {
+    const iconUrl = incidentIcons[alert.type] || severityIcons[alert.severity] || 'assets/icon-advice.svg';
     const icon = L.icon({
-      iconUrl: severityIcons[alert.severity],
+      iconUrl,
       iconSize: [40, 40],
       iconAnchor: [20, 40],
       popupAnchor: [0, -35],
@@ -263,7 +311,7 @@ function renderMap() {
     L.marker(alert.coordinates, { icon })
       .addTo(map)
       .bindPopup(
-        `<b>${alert.title}</b><br>${alert.location}<br><span style='color:#b71c1c;font-weight:bold;'>${alert.severity.toUpperCase()}</span><br>${alert.summary}`
+        `<b>${alert.title}</b><br>${alert.location}<br><span style='color:#b71c1c;font-weight:bold;'>${alert.severity ? alert.severity.toUpperCase() : ''}</span><br>${alert.summary}`
       );
   });
   setTimeout(() => { map.invalidateSize(); }, 200);

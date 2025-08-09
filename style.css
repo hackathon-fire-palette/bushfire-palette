@@ -1,3 +1,29 @@
+/* Dashboard flex layout: alerts left, map right */
+.dashboard-flex {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+}
+.alerts-list-section {
+  flex: 0 0 340px;
+  min-width: 280px;
+  max-width: 400px;
+}
+.map-section {
+  flex: 1 1 0%;
+}
+@media (max-width: 900px) {
+  .dashboard-flex {
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  .alerts-list-section, .map-section {
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+}
 /* Vehicle Tracking Styles */
 .vehicle-section {
   margin-top: 2.5rem;
