@@ -1,9 +1,9 @@
 // --- Vehicle & Crew Tracking System ---
 // Dummy data for vehicles and crew assignments
 var vehicles = [
-  { id: 1, callsign: 'DFES201', type: 'Fire Truck', status: 'active', location: [-33.7, 150.3], crew: [1, 2], lastCheckIn: '2025-08-09 13:10' },
-  { id: 2, callsign: 'DFES305', type: 'Tanker', status: 'standby', location: [-37.6, 143.8], crew: [3], lastCheckIn: '2025-08-09 12:55' },
-  { id: 3, callsign: 'DFES112', type: 'Support', status: 'out-of-service', location: [-31.9, 116.1], crew: [], lastCheckIn: '2025-08-09 11:40' },
+  { id: 1, callsign: 'DFES201', type: 'bushfire', status: 'active', location: [-33.7, 150.3], crew: [1, 2], lastCheckIn: '2025-08-09 13:10' },
+  { id: 2, callsign: 'DFES305', type: 'burn off', status: 'standby', location: [-37.6, 143.8], crew: [3], lastCheckIn: '2025-08-09 12:55' },
+  { id: 3, callsign: 'DFES112', type: 'road crash', status: 'out-of-service', location: [-31.9, 116.1], crew: [], lastCheckIn: '2025-08-09 11:40' },
 ];
 
 function renderVehicleTrackingDashboard() {
@@ -53,8 +53,15 @@ function renderVehicleMap() {
   setTimeout(() => { map.invalidateSize(); }, 200);
   // Vehicle markers
   vehicles.forEach(v => {
+    // Use incident type if available, else fallback to fire ban icon
+    let iconUrl = 'assets/fire_ban.png';
+    // Use PNG fallback for all vehicle icons for compatibility
+    if (v.type === 'bushfire') iconUrl = 'assets/fire_ban.png';
+    else if (v.type === 'burn off') iconUrl = 'assets/aus-map-placeholder.png';
+    else if (v.type === 'road crash') iconUrl = 'assets/aus-map-placeholder.png';
+    // (Add more PNGs for other types as needed)
     const icon = L.icon({
-  iconUrl: 'assets/fire_ban.png',
+      iconUrl,
       iconSize: [36, 36],
       iconAnchor: [18, 36],
       popupAnchor: [0, -30],
@@ -158,19 +165,22 @@ const severityIcons = {
 function renderAlertsList() {
   const list = document.getElementById('alertsList');
   if (!list) return;
-  list.innerHTML = alerts.map(alert => `
-    <div class="alert-card alert-severity-${alert.severity}">
-      <img src="${severityIcons[alert.severity]}" alt="${alert.severity} icon" class="alert-icon" />
-      <div class="alert-info">
-        <div class="alert-title">${alert.title}</div>
-        <div class="alert-location">${alert.location}</div>
-        <div class="alert-summary">${alert.summary}</div>
-        <div class="alert-actions">${alert.actions}</div>
-        <div class="alert-updated">Last updated: ${alert.updated}</div>
-        <a href="alert.html?id=${alert.id}" class="alert-details-link">View Details</a>
+  list.innerHTML = alerts.map(alert => {
+    const iconUrl = incidentIcons[alert.type] || severityIcons[alert.severity] || 'assets/icon-advice.svg';
+    return `
+      <div class="alert-card alert-severity-${alert.severity}">
+        <img src="${iconUrl}" alt="${alert.severity} icon" class="alert-icon" />
+        <div class="alert-info">
+          <div class="alert-title">${alert.title}</div>
+          <div class="alert-location">${alert.location}</div>
+          <div class="alert-summary">${alert.summary}</div>
+          <div class="alert-actions">${alert.actions}</div>
+          <div class="alert-updated">Last updated: ${alert.updated}</div>
+          <a href="alert.html?id=${alert.id}" class="alert-details-link">View Details</a>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 

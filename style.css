@@ -1,3 +1,93 @@
+/* Enhanced dashboard appearance */
+.dashboard-flex {
+  margin-top: 2rem;
+}
+.alerts-list-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(183,28,28,0.08);
+  border: 1.5px solid #f3e5e5;
+  padding: 1.5rem 1.2rem 1.5rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+.alerts-list-section h2 {
+  color: #b71c1c;
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.01em;
+}
+.map-section {
+  background: #fafbfc;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(33,33,33,0.07);
+  border: 1.5px solid #e3e3e3;
+  padding: 1.5rem 1.2rem 1.5rem 1.2rem;
+}
+.map-section h2 {
+  color: #1976d2;
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.01em;
+}
+.alert-card {
+  border-left: 8px solid #b71c1c;
+  background: #fff3e0;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 1px 6px rgba(183,28,28,0.07);
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 1.2rem;
+  transition: box-shadow 0.2s;
+}
+.alert-card:last-child {
+  margin-bottom: 0;
+}
+.alert-card:hover {
+  box-shadow: 0 4px 16px rgba(183,28,28,0.13);
+}
+.alert-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+.alert-location {
+  color: #b71c1c;
+  font-weight: bold;
+  font-size: 1.01rem;
+}
+.alert-summary {
+  margin: 0.2rem 0 0.2rem 0;
+  color: #444;
+}
+.alert-actions {
+  margin-top: 0.3rem;
+  font-size: 0.98rem;
+  color: #333;
+}
+.alert-updated {
+  font-size: 0.93rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+.alert-icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  .alerts-list-section, .map-section {
+    padding: 1rem 0.5rem;
+    border-radius: 8px;
+  }
+  .alert-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.8rem 0.7rem;
+  }
+}
 /* Dashboard flex layout: alerts left, map right */
 .dashboard-flex {
   display: flex;
