@@ -416,6 +416,8 @@
             <button onclick="showMedIntegration(4)">Equipment Tracking</button>
             <button onclick="showMedIntegration(5)">Predictive Alerts</button>
             <button onclick="showMedIntegration(6)">Incident Analytics</button>
+            <button onclick="showMedIntegration(7)">Live Status</button>
+            <button onclick="showMedIntegration(8)">Request Medical Support</button>
           </div>
           <div id="med-integration-content" class="med-content">
             <!-- Details will appear here -->
@@ -823,6 +825,214 @@
     }
     // Show first tab by default
     showMedDispatchTab(0);
+    // --- Medical Integration Demo Data ---
+    const hospitals = [
+      { id: 1, name: "Royal Perth Hospital", status: "Available", capacity: 70, lat: -31.951, lng: 115.860 },
+      { id: 2, name: "Fiona Stanley Hospital", status: "Busy", capacity: 95, lat: -32.081, lng: 115.857 },
+      { id: 3, name: "Sir Charles Gairdner", status: "Full", capacity: 100, lat: -31.943, lng: 115.814 }
+    ];
+    const ambulances = [
+      { id: 1, name: "Ambulance 12", status: "Available", lat: -31.95, lng: 115.86 },
+      { id: 2, name: "Ambulance 22", status: "Busy", lat: -32.08, lng: 115.85 },
+      { id: 3, name: "Ambulance 33", status: "En Route", lat: -31.94, lng: 115.81 }
+    ];
+    function hospitalStatusColor(status) {
+      if (status === "Available") return "background:#d4f8e8;color:#218838;";
+      if (status === "Busy") return "background:#fff3cd;color:#856404;";
+      if (status === "Full") return "background:#f8d7da;color:#721c24;";
+      return "background:#e2e3e5;color:#383d41;";
+    }
+    function ambulanceStatusColor(status) {
+      if (status === "Available") return "background:#d4f8e8;color:#218838;";
+      if (status === "Busy") return "background:#fff3cd;color:#856404;";
+      if (status === "En Route") return "background:#cce5ff;color:#004085;";
+      return "background:#e2e3e5;color:#383d41;";
+    }
+    // --- Medical Integration Tabs ---
+    function showMedIntegration(idx) {
+      const content = document.getElementById('med-integration-content');
+      // Dispatch Coordination tab
+      if (idx === 0) {
+        content.innerHTML = `
+          <div><strong>Status:</strong> ${statusBadge(medIncidentStatus)}</div>
+          <div style="margin:1em 0;">
+            <button onclick="setMedStatus('Pending')">🕓 Pending</button>
+            <button onclick="setMedStatus('En Route')">🚑 En Route</button>
+            <button onclick="setMedStatus('On Scene')">📍 On Scene</button>
+            <button onclick="setMedStatus('Completed')">✅ Completed</button>
+          </div>
+          <div><em>${{
+            "Pending":"Request created, not yet accepted.",
+            "En Route":"Medical team assigned and on the way.",
+            "On Scene":"Team arrived at incident location.",
+            "Completed":"Incident resolved, report submitted."
+          }[medIncidentStatus]}</em></div>
+        `;
+      } else if (idx === 1) {
+        // Health Risk Mapping tab (demo content)
+        content.innerHTML = `
+          <h3>🌏 Health Risk Mapping (Demo)</h3>
+          <p>Map showing health risks based on latest data.</p>
+          <div id="healthRiskMap" style="height:200px;position:relative;">
+            <div style="position:absolute;top:10px;right:10px;background:white;padding:0.5em;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+              <strong>Legend:</strong><br>
+              <span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:0.5em;"></span> High Risk<br>
+              <span style="display:inline-block;width:10px;height:10px;background:#f39c12;margin-right:0.5em;"></span> Moderate Risk<br>
+              <span style="display:inline-block;width:10px;height:10px;background:#2ecc71;margin-right:0.5em;"></span> Low Risk
+            </div>
+            <!-- Demo map, replace with real data/map -->
+            <img src="https://via.placeholder.com/400x200.png?text=Health+Risk+Map" alt="Health Risk Map" style="width:100%;height:auto;border-radius:8px;">
+          </div>
+        `;
+      } else if (idx === 2) {
+        // Responder Profiles tab (demo content)
+        content.innerHTML = `
+          <h3>👨‍⚕️ Responder Profiles (Demo)</h3>
+          <p>List of available responders and their status.</p>
+          <div style="max-height:150px;overflow-y:auto;">
+            ${Array.from({length: 10}, (_,i)=>
+              `<div style="padding:0.5em;border-bottom:1px solid #eee;">
+                <strong>Responder ${i+1}</strong> - ${i%3===0 ? 'Available' : i%3===1 ? 'Busy' : 'On Leave'}
+              </div>`
+            ).join('')}
+          </div>
+        `;
+      } else if (idx === 3) {
+        // Health Services tab (demo content)
+        content.innerHTML = `
+          <h3>🏥 Health Services (Demo)</h3>
+          <p>Information about nearby health services.</p>
+          <ul style="list-style:none;padding:0;">
+            <li style="padding:0.5em;border-bottom:1px solid #eee;">
+              <strong>Royal Perth Hospital</strong><br>
+              197 Wellington St, Perth WA 6000<br>
+              <em>Emergency Department: Open 24/7</em>
+            </li>
+            <li style="padding:0.5em;border-bottom:1px solid #eee;">
+              <strong>Fiona Stanley Hospital</strong><br>
+              102 Shenton Ave, Murdoch WA 6150<br>
+              <em>Emergency Department: Open 24/7</em>
+            </li>
+            <li style="padding:0.5em;border-bottom:1px solid #eee;">
+              <strong>Sir Charles Gairdner Hospital</strong><br>
+              Hospital Ave, Nedlands WA 6009<br>
+              <em>Emergency Department: Open 24/7</em>
+            </li>
+          </ul>
+        `;
+      } else if (idx === 4) {
+        // Equipment Tracking tab (demo content)
+        content.innerHTML = `
+          <h3>🧰 Equipment Tracking (Demo)</h3>
+          <p>Status of critical equipment and supplies.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1em;">
+            ${['Defibrillator','Ventilator','Syringe Pump','Thermal Scanner'].map(eq=>`
+              <div style="padding:1em;border-radius:8px;box-shadow:0 1px 4px #0001;background:#f9f9f9;">
+                <strong>${eq}</strong>
+                <div style="font-size:0.9em;color:#666;">${Math.random() > 0.5 ? '✅ Available' : '❌ Not Available'}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (idx === 5) {
+        // Predictive Alerts tab (demo content)
+        content.innerHTML = `
+          <h3>🔮 Predictive Alerts (Demo)</h3>
+          <p>Forecast of potential health incidents based on data trends.</p>
+          <div style="height:200px;position:relative;">
+            <!-- Demo graph, replace with real data -->
+            <img src="https://via.placeholder.com/400x200.png?text=Predictive+Alerts+Graph" alt="Predictive Alerts Graph" style="width:100%;height:auto;border-radius:8px;">
+            <div style="position:absolute;top:10px;right:10px;background:white;padding:0.5em;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+              <strong>Legend:</strong><br>
+              <span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:0.5em;"></span> High Alert<br>
+              <span style="display:inline-block;width:10px;height:10px;background:#f39c12;margin-right:0.5em;"></span> Medium Alert<br>
+              <span style="display:inline-block;width:10px;height:10px;background:#2ecc71;margin-right:0.5em;"></span> Low Alert
+            </div>
+          </div>
+        `;
+      } else if (idx === 6) {
+        // Incident Analytics tab (demo content)
+        content.innerHTML = `
+          <h3>📊 Incident Analytics (Demo)</h3>
+          <p>Analysis of past incidents and response effectiveness.</p>
+          <div style="height:200px;position:relative;">
+            <!-- Demo chart, replace with real data -->
+            <img src="https://via.placeholder.com/400x200.png?text=Incident+Analytics+Chart" alt="Incident Analytics Chart" style="width:100%;height:auto;border-radius:8px;">
+          </div>
+        `;
+      } else if (idx === 7) {
+        // Live Status Dashboard
+        content.innerHTML = `
+          <div>
+            <h3>🏥 Hospital Status</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1em;">
+              ${hospitals.map(h=>`
+                <div style="padding:1em;border-radius:8px;box-shadow:0 1px 4px #0001;${hospitalStatusColor(h.status)}">
+                  <strong>${h.name}</strong><br>
+                  Status: ${h.status}<br>
+                  Capacity: ${h.capacity}%
+                </div>
+              `).join('')}
+            </div>
+            <h3 style="margin-top:1em;">🚑 Ambulance Status</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1em;">
+              ${ambulances.map(a=>`
+                <div style="padding:0.7em;border-radius:8px;box-shadow:0 1px 4px #0001;${ambulanceStatusColor(a.status)}">
+                  <strong>${a.name}</strong><br>
+                  Status: ${a.status}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        // Optionally overlay on map
+        if (window.L && window.map) {
+          // Remove previous markers
+          if (window.medMarkers) { window.medMarkers.forEach(m=>window.map.removeLayer(m)); }
+          window.medMarkers = [];
+          hospitals.forEach(h=>{
+            const marker = L.marker([h.lat,h.lng],{
+              icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🏥</span>`,iconAnchor:[16,32]})
+            }).addTo(window.map).bindPopup(`<b>${h.name}</b><br>Status: ${h.status}<br>Capacity: ${h.capacity}%`);
+            window.medMarkers.push(marker);
+          });
+          ambulances.forEach(a=>{
+            const marker = L.marker([a.lat,a.lng],{
+              icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🚑</span>`,iconAnchor:[16,32]})
+            }).addTo(window.map).bindPopup(`<b>${a.name}</b><br>Status: ${a.status}`);
+            window.medMarkers.push(marker);
+          });
+        }
+      } else if (idx === 8) {
+        // Request Medical Support Form
+        content.innerHTML = `
+          <form id="medRequestForm" style="margin-top:0.5em;">
+            <label>Incident Location:<br><input type="text" id="medReqLoc" required style="width:80%;" /></label><br>
+            <label>Severity:<br>
+              <select id="medReqSeverity">
+                <option value="Minor">Minor</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </label><br>
+            <label>Patient Condition:<br><input type="text" id="medReqCond" required style="width:80%;" /></label><br>
+            <button type="submit" style="margin-top:0.7em;">Request Support</button>
+          </form>
+          <div id="medReqStatus" style="margin-top:0.7em;color:#218838;"></div>
+        `;
+        document.getElementById('medRequestForm').onsubmit = function(e) {
+          e.preventDefault();
+          document.getElementById('medReqStatus').textContent = 'Medical support requested! (Demo only)';
+          setTimeout(()=>{document.getElementById('medReqStatus').textContent='';},4000);
+          // Optionally send to backend or Firestore
+        };
+      }
+      // Highlight active tab
+      const btns = document.querySelectorAll('.med-tabs button');
+      btns.forEach((btn, i) => btn.classList.toggle('active', i === idx));
+    }
+    // Show first tab by default
+    showMedIntegration(0);
   </script>
 </body>
 </html>
