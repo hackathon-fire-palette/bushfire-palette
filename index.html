@@ -367,6 +367,40 @@
     </nav>
   </header>
   <main>
+    <!-- Summary Cards Row -->
+    <div class="dashboard-summary-cards" style="display:flex;gap:1em;flex-wrap:wrap;margin-bottom:1.5em;">
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>🔥 Active Bushfires</h3>
+        <div id="summaryActiveFires" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>⚠️ High-Risk Areas</h3>
+        <div id="summaryHighRisk" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>🚑 Medical Resources</h3>
+        <div id="summaryMedResources" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>🌡️ Weather Risk Index</h3>
+        <div id="summaryWeatherRisk" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+    </div>
+    <!-- Trend Graphs Row -->
+    <div class="dashboard-trend-graphs" style="display:flex;gap:1em;flex-wrap:wrap;margin-bottom:1.5em;">
+      <div class="card" style="flex:1;min-width:280px;">
+        <h3>📈 Fire Incidents Trend</h3>
+        <div id="trendFireIncidents" style="height:120px;">[Graph]</div>
+      </div>
+      <div class="card" style="flex:1;min-width:280px;">
+        <h3>🛠️ Resource Use Trend</h3>
+        <div id="trendResourceUse" style="height:120px;">[Graph]</div>
+      </div>
+      <div class="card" style="flex:1;min-width:280px;">
+        <h3>🚑 Medical Calls Trend</h3>
+        <div id="trendMedicalCalls" style="height:120px;">[Graph]</div>
+      </div>
+    </div>
     <div class="dashboard-flex">
       <section class="alerts-list-section" aria-label="Active Alerts">
         <div class="alerts-header">
@@ -375,6 +409,7 @@
           <button class="refresh-btn" onclick="refreshAlerts()" aria-label="Refresh alerts">🔄</button>
           <button class="collapse-btn" id="toggle-alerts" aria-label="Collapse alerts">▼</button>
         </div>
+        <div id="alertsFeed" class="alerts-feed" style="margin-bottom:1em;"></div>
         <div id="alertsList" class="alerts-list" role="list"></div>
       </section>
       <section class="weather-chat-section" aria-label="AI Weather Predictor">
@@ -524,6 +559,15 @@
       const data = await res.json();
       alertsLastFetched = Date.now();
       renderAlerts(data);
+      // Demo: high risk areas, med resources, weather risk, trends
+      const highRiskAreas = data.filter(a => a.level === 'Emergency' || a.level === 'Watch and Act');
+      const medResources = 3; // demo, count ambulances available
+      const weatherRisk = Math.round(Math.random()*100); // demo
+      updateSummaryCards(data, highRiskAreas, medResources, weatherRisk);
+      renderTrendGraph('trendFireIncidents', [2,3,5,4,6,7,8], '#c0392b');
+      renderTrendGraph('trendResourceUse', [1,2,2,3,4,3,2], '#1976d2');
+      renderTrendGraph('trendMedicalCalls', [0,1,2,1,3,2,1], '#27ae60');
+      renderAlertsFeed(data);
     }
     function refreshAlerts() {
       fetchAlerts();
@@ -995,8 +1039,8 @@
             <div style="position:absolute;top:10px;right:10px;background:white;padding:0.5em;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
               <strong>Legend:</strong><br>
               <span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:0.5em;"></span> High Alert<br>
-              <span style="display:inline-block;width:10px;height:10px;background:#f39c12;margin-right:0.5em;"></span> Medium Alert<br>
-              <span style="display:inline-block;width:10px;height:10px;background:#2ecc71;margin-right:0.5em;"></span> Low Alert
+              <span style="display:inline-block;width=10px;height=10px;background:#f39c12;margin-right:0.5em;"></span> Medium Alert<br>
+              <span style="display:inline-block;width=10px;height=10px;background:#2ecc71;margin-right:0.5em;"></span> Low Alert
             </div>
           </div>
         `;
