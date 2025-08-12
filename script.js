@@ -53,13 +53,13 @@ function renderVehicleMap() {
   setTimeout(() => { map.invalidateSize(); }, 200);
   // Vehicle markers
   vehicles.forEach(v => {
-    // Use incident type if available, else fallback to fire ban icon
+    // Use a more descriptive icon for each vehicle type
     let iconUrl = 'assets/fire_ban.png';
-    // Use PNG fallback for all vehicle icons for compatibility
-    if (v.type === 'bushfire') iconUrl = 'assets/fire_ban.png';
-    else if (v.type === 'burn off') iconUrl = 'assets/aus-map-placeholder.png';
-    else if (v.type === 'road crash') iconUrl = 'assets/aus-map-placeholder.png';
-    // (Add more PNGs for other types as needed)
+    if (v.type === 'bushfire') iconUrl = 'assets/icon-bushfire.svg';
+    else if (v.type === 'burn off') iconUrl = 'assets/icon-burnoff.svg';
+    else if (v.type === 'road crash') iconUrl = 'assets/icon-roadcrash.svg';
+    else if (v.type === 'storm') iconUrl = 'assets/icon-storm.svg';
+    // fallback to aus-map-placeholder.png if icon not found
     const icon = L.icon({
       iconUrl,
       iconSize: [36, 36],
@@ -165,12 +165,15 @@ const severityIcons = {
 function renderAlertsList() {
   const list = document.getElementById('alertsList');
   if (!list) return;
-  list.innerHTML = alerts.map(alert => {
+  list.innerHTML = alerts.map((alert, idx) => {
     const iconUrl = incidentIcons[alert.type] || severityIcons[alert.severity] || 'assets/icon-advice.svg';
     return `
-      <div class="alert-card alert-severity-${alert.severity}">
+      <div class="alert-card alert-severity-${alert.severity} collapsed" data-alert-idx="${idx}">
         <img src="${iconUrl}" alt="${alert.severity} icon" class="alert-icon" />
-        <div class="alert-info">
+        <div class="alert-info-collapsed">
+          <div class="alert-title">${alert.title}</div>
+        </div>
+        <div class="alert-info-full">
           <div class="alert-title">${alert.title}</div>
           <div class="alert-location">${alert.location}</div>
           <div class="alert-summary">${alert.summary}</div>
@@ -181,6 +184,25 @@ function renderAlertsList() {
       </div>
     `;
   }).join('');
+  // Add click handlers for collapse/expand
+  setTimeout(() => {
+    const cards = list.querySelectorAll('.alert-card');
+    cards.forEach(card => {
+      card.addEventListener('click', function(e) {
+        // Only expand/collapse if not clicking a link
+        if (e.target.tagName === 'A') return;
+        cards.forEach(c => c.classList.add('collapsed'));
+        cards.forEach(c => c.classList.remove('expanded'));
+        this.classList.remove('collapsed');
+        this.classList.add('expanded');
+      });
+    });
+    // Expand the first card by default
+    if (cards[0]) {
+      cards[0].classList.remove('collapsed');
+      cards[0].classList.add('expanded');
+    }
+  }, 10);
 }
 
 
@@ -285,29 +307,11 @@ function renderMap() {
     mapDiv._leaflet_id = null;
     mapDiv.innerHTML = '';
   }
-  const map = L.map(mapDiv).setView([-25.2744, 133.7751], 4);
+  // Center on Perth, WA (zoomed in)
+  const map = L.map(mapDiv).setView([-31.9505, 115.8605], 11);
+  window.map = map; // Expose dashboard map for weather overlay
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-  // Example polygon covering major bush/forest regions (rough demo, not accurate)
-  const bushPolygonCoords = [
-    [-10, 142], // Cape York
-    [-17, 145],
-    [-23, 150],
-    [-28, 153], // SE QLD/NSW
-    [-38, 146], // VIC
-    [-42, 147], // TAS
-    [-35, 138], // SA
-    [-30, 122], // WA
-    [-15, 125],
-    [-10, 130],
-    [-10, 142],
-  ];
-  L.polygon(bushPolygonCoords, {
-    color: '#388e3c',
-    fillColor: '#388e3c',
-    fillOpacity: 0.25,
-    weight: 2
   }).addTo(map);
   // Add alert markers
   alerts.forEach(alert => {

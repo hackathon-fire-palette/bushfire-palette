@@ -6,65 +6,11 @@
   <title>Australian Bushfire Alert System</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <header>
-    <div class="logo-title">
-      <a href="/">
-        <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
-      </a>
-      <h1>Australian Bushfire Alert System</h1>
-    </div>
-    <nav>
-  <a href="index.html" class="active">Dashboard</a>
-  <a href="about.html">About</a>
-  <a href="roster.html">Roster</a>
-  <a href="vehicle.html">Vehicle Tracking</a>
-    </nav>
-  </header>
-  <main>
-    <div class="dashboard-flex">
-      <section class="alerts-list-section">
-        <h2>Active Alerts</h2>
-        <div id="alertsList" class="alerts-list"></div>
-      </section>
-      <div class="map-medical-stack">
-        <section class="map-section">
-          <h2>Current Bushfire Alerts</h2>
-          <div id="map" class="map-embed"></div>
-        </section>
-        <section class="medical-emergency-section card">
-          <h2>Medical Emergency Integrations</h2>
-          <div id="med-integration-tabs" class="med-tabs">
-            <button onclick="showMedIntegration(0)">Dispatch Coordination</button>
-            <button onclick="showMedIntegration(1)">Health Risk Mapping</button>
-            <button onclick="showMedIntegration(2)">Responder Profiles</button>
-            <button onclick="showMedIntegration(3)">Health Services</button>
-            <button onclick="showMedIntegration(4)">Equipment Tracking</button>
-            <button onclick="showMedIntegration(5)">Predictive Alerts</button>
-            <button onclick="showMedIntegration(6)">Incident Analytics</button>
-          </div>
-          <div id="med-integration-content" class="med-content">
-            <!-- Details will appear here -->
-          </div>
-        </section>
-        <!-- Emergency Communication Flow Section -->
-        <section class="emergency-flow-section card">
-          <h2>Emergency Communication Flow</h2>
-          <div id="emergency-flow-steps" class="emergency-flow-steps"></div>
-          <div class="emergency-flow-nav">
-            <button onclick="prevFlowStep()">Previous</button>
-            <button onclick="nextFlowStep()">Next</button>
-            <button onclick="restartFlowStep()">Restart</button>
-          </div>
-        </section>
-      </div>
-    </div>
-  </main>
-  <footer>
-    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
-  </footer>
+  <meta name="theme-color" content="#c0392b" />
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
   <style>
+    /* --- Existing styles --- */
     .dashboard-flex {
       display: flex;
       gap: 1rem;
@@ -262,95 +208,458 @@
         width: 100%;
       }
     }
+    /* --- New styles --- */
+    body.dark-mode {
+      background: #181818;
+      color: #f2f2f2;
+    }
+    .card, .alerts-list, .med-content, .emergency-step-card {
+      background: var(--card-bg, #fff);
+      color: var(--card-color, #333);
+    }
+    body.dark-mode .card, body.dark-mode .alerts-list, body.dark-mode .med-content, body.dark-mode .emergency-step-card {
+      --card-bg: #232323;
+      --card-color: #f2f2f2;
+      border-color: #444;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .high-contrast {
+      background: #000 !important;
+      color: #fff !important;
+    }
+    .alerts-list .alert-card {
+      border-radius: 8px;
+      margin-bottom: 1em;
+      padding: 1em;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border-left: 8px solid #ccc;
+      background: #fff;
+      transition: background 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+    }
+    .alert-card[data-level="Emergency"] { border-color: #c0392b; background: #fff3f0; }
+    .alert-card[data-level="Watch and Act"] { border-color: #f39c12; background: #fffbe6; }
+    .alert-card[data-level="Advice"] { border-color: #1976d2; background: #e6f0ff; }
+    .alert-card .alert-title { font-weight: bold; font-size: 1.1em; }
+    .alert-card .alert-status { font-size: 0.95em; }
+    .alert-card .alert-updated { font-size: 0.9em; color: #888; }
+    .alerts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1em;
+    }
+    .alerts-header .last-updated {
+      font-size: 0.95em;
+      color: #888;
+    }
+    .alerts-header .refresh-btn {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      cursor: pointer;
+      font-size: 1em;
+      margin-left: 0.5em;
+    }
+    .alerts-list-section.collapsed .alerts-list {
+      display: none;
+    }
+    .alerts-list-section .collapse-btn {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      cursor: pointer;
+      font-size: 1em;
+      margin-left: 0.5em;
+    }
+    /* Accessibility toggles */
+    .accessibility-bar {
+      display: flex;
+      gap: 1em;
+      align-items: center;
+      margin-bottom: 1em;
+      justify-content: flex-end;
+    }
+    .accessibility-bar button, .accessibility-bar select {
+      background: #eee;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .accessibility-bar button.active, .accessibility-bar button:focus {
+      background: #c0392b;
+      color: #fff;
+      outline: 2px solid #c0392b;
+    }
+    /* Voice input button */
+    .voice-btn {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 2.2em;
+      height: 2.2em;
+      font-size: 1.3em;
+      cursor: pointer;
+      margin-left: 0.5em;
+      vertical-align: middle;
+      transition: background 0.2s;
+    }
+    .voice-btn.listening {
+      background: #f39c12;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 #f39c12; }
+      70% { box-shadow: 0 0 0 10px #f39c1200; }
+      100% { box-shadow: 0 0 0 0 #f39c12; }
+    }
+    /* Fire risk graph placeholder */
+    .fire-risk-graph {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(90deg,#e6f0ff,#fffbe6,#fff3f0);
+      border-radius: 8px;
+      margin: 1em 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 1.1em;
+      border: 1px solid #e0e0e0;
+    }
   </style>
+</head>
+<body>
+  <!-- Accessibility & language toggles -->
+  <div class="accessibility-bar" aria-label="Accessibility and language options">
+    <button id="darkModeToggle" aria-label="Toggle dark mode" tabindex="0">🌙 Dark Mode</button>
+    <button id="contrastToggle" aria-label="Toggle high contrast" tabindex="0">⬛ High Contrast</button>
+    <select id="languageSelect" aria-label="Select language" tabindex="0">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+      <option value="ar">العربية</option>
+      <option value="noongar">Noongar</option>
+    </select>
+  </div>
+  <header>
+    <div class="logo-title">
+      <a href="/">
+        <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
+      </a>
+      <h1>Australian Bushfire Alert System</h1>
+    </div>
+    <nav>
+  <a href="index.html" class="active">Dashboard</a>
+  <a href="roster.html">Roster</a>
+  <a href="vehicle.html">Vehicle Tracking</a>
+  <a href="about.html">About</a>
+    </nav>
+  </header>
+  <main>
+    <div class="dashboard-flex">
+      <section class="alerts-list-section" aria-label="Active Alerts">
+        <div class="alerts-header">
+          <h2>Active Alerts</h2>
+          <span class="last-updated" id="alertsLastUpdated">Updated just now</span>
+          <button class="refresh-btn" onclick="refreshAlerts()" aria-label="Refresh alerts">🔄</button>
+          <button class="collapse-btn" id="toggle-alerts" aria-label="Collapse alerts">▼</button>
+        </div>
+        <div id="alertsList" class="alerts-list" role="list"></div>
+      </section>
+      <section class="weather-chat-section" aria-label="AI Weather Predictor">
+        <h2>🤖 AI Weather Predictor</h2>
+        <div class="quick-questions">
+          <h4>Quick Questions:</h4>
+          <button class="quick-question-btn" onclick="askWeatherQuestion('What will the weather be like in Perth next week?')">Perth Next Week</button>
+          <button class="quick-question-btn" onclick="askWeatherQuestion('What are the fire risk conditions for next week?')">Fire Risk Analysis</button>
+          <button class="quick-question-btn" onclick="askWeatherQuestion('Should we pre-position resources based on predicted conditions?')">Resource Planning</button>
+        </div>
+        <div class="fire-risk-graph" id="fireRiskGraph" aria-label="Fire risk trend graph">
+          [Fire risk trend graph will appear here]
+        </div>
+        <div class="chat-container">
+          <div id="chatMessages" class="chat-messages" aria-live="polite">
+            <div class="message ai">
+              Hello! I'm your AI Weather Predictor. Ask me about weather conditions, fire risk assessments, or operational planning for Perth and surrounding areas. How can I help you today?
+            </div>
+          </div>
+          <div class="chat-input-container">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500" aria-label="Weather chat input" />
+            <button id="voiceBtn" class="voice-btn" aria-label="Voice input" tabindex="0">🎤</button>
+            <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">Send</button>
+          </div>
+        </div>
+      </section>
+      <div class="map-medical-stack">
+        <section class="map-section">
+          <h2>Current Bushfire Alerts</h2>
+          <div id="map" class="map-embed"></div>
+        </section>
+        <section class="medical-emergency-section card">
+          <h2>Medical Emergency Integrations</h2>
+          <div id="med-integration-tabs" class="med-tabs">
+            <button onclick="showMedIntegration(0)">Dispatch Coordination</button>
+            <button onclick="showMedIntegration(1)">Health Risk Mapping</button>
+            <button onclick="showMedIntegration(2)">Responder Profiles</button>
+            <button onclick="showMedIntegration(3)">Health Services</button>
+            <button onclick="showMedIntegration(4)">Equipment Tracking</button>
+            <button onclick="showMedIntegration(5)">Predictive Alerts</button>
+            <button onclick="showMedIntegration(6)">Incident Analytics</button>
+          </div>
+          <div id="med-integration-content" class="med-content">
+            <!-- Details will appear here -->
+          </div>
+        </section>
+        <!-- Emergency Communication Flow Section -->
+        <section class="emergency-flow-section card">
+          <h2>Emergency Communication Flow</h2>
+          <div id="emergency-flow-steps" class="emergency-flow-steps"></div>
+          <div class="emergency-flow-nav">
+            <button onclick="prevFlowStep()">Previous</button>
+            <button onclick="nextFlowStep()">Next</button>
+            <button onclick="restartFlowStep()">Restart</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <div style="font-weight:bold;color:#c0392b;">
+      ⚠️ Not for Operational Use. For demonstration only.<br>
+      Data sources: <a href="https://www.bom.gov.au/" target="_blank">Bureau of Meteorology</a>, <a href="https://afdrs.com.au/" target="_blank">AFDRS</a>, <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank">NASA FIRMS</a>
+    </div>
+    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>.</p>
+    <form id="feedbackForm" style="margin-top:1em;" aria-label="Feedback form">
+      <label for="feedbackInput">Feedback for improvement:</label>
+      <input type="text" id="feedbackInput" maxlength="200" style="width:60%;" aria-label="Feedback input" />
+      <button type="submit" aria-label="Submit feedback">Submit</button>
+      <span id="feedbackStatus" style="margin-left:1em;color:#1976d2;"></span>
+    </form>
+  </footer>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
   <script>
-    // Medical Integration Dashboard Interactivity
-    const medIntegrationDetails = [
-      `<strong>Real-Time Medical Dispatch Coordination:</strong><br>
-      Integrate with ambulance dispatch systems for coordinated fire and medical response.<br>
-      Enable dual-response alerts for incidents involving injury, smoke inhalation, or burns.`,
-      `<strong>Health Risk Mapping:</strong><br>
-      Overlay vulnerable population data (aged care, hospitals, disability services) on bushfire prediction maps.<br>
-      Prioritize evacuation and medical support based on risk zones.`,
-      `<strong>First Responder Medical Profiles:</strong><br>
-      Include paramedic certifications and first aid skills in the roster system.<br>
-      Auto-assign medically trained firefighters to incidents with injury potential.`,
-      `<strong>Integration with Emergency Health Services:</strong><br>
-      Connect with state health databases to access nearest trauma centers, air ambulance availability, and real-time hospital capacity.`,
-      `<strong>Medical Equipment Tracking:</strong><br>
-      Link inventory systems to track medical kits, oxygen tanks, and burn treatment supplies on each fire vehicle.<br>
-      Alert roster managers when equipment is low or expired.`,
-      `<strong>Predictive Health Alerts:</strong><br>
-      Use bushfire simulation data to forecast smoke exposure zones.<br>
-      Trigger alerts for respiratory risk and deploy medical teams proactively.`,
-      `<strong>Incident Reporting and Analytics:</strong><br>
-      Add modules for medical incident logging during bushfire events.<br>
-      Analyze trends in injuries, response times, and treatment outcomes.`
-    ];
-    function showMedIntegration(idx) {
-      document.getElementById('med-integration-content').innerHTML = medIntegrationDetails[idx];
-      // Highlight active tab
-      const btns = document.querySelectorAll('.med-tabs button');
-      btns.forEach((btn, i) => btn.classList.toggle('active', i === idx));
-    }
-    // Show first tab by default
-    showMedIntegration(0);
+    // --- Accessibility & Language ---
+    document.getElementById('darkModeToggle').onclick = function() {
+      document.body.classList.toggle('dark-mode');
+      this.classList.toggle('active');
+    };
+    document.getElementById('contrastToggle').onclick = function() {
+      document.body.classList.toggle('high-contrast');
+      this.classList.toggle('active');
+    };
+    document.getElementById('languageSelect').onchange = function() {
+      // Simple demo: just change html lang attribute
+      document.documentElement.lang = this.value;
+    };
 
-    // Emergency Communication Flow Interactivity
-    const emergencyFlowSteps = [
-      {
-        icon: "🔥",
-        title: "Fire Detected",
-        desc: "A bushfire is detected by sensors, public, or authorities."
-      },
-      {
-        icon: "🚒",
-        title: "Fire Station Alerted",
-        desc: "Local fire station receives the alert and prepares response."
-      },
-      {
-        icon: "📞",
-        title: "Call Emergency Number (000)",
-        desc: "Emergency services are contacted via the national hotline."
-      },
-      {
-        icon: "🕹️",
-        title: "Dispatcher Contacts Medical Team",
-        desc: "Dispatcher coordinates with medical teams for possible injuries."
-      },
-      {
-        icon: "🚑",
-        title: "Medical Team Dispatched",
-        desc: "Medical team is sent to the scene for support and treatment."
+    // --- Feedback Form ---
+    document.getElementById('feedbackForm').onsubmit = function(e) {
+      e.preventDefault();
+      const val = document.getElementById('feedbackInput').value.trim();
+      if (!val) return;
+      document.getElementById('feedbackStatus').textContent = 'Thank you for your feedback!';
+      setTimeout(() => { document.getElementById('feedbackStatus').textContent = ''; }, 4000);
+      document.getElementById('feedbackInput').value = '';
+      // Optionally send to backend
+      // fetch('/api/feedback', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feedback:val})});
+    };
+
+    // --- Alerts: Color-coded, last updated, auto-refresh ---
+    let alertsLastFetched = Date.now();
+    function renderAlerts(alerts) {
+      const container = document.getElementById('alertsList');
+      container.innerHTML = '';
+      alerts.forEach(alert => {
+        const card = document.createElement('div');
+        card.className = 'alert-card';
+        card.setAttribute('data-level', alert.level || 'Advice');
+        card.innerHTML = `
+          <div class="alert-title">${alert.title || 'Bushfire Alert'}</div>
+          <div class="alert-status"><strong>Status:</strong> ${alert.status || 'Unknown'} (${alert.level || 'Advice'})</div>
+          <div><strong>Location:</strong> ${alert.locationDesc || ''}</div>
+          <div class="alert-updated">Updated ${timeAgo(alert.updated || Date.now())}</div>
+        `;
+        container.appendChild(card);
+      });
+      document.getElementById('alertsLastUpdated').textContent = 'Updated ' + timeAgo(alertsLastFetched);
+    }
+    function timeAgo(ts) {
+      const now = Date.now();
+      const diff = Math.floor((now - ts) / 1000);
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff/60)} mins ago`;
+      return `${Math.floor(diff/3600)} hrs ago`;
+    }
+    async function fetchAlerts() {
+      // Replace with your API endpoint
+      const res = await fetch('/api/alerts');
+      const data = await res.json();
+      alertsLastFetched = Date.now();
+      renderAlerts(data);
+    }
+    function refreshAlerts() {
+      fetchAlerts();
+    }
+    setInterval(fetchAlerts, 60000); // auto-refresh every minute
+    document.addEventListener('DOMContentLoaded', fetchAlerts);
+
+    // Collapsible alerts section
+    document.getElementById('toggle-alerts').onclick = function() {
+      document.querySelector('.alerts-list-section').classList.toggle('collapsed');
+    };
+
+    // --- AI Weather Chat: Voice input, confidence, graph placeholder ---
+    let isLoading = false;
+    let recognition;
+    function addMessage(content, isUser = false) {
+      const messagesContainer = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+      
+      if (isUser) {
+        messageDiv.textContent = content;
+      } else {
+        // Convert markdown-like formatting to HTML
+        const formattedContent = content
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br>');
+        messageDiv.innerHTML = formattedContent;
       }
-    ];
-    let currentFlowStep = 0;
-    function renderEmergencyFlow() {
-      const container = document.getElementById('emergency-flow-steps');
-      container.innerHTML = emergencyFlowSteps.map((step, idx) => `
-        <div class="emergency-step-card${idx === currentFlowStep ? ' active' : ''}">
-          <div class="emergency-step-icon">${step.icon}</div>
-          <div class="emergency-step-title">${step.title}</div>
-          <div class="emergency-step-desc">${idx === currentFlowStep ? step.desc : ''}</div>
-        </div>
-        ${idx < emergencyFlowSteps.length - 1 ? '<div style="font-size:2rem;align-self:center;">→</div>' : ''}
-      `).join('');
+      
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-    function nextFlowStep() {
-      if (currentFlowStep < emergencyFlowSteps.length - 1) currentFlowStep++;
-      renderEmergencyFlow();
+
+    function addLoadingMessage() {
+      const messagesContainer = document.getElementById('chatMessages');
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message loading';
+      loadingDiv.id = 'loading-message';
+      loadingDiv.textContent = '🤖 Analyzing weather patterns...';
+      messagesContainer.appendChild(loadingDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-    function prevFlowStep() {
-      if (currentFlowStep > 0) currentFlowStep--;
-      renderEmergencyFlow();
+
+    function removeLoadingMessage() {
+      const loadingMsg = document.getElementById('loading-message');
+      if (loadingMsg) {
+        loadingMsg.remove();
+      }
     }
-    function restartFlowStep() {
-      currentFlowStep = 0;
-      renderEmergencyFlow();
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const sendBtn = document.getElementById('chatSendBtn');
+      const message = input.value.trim();
+      
+      if (!message || isLoading) return;
+      
+      // Add user message
+      addMessage(message, true);
+      
+      // Clear input and disable button
+      input.value = '';
+      sendBtn.disabled = true;
+      isLoading = true;
+      
+      // Add loading message
+      addLoadingMessage();
+      
+      try {
+        const response = await fetch('/api/weather-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to get weather prediction');
+        }
+        
+        const data = await response.json();
+        removeLoadingMessage();
+        addMessage(data.response + (data.confidence ? `<br><strong>Confidence:</strong> ${data.confidence}` : ''));
+        if (data.riskGraphData) renderFireRiskGraph(data.riskGraphData);
+        
+      } catch (error) {
+        console.error('Chat error:', error);
+        removeLoadingMessage();
+        addMessage('Sorry, I encountered an error while processing your request. Please try again later.');
+      } finally {
+        sendBtn.disabled = false;
+        isLoading = false;
+        input.focus();
+      }
     }
-    document.addEventListener('DOMContentLoaded', renderEmergencyFlow);
+
+    function askWeatherQuestion(question) {
+      document.getElementById('chatInput').value = question;
+      sendMessage();
+    }
+
+    // Voice input integration
+    document.getElementById('voiceBtn').onclick = function() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Voice input not supported in this browser.');
+        return;
+      }
+      if (recognition && recognition.recognizing) {
+        recognition.stop();
+        this.classList.remove('listening');
+        return;
+      }
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = document.documentElement.lang || 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.onstart = () => this.classList.add('listening');
+      recognition.onend = () => this.classList.remove('listening');
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('chatInput').value = transcript;
+        sendMessage();
+      };
+      recognition.start();
+    };
+    // Fire risk graph rendering (placeholder)
+    function renderFireRiskGraph(data) {
+      // For demo, just show JSON or simple SVG
+      const graph = document.getElementById('fireRiskGraph');
+      if (!data || !Array.isArray(data)) {
+        graph.textContent = '[Fire risk trend graph will appear here]';
+        return;
+      }
+      // Simple SVG line graph
+      const max = Math.max(...data.map(d=>d.value));
+      const min = Math.min(...data.map(d=>d.value));
+      const points = data.map((d,i) => `${i*30+10},${120-((d.value-min)/(max-min+0.01))*100}`).join(' ');
+      graph.innerHTML = `<svg width="100%" height="120"><polyline points="${points}" fill="none" stroke="#c0392b" stroke-width="3"/><text x="10" y="20" font-size="14" fill="#333">Risk</text></svg>`;
+    }
+    // Enter key support
+    document.getElementById('chatInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !isLoading) {
+        sendMessage();
+      }
+    });
+
+    // Auto-focus on input when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('chatInput').focus();
+    });
   </script>
 </body>
 </html>
