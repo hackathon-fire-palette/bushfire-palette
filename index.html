@@ -48,6 +48,16 @@
             <!-- Details will appear here -->
           </div>
         </section>
+        <!-- Emergency Communication Flow Section -->
+        <section class="emergency-flow-section card">
+          <h2>Emergency Communication Flow</h2>
+          <div id="emergency-flow-steps" class="emergency-flow-steps"></div>
+          <div class="emergency-flow-nav">
+            <button onclick="prevFlowStep()">Previous</button>
+            <button onclick="nextFlowStep()">Next</button>
+            <button onclick="restartFlowStep()">Restart</button>
+          </div>
+        </section>
       </div>
     </div>
   </main>
@@ -146,6 +156,70 @@
       background: #c0392b;
       color: #fff;
     }
+    /* Emergency Communication Flow styles */
+    .emergency-flow-section {
+      margin-top: 1rem;
+    }
+    .emergency-flow-steps {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      align-items: flex-end;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .emergency-step-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1rem 0.7rem;
+      min-width: 110px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      border: 2px solid transparent;
+      transition: border 0.2s, background 0.2s;
+      opacity: 0.6;
+    }
+    .emergency-step-card.active {
+      border: 2px solid #c0392b;
+      background: #fff3f0;
+      opacity: 1;
+    }
+    .emergency-step-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .emergency-step-title {
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+      font-size: 1.05rem;
+      text-align: center;
+    }
+    .emergency-step-desc {
+      font-size: 0.95rem;
+      text-align: center;
+      color: #555;
+    }
+    .emergency-flow-nav {
+      display: flex;
+      gap: 0.7rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    .emergency-flow-nav button {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.4em 1em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .emergency-flow-nav button:hover {
+      background: #e74c3c;
+    }
     /* Responsive styles */
     @media (max-width: 900px) {
       .dashboard-flex {
@@ -178,6 +252,14 @@
       }
       nav {
         gap: 0.5rem;
+      }
+      .emergency-flow-steps {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .emergency-step-card {
+        min-width: 0;
+        width: 100%;
       }
     }
   </style>
@@ -215,6 +297,60 @@
     }
     // Show first tab by default
     showMedIntegration(0);
+
+    // Emergency Communication Flow Interactivity
+    const emergencyFlowSteps = [
+      {
+        icon: "🔥",
+        title: "Fire Detected",
+        desc: "A bushfire is detected by sensors, public, or authorities."
+      },
+      {
+        icon: "🚒",
+        title: "Fire Station Alerted",
+        desc: "Local fire station receives the alert and prepares response."
+      },
+      {
+        icon: "📞",
+        title: "Call Emergency Number (000)",
+        desc: "Emergency services are contacted via the national hotline."
+      },
+      {
+        icon: "🕹️",
+        title: "Dispatcher Contacts Medical Team",
+        desc: "Dispatcher coordinates with medical teams for possible injuries."
+      },
+      {
+        icon: "🚑",
+        title: "Medical Team Dispatched",
+        desc: "Medical team is sent to the scene for support and treatment."
+      }
+    ];
+    let currentFlowStep = 0;
+    function renderEmergencyFlow() {
+      const container = document.getElementById('emergency-flow-steps');
+      container.innerHTML = emergencyFlowSteps.map((step, idx) => `
+        <div class="emergency-step-card${idx === currentFlowStep ? ' active' : ''}">
+          <div class="emergency-step-icon">${step.icon}</div>
+          <div class="emergency-step-title">${step.title}</div>
+          <div class="emergency-step-desc">${idx === currentFlowStep ? step.desc : ''}</div>
+        </div>
+        ${idx < emergencyFlowSteps.length - 1 ? '<div style="font-size:2rem;align-self:center;">→</div>' : ''}
+      `).join('');
+    }
+    function nextFlowStep() {
+      if (currentFlowStep < emergencyFlowSteps.length - 1) currentFlowStep++;
+      renderEmergencyFlow();
+    }
+    function prevFlowStep() {
+      if (currentFlowStep > 0) currentFlowStep--;
+      renderEmergencyFlow();
+    }
+    function restartFlowStep() {
+      currentFlowStep = 0;
+      renderEmergencyFlow();
+    }
+    document.addEventListener('DOMContentLoaded', renderEmergencyFlow);
   </script>
 </body>
 </html>
