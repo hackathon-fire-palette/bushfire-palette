@@ -431,6 +431,20 @@
             <button onclick="restartFlowStep()">Restart</button>
           </div>
         </section>
+        <!-- Medical Dispatch Coordination Panel -->
+        <section class="medical-dispatch-panel card" aria-label="Medical Dispatch Coordination">
+          <h2>🚑 Medical Dispatch Coordination</h2>
+          <div class="med-dispatch-tabs" style="display:flex;gap:0.5em;margin-bottom:1em;">
+            <button onclick="showMedDispatchTab(0)" id="tab-dispatch" aria-label="Dispatch Workflow">Dispatch</button>
+            <button onclick="showMedDispatchTab(1)" id="tab-comm" aria-label="Communication Log">Comm Log</button>
+            <button onclick="showMedDispatchTab(2)" id="tab-triage" aria-label="Triage Tracker">Triage</button>
+            <button onclick="showMedDispatchTab(3)" id="tab-report" aria-label="Post-Incident Report">Report</button>
+            <button onclick="showMedDispatchTab(4)" id="tab-sync" aria-label="Offline Sync">Offline Sync</button>
+          </div>
+          <div id="med-dispatch-content" class="med-content" style="min-height:180px;">
+            <!-- Content will be injected here -->
+          </div>
+        </section>
       </div>
     </div>
   </main>
@@ -660,6 +674,155 @@
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('chatInput').focus();
     });
+
+    // --- Medical Dispatch Coordination Panel ---
+    let medDispatchTab = 0;
+    let medIncidentStatus = "Pending";
+    let medIncidentMessages = [
+      { sender: "Fire Command", text: "Medical request created.", ts: Date.now() }
+    ];
+    let medTriageList = [
+      { name: "Patient A", level: "Yellow", ts: Date.now() },
+      { name: "Patient B", level: "Green", ts: Date.now() }
+    ];
+    let medReport = {
+      injured: 2,
+      treated: 2,
+      green: 1,
+      yellow: 1,
+      red: 0,
+      transport: "Royal Perth Hospital",
+      dispatchTime: Date.now() - 1000*60*8,
+      arrivalTime: Date.now() - 1000*60*2,
+      treatmentStart: Date.now() - 1000*60*1
+    };
+    let offlineQueue = [
+      { type: "message", data: "Need 2 additional ambulances", ts: Date.now()-1000*60 }
+    ];
+    function statusBadge(status) {
+      const map = {
+        "Pending": 'bg-gray-200 text-gray-800',
+        "En Route": 'bg-blue-100 text-blue-800',
+        "On Scene": 'bg-orange-100 text-orange-800',
+        "Completed": 'bg-green-100 text-green-800'
+      };
+      return `<span class="${map[status]||'bg-gray-200 text-gray-800'} px-2 py-1 rounded text-sm" style="font-weight:bold;">${status}</span>`;
+    }
+    function triageBadge(level) {
+      const map = {
+        "Green": 'bg-green-100 text-green-800',
+        "Yellow": 'bg-yellow-100 text-yellow-800',
+        "Red": 'bg-red-100 text-red-800'
+      };
+      return `<span class="${map[level]||'bg-gray-200 text-gray-800'} px-2 py-1 rounded text-sm">${level}</span>`;
+    }
+    function showMedDispatchTab(idx) {
+      medDispatchTab = idx;
+      document.querySelectorAll('.med-dispatch-tabs button').forEach((btn,i)=>btn.classList.toggle('active',i===idx));
+      const c = document.getElementById('med-dispatch-content');
+      if (idx===0) {
+        // Dispatch Workflow
+        c.innerHTML = `
+          <div><strong>Status:</strong> ${statusBadge(medIncidentStatus)}</div>
+          <div style="margin:1em 0;">
+            <button onclick="setMedStatus('Pending')">🕓 Pending</button>
+            <button onclick="setMedStatus('En Route')">🚑 En Route</button>
+            <button onclick="setMedStatus('On Scene')">📍 On Scene</button>
+            <button onclick="setMedStatus('Completed')">✅ Completed</button>
+          </div>
+          <div><em>${{
+            "Pending":"Request created, not yet accepted.",
+            "En Route":"Medical team assigned and on the way.",
+            "On Scene":"Team arrived at incident location.",
+            "Completed":"Incident resolved, report submitted."
+          }[medIncidentStatus]}</em></div>
+        `;
+      } else if (idx===1) {
+        // Communication Log
+        c.innerHTML = `<div style="max-height:120px;overflow-y:auto;border:1px solid #eee;padding:0.5em;">
+          ${medIncidentMessages.map(m=>`
+            <div style="margin-bottom:0.5em;">
+              <span style="font-weight:bold;">${m.sender}:</span>
+              <span>${m.text}</span>
+              <span style="color:#888;font-size:0.9em;">(${timeAgo(m.ts)})</span>
+            </div>
+          `).join('')}
+        </div>
+        <input type="text" id="medMsgInput" placeholder="Send message..." style="width:70%;margin-top:0.5em;" aria-label="Send message" />
+        <button onclick="sendMedMessage()">Send</button>
+        `;
+      } else if (idx===2) {
+        // Triage Tracker
+        c.innerHTML = `
+          <div>
+            ${medTriageList.map(p=>`
+              <div style="margin-bottom:0.5em;">
+                <span style="font-weight:bold;">${p.name}</span>
+                ${triageBadge(p.level)}
+                <span style="color:#888;font-size:0.9em;">(${timeAgo(p.ts)})</span>
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top:0.5em;">
+            <input type="text" id="triageName" placeholder="Patient name" style="width:40%;" />
+            <select id="triageLevel">
+              <option value="Green">Green</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Red">Red</option>
+            </select>
+            <button onclick="addTriage()">Add</button>
+          </div>
+          <div style="margin-top:1em;">
+            <strong>Triage Summary:</strong>
+            🟢 ${medTriageList.filter(p=>p.level==="Green").length}
+            🟡 ${medTriageList.filter(p=>p.level==="Yellow").length}
+            🔴 ${medTriageList.filter(p=>p.level==="Red").length}
+          </div>
+        `;
+      } else if (idx===3) {
+        // Post-Incident Report
+        c.innerHTML = `
+          <div><strong>Number injured:</strong> ${medReport.injured}</div>
+          <div><strong>Treated:</strong> ${medReport.treated}</div>
+          <div><strong>Triage breakdown:</strong> 🟢 ${medReport.green}, 🟡 ${medReport.yellow}, 🔴 ${medReport.red}</div>
+          <div><strong>Transport:</strong> ${medReport.transport}</div>
+          <div><strong>Dispatch → Arrival:</strong> ${Math.round((medReport.arrivalTime-medReport.dispatchTime)/60000)} min</div>
+          <div><strong>Arrival → Treatment:</strong> ${Math.round((medReport.treatmentStart-medReport.arrivalTime)/60000)} min</div>
+          <div style="margin-top:1em;"><em>Report auto-saved for analytics.</em></div>
+        `;
+      } else if (idx===4) {
+        // Offline Sync
+        c.innerHTML = `
+          <div><strong>Offline Records Queued:</strong></div>
+          <ul>
+            ${offlineQueue.map(r=>`<li>${r.type}: ${r.data} <span style="color:#888;">(${timeAgo(r.ts)})</span></li>`).join('')}
+          </ul>
+          <div style="margin-top:1em;"><em>Records will auto-sync when connection resumes.</em></div>
+        `;
+      }
+    }
+    function setMedStatus(status) {
+      medIncidentStatus = status;
+      showMedDispatchTab(medDispatchTab);
+    }
+    function sendMedMessage() {
+      const inp = document.getElementById('medMsgInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      medIncidentMessages.push({ sender: "Medical Team", text: val, ts: Date.now() });
+      inp.value = '';
+      showMedDispatchTab(medDispatchTab);
+      // Optionally push to backend or offline queue
+    }
+    function addTriage() {
+      const name = document.getElementById('triageName').value.trim();
+      const level = document.getElementById('triageLevel').value;
+      if (!name) return;
+      medTriageList.push({ name, level, ts: Date.now() });
+      showMedDispatchTab(medDispatchTab);
+    }
+    // Show first tab by default
+    showMedDispatchTab(0);
   </script>
 </body>
 </html>
