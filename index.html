@@ -827,15 +827,16 @@
     showMedDispatchTab(0);
     // --- Medical Integration Demo Data ---
     const hospitals = [
-      { id: 1, name: "Royal Perth Hospital", status: "Available", capacity: 70, lat: -31.951, lng: 115.860 },
-      { id: 2, name: "Fiona Stanley Hospital", status: "Busy", capacity: 95, lat: -32.081, lng: 115.857 },
-      { id: 3, name: "Sir Charles Gairdner", status: "Full", capacity: 100, lat: -31.943, lng: 115.814 }
+      { id: 1, name: "Royal Perth Hospital", status: "Available", capacity: 70, erLoad: 30, lat: -31.951, lng: 115.860 },
+      { id: 2, name: "Fiona Stanley Hospital", status: "Busy", capacity: 95, erLoad: 80, lat: -32.081, lng: 115.857 },
+      { id: 3, name: "Sir Charles Gairdner", status: "Full", capacity: 100, erLoad: 100, lat: -31.943, lng: 115.814 }
     ];
     const ambulances = [
       { id: 1, name: "Ambulance 12", status: "Available", lat: -31.95, lng: 115.86 },
       { id: 2, name: "Ambulance 22", status: "Busy", lat: -32.08, lng: 115.85 },
       { id: 3, name: "Ambulance 33", status: "En Route", lat: -31.94, lng: 115.81 }
     ];
+
     function hospitalStatusColor(status) {
       if (status === "Available") return "background:#d4f8e8;color:#218838;";
       if (status === "Busy") return "background:#fff3cd;color:#856404;";
@@ -848,6 +849,55 @@
       if (status === "En Route") return "background:#cce5ff;color:#004085;";
       return "background:#e2e3e5;color:#383d41;";
     }
+
+    // --- Map Overlay for Medical Resources ---
+    function updateMedicalMapOverlay(selectedIncident = null) {
+      if (!window.L || !window.map) return;
+      // Remove previous markers
+      if (window.medMarkers) { window.medMarkers.forEach(m=>window.map.removeLayer(m)); }
+      window.medMarkers = [];
+      // Hospitals
+      hospitals.forEach(h=>{
+        const marker = L.marker([h.lat,h.lng],{
+          icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🏥</span>`,iconAnchor:[16,32]})
+        }).addTo(window.map).bindPopup(
+          `<b>${h.name}</b><br>Status: <span style="${hospitalStatusColor(h.status)}">${h.status}</span><br>Capacity: ${h.capacity}%<br>ER Load: ${h.erLoad}%`
+        );
+        window.medMarkers.push(marker);
+      });
+      // Ambulances
+      ambulances.forEach(a=>{
+        const marker = L.marker([a.lat,a.lng],{
+          icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🚑</span>`,iconAnchor:[16,32]})
+        }).addTo(window.map).bindPopup(
+          `<b>${a.name}</b><br>Status: <span style="${ambulanceStatusColor(a.status)}">${a.status}</span>`
+        );
+        window.medMarkers.push(marker);
+      });
+      // If incident selected, show nearest resources
+      if (selectedIncident && selectedIncident.location) {
+        // Find nearest hospital and ambulance
+        function dist(a, b) {
+          const dx = a.lat - b.lat, dy = a.lng - b.lng;
+          return Math.sqrt(dx*dx + dy*dy);
+        }
+        const incidentLoc = selectedIncident.location;
+        const nearestHospital = hospitals.reduce((min, h) => dist(h, incidentLoc) < dist(min, incidentLoc) ? h : min, hospitals[0]);
+        const nearestAmbulance = ambulances.reduce((min, a) => dist(a, incidentLoc) < dist(min, incidentLoc) ? a : min, ambulances[0]);
+        // Estimate travel time (simple, not real routing)
+        function estTime(a, b) {
+          return Math.round(dist(a, b) * 80); // ~80 min/degree for demo
+        }
+        L.popup()
+          .setLatLng([incidentLoc.lat, incidentLoc.lng])
+          .setContent(
+            `<b>Nearest Hospital:</b> ${nearestHospital.name} (${estTime(incidentLoc, nearestHospital)} min)<br>
+             <b>Nearest Ambulance:</b> ${nearestAmbulance.name} (${estTime(incidentLoc, nearestAmbulance)} min)`
+          )
+          .openOn(window.map);
+      }
+    }
+
     // --- Medical Integration Tabs ---
     function showMedIntegration(idx) {
       const content = document.getElementById('med-integration-content');
@@ -970,7 +1020,8 @@
                 <div style="padding:1em;border-radius:8px;box-shadow:0 1px 4px #0001;${hospitalStatusColor(h.status)}">
                   <strong>${h.name}</strong><br>
                   Status: ${h.status}<br>
-                  Capacity: ${h.capacity}%
+                  Capacity: ${h.capacity}%<br>
+                  ER Load: ${h.erLoad}%
                 </div>
               `).join('')}
             </div>
@@ -985,24 +1036,7 @@
             </div>
           </div>
         `;
-        // Optionally overlay on map
-        if (window.L && window.map) {
-          // Remove previous markers
-          if (window.medMarkers) { window.medMarkers.forEach(m=>window.map.removeLayer(m)); }
-          window.medMarkers = [];
-          hospitals.forEach(h=>{
-            const marker = L.marker([h.lat,h.lng],{
-              icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🏥</span>`,iconAnchor:[16,32]})
-            }).addTo(window.map).bindPopup(`<b>${h.name}</b><br>Status: ${h.status}<br>Capacity: ${h.capacity}%`);
-            window.medMarkers.push(marker);
-          });
-          ambulances.forEach(a=>{
-            const marker = L.marker([a.lat,a.lng],{
-              icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🚑</span>`,iconAnchor:[16,32]})
-            }).addTo(window.map).bindPopup(`<b>${a.name}</b><br>Status: ${a.status}`);
-            window.medMarkers.push(marker);
-          });
-        }
+        updateMedicalMapOverlay();
       } else if (idx === 8) {
         // Request Medical Support Form
         content.innerHTML = `
@@ -1024,7 +1058,7 @@
           e.preventDefault();
           document.getElementById('medReqStatus').textContent = 'Medical support requested! (Demo only)';
           setTimeout(()=>{document.getElementById('medReqStatus').textContent='';},4000);
-          // Optionally send to backend or Firestore
+          // Optionally send to backend/Firestore/Twilio/email
         };
       }
       // Highlight active tab
@@ -1033,6 +1067,24 @@
     }
     // Show first tab by default
     showMedIntegration(0);
+
+    // --- Incident selection integration ---
+    // Example: When a bushfire incident is selected, show nearest medical resources
+    window.selectIncidentForMedical = function(incident) {
+      showMedIntegration(7);
+      updateMedicalMapOverlay(incident);
+    };
+
+    // --- Debugging / Demo tools ---
+    window.dumpData = function() {
+      console.log('Hospitals:', hospitals);
+      console.log('Ambulances:', ambulances);
+      console.log('Medical Incident Status:', medIncidentStatus);
+      console.log('Medical Incident Messages:', medIncidentMessages);
+      console.log('Triage List:', medTriageList);
+      console.log('Post-Incident Report:', medReport);
+      console.log('Offline Queue:', offlineQueue);
+    };
   </script>
 </body>
 </html>
