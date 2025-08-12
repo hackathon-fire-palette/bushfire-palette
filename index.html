@@ -363,6 +363,9 @@
       border: 1px solid #ffd194;
     }
   </style>
+  <!-- Add Leaflet.markercluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 </head>
 <body>
   <!-- Accessibility & language toggles -->
@@ -463,7 +466,16 @@
       <div class="map-medical-stack">
         <section class="map-section">
           <h2>Current Bushfire Alerts</h2>
+          <div style="margin-bottom:0.7em;">
+            <label><input type="radio" name="mapFilter" value="fires" checked onchange="setMapFilter('fires')"> Fires Only</label>
+            <label style="margin-left:1em;"><input type="radio" name="mapFilter" value="medical" onchange="setMapFilter('medical')"> Medical Resources Only</label>
+            <label style="margin-left:1em;"><input type="radio" name="mapFilter" value="both" onchange="setMapFilter('both')"> Both</label>
+          </div>
           <div id="map" class="map-embed"></div>
+          <div style="margin-top:0.5em;">
+            <button onclick="toggleFireSpreadLayer()" id="fireSpreadBtn">Show Fire Spread Zones</button>
+            <button onclick="toggleRiskLayer()" id="riskLayerBtn" style="margin-left:0.5em;">Show Predicted Risk Areas</button>
+          </div>
         </section>
         <section class="medical-emergency-section card">
           <h2>Medical Emergency Integrations</h2>
@@ -523,6 +535,7 @@
     </form>
   </footer>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="script.js"></script>
   <script>
     // --- Accessibility & Language ---
@@ -1062,7 +1075,7 @@
             <img src="https://via.placeholder.com/400x200.png?text=Predictive+Alerts+Graph" alt="Predictive Alerts Graph" style="width:100%;height:auto;border-radius:8px;">
             <div style="position:absolute;top:10px;right:10px;background:white;padding:0.5em;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
               <strong>Legend:</strong><br>
-              <span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:0.5em;"></span> High Alert<br>
+              <span style="display:inline-block;width=10px;height=10px;background:#c0392b;margin-right:0.5em;"></span> High Alert<br>
               <span style="display:inline-block;width=10px;height=10px;background:#f39c12;margin-right:0.5em;"></span> Medium Alert<br>
               <span style="display:inline-block;width=10px;height=10px;background:#2ecc71;margin-right:0.5em;"></span> Low Alert
             </div>
@@ -1153,6 +1166,131 @@
       console.log('Post-Incident Report:', medReport);
       console.log('Offline Queue:', offlineQueue);
     };
+
+    // --- Map Interactivity: Cluster Markers, Filters, Dynamic Layers ---
+    let mapFilter = 'fires';
+    let fireMarkers = [];
+    let medicalMarkers = [];
+    let fireCluster, medicalCluster;
+    let fireSpreadLayer = null;
+    let riskLayer = null;
+
+    function setMapFilter(val) {
+      mapFilter = val;
+      updateMapLayers();
+    }
+
+    function updateMapLayers() {
+      if (!window.map) return;
+      // Remove all clusters/layers
+      if (fireCluster) window.map.removeLayer(fireCluster);
+      if (medicalCluster) window.map.removeLayer(medicalCluster);
+      // Fires only
+      if (mapFilter === 'fires') {
+        if (fireCluster) window.map.addLayer(fireCluster);
+      }
+      // Medical only
+      else if (mapFilter === 'medical') {
+        if (medicalCluster) window.map.addLayer(medicalCluster);
+      }
+      // Both
+      else {
+        if (fireCluster) window.map.addLayer(fireCluster);
+        if (medicalCluster) window.map.addLayer(medicalCluster);
+      }
+    }
+
+    // --- Fire Spread Zones Layer (demo polygon) ---
+    function toggleFireSpreadLayer() {
+      if (!window.map) return;
+      if (fireSpreadLayer) {
+        window.map.removeLayer(fireSpreadLayer);
+        fireSpreadLayer = null;
+        document.getElementById('fireSpreadBtn').textContent = 'Show Fire Spread Zones';
+      } else {
+        fireSpreadLayer = L.polygon([
+          [-31.96, 115.85], [-31.95, 115.87], [-31.94, 115.86], [-31.95, 115.84]
+        ], {color:'#ff6a00',fillColor:'#ffd194',fillOpacity:0.4}).addTo(window.map);
+        document.getElementById('fireSpreadBtn').textContent = 'Hide Fire Spread Zones';
+      }
+    }
+
+    // --- Predicted Risk Areas Layer (demo circle) ---
+    function toggleRiskLayer() {
+      if (!window.map) return;
+      if (riskLayer) {
+        window.map.removeLayer(riskLayer);
+        riskLayer = null;
+        document.getElementById('riskLayerBtn').textContent = 'Show Predicted Risk Areas';
+      } else {
+        riskLayer = L.circle([-31.95, 115.86], {radius: 4000, color:'#c0392b',fillColor:'#ffd194',fillOpacity:0.3}).addTo(window.map);
+        document.getElementById('riskLayerBtn').textContent = 'Hide Predicted Risk Areas';
+      }
+    }
+
+    // --- Cluster Marker Setup ---
+    function setupMapClusters(fireIncidents, medicalResources) {
+      if (!window.map || !window.L) return;
+      // Remove previous clusters
+      if (fireCluster) window.map.removeLayer(fireCluster);
+      if (medicalCluster) window.map.removeLayer(medicalCluster);
+      fireCluster = L.markerClusterGroup();
+      medicalCluster = L.markerClusterGroup();
+      fireMarkers = [];
+      medicalMarkers = [];
+      // Fires
+      fireIncidents.forEach(incident => {
+        if (!incident.location) return;
+        const marker = L.marker([incident.location.lat, incident.location.lng], {
+          icon: L.icon({
+            iconUrl: 'assets/icon-bushfire.svg',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+            popupAnchor: [0, -30],
+          })
+        }).bindPopup(`<b>${incident.title || 'Bushfire Incident'}</b><br>
+          <b>Status:</b> ${incident.status || 'Unknown'}<br>
+          <b>Location:</b> ${incident.locationDesc || ''}<br>
+          <b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`);
+        fireCluster.addLayer(marker);
+        fireMarkers.push(marker);
+      });
+      // Medical
+      medicalResources.forEach(resource => {
+        const marker = L.marker([resource.lat, resource.lng], {
+          icon: L.divIcon({
+            className: '',
+            html: `<span style="font-size:1.5em;">${resource.type === 'hospital' ? '🏥' : '🚑'}</span>`,
+            iconAnchor: [16, 32]
+          })
+        }).bindPopup(`<b>${resource.name}</b><br>Status: ${resource.status}`);
+        medicalCluster.addLayer(marker);
+        medicalMarkers.push(marker);
+      });
+      updateMapLayers();
+    }
+
+    // --- Demo: Hook into bushfire and medical data ---
+    function loadMapData() {
+      // Demo: Use hospitals/ambulances from previous code
+      const medicalResources = [
+        ...hospitals.map(h => ({...h, type:'hospital'})),
+        ...ambulances.map(a => ({...a, type:'ambulance'}))
+      ];
+      // Demo: Fetch fire incidents from alerts (if available)
+      fetch('/api/alerts')
+        .then(r => r.json())
+        .then(data => {
+          setupMapClusters(data, medicalResources);
+        });
+    }
+    // Initial map setup after Leaflet ready
+    function waitForMapReady() {
+      if (window.map && window.L) {
+        loadMapData();
+      } else setTimeout(waitForMapReady, 400);
+    }
+    document.addEventListener('DOMContentLoaded', waitForMapReady);
   </script>
 </body>
 </html>
