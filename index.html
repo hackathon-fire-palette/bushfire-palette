@@ -430,6 +430,78 @@
     .dropdown:focus-within .dropdown-menu {
       display: flex;
     }
+    /* New styles for alert cards */
+    .alerts-list .alert-card {
+      border-radius: 8px;
+      margin-bottom: 1em;
+      padding: 1em;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border-left: 8px solid #ccc;
+      background: #fff;
+      transition: background 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+    }
+    .alert-card[data-level="Emergency"] { border-color: #c0392b; background: #fff3f0; }
+    .alert-card[data-level="Watch and Act"] { border-color: #f39c12; background: #fffbe6; }
+    .alert-card[data-level="Advice"] { border-color: #1976d2; background: #e6f0ff; }
+    .alert-card .alert-title { font-weight: bold; font-size: 1.1em; }
+    .alert-card .alert-status { font-size: 0.95em; }
+    .alert-card .alert-updated { font-size: 0.9em; color: #888; }
+    .alerts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1em;
+    }
+    .alerts-header .last-updated {
+      font-size: 0.95em;
+      color: #888;
+    }
+    .alerts-header .refresh-btn {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      cursor: pointer;
+      font-size: 1em;
+      margin-left: 0.5em;
+    }
+    .alerts-list-section.collapsed .alerts-list {
+      display: none;
+    }
+    .alert-card .alert-content {
+      display: none;
+    }
+    .alert-card[data-expanded="true"] .alert-content {
+      display: block;
+    }
+    .alert-card .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .alert-card .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #555;
+      padding: 0;
+    }
+    .alerts-list-section .collapse-btn {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      cursor: pointer;
+      font-size: 1em;
+      margin-left: 0.5em;
+    }
   </style>
   <!-- Add Leaflet.markercluster CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
@@ -756,6 +828,42 @@
 
     // --- Alerts: Color-coded, last updated, auto-refresh ---
     let alertsLastFetched = Date.now();
+
+    const dummyAlerts = [
+      {
+        title: "Bushfire Emergency Warning",
+        level: "Emergency",
+        status: "Immediate Threat",
+        locationDesc: "PERTH METROPOLITAN, CITY OF SWAN",
+        updated: Date.now() - 1000 * 60 * 5, // 5 minutes ago
+        details: "There is a bushfire in your area. You are in danger and need to act immediately to survive. Leave now if the path is clear. If you cannot leave, you need to shelter."
+      },
+      {
+        title: "Bushfire Watch and Act",
+        level: "Watch and Act",
+        status: "High Alert",
+        locationDesc: "SOUTH WEST, SHIRE OF AUGUSTA-MARGARET RIVER",
+        updated: Date.now() - 1000 * 60 * 30, // 30 minutes ago
+        details: "A bushfire is burning and conditions are changing. There is a possible threat to lives and homes. Stay alert and monitor your surroundings. Prepare to leave or defend."
+      },
+      {
+        title: "Storm Advice",
+        level: "Advice",
+        status: "Monitor Conditions",
+        locationDesc: "LOWER SOUTH WEST, CITY OF ALBANY",
+        updated: Date.now() - 1000 * 60 * 60 * 2, // 2 hours ago
+        details: "A severe thunderstorm is possible. Stay informed and be aware of the situation. Take precautions such as securing loose items and preparing an emergency kit."
+      },
+      {
+        title: "Bushfire Advice",
+        level: "Advice",
+        status: "Threat Reduced",
+        locationDesc: "ROEBUCK, SHIRE OF BROOME",
+        updated: Date.now() - 1000 * 60 * 60 * 6, // 6 hours ago
+        details: "The immediate threat has passed, but remain vigilant. There may still be smoke and hazards in the area. Stay up to date with official information."
+      }
+    ];
+
     function renderAlerts(alerts) {
       const container = document.getElementById('alertsList');
       container.innerHTML = '';
@@ -773,6 +881,7 @@
             <div class="alert-status"><strong>Status:</strong> ${alert.status || 'Unknown'} (${alert.level || 'Advice'})</div>
             <div><strong>Location:</strong> ${alert.locationDesc || ''}</div>
             <div class="alert-updated">Updated ${timeAgo(alert.updated || Date.now())}</div>
+            <p>${alert.details || 'No additional details provided.'}</p>
           </div>
         `;
         container.appendChild(card);
@@ -795,27 +904,57 @@
       if (diff < 3600) return `${Math.floor(diff/60)} mins ago`;
       return `${Math.floor(diff/3600)} hrs ago`;
     }
-    async function fetchAlerts() {
-      // Replace with your API endpoint
-      const res = await fetch('/api/alerts');
-      const data = await res.json();
+    
+    // Function to update summary cards (dummy data)
+    function updateSummaryCards(alerts) {
+      // Dummy data for summary cards
+      const activeFires = alerts.filter(a => a.title.includes('Bushfire') && a.level !== 'Advice').length;
+      const highRiskAreas = alerts.filter(a => a.level === 'Emergency' || a.level === 'Watch and Act').length;
+      const medicalResources = 5; // Example dummy value
+      const weatherRisk = Math.round(Math.random() * 100); // Example dummy value
+
+      // Update elements (if they exist, as they are commented out in HTML)
+      const summaryActiveFires = document.getElementById('summaryActiveFires');
+      if (summaryActiveFires) summaryActiveFires.textContent = activeFires;
+      const summaryHighRisk = document.getElementById('summaryHighRisk');
+      if (summaryHighRisk) summaryHighRisk.textContent = highRiskAreas;
+      const summaryMedResources = document.getElementById('summaryMedResources');
+      if (summaryMedResources) summaryMedResources.textContent = medicalResources;
+      const summaryWeatherRisk = document.getElementById('summaryWeatherRisk');
+      if (summaryWeatherRisk) summaryWeatherRisk.textContent = weatherRisk;
+    }
+
+    // Dummy function for rendering trend graphs
+    function renderTrendGraph(elementId, data, color) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.innerHTML = `[Graph for ${elementId} with data: ${data.join(', ')}]`;
+        // In a real scenario, you'd use a charting library like Chart.js or D3.js here
+      }
+    }
+
+    // Dummy function for alerts feed
+    function renderAlertsFeed(alerts) {
+      const feedContainer = document.getElementById('alertsFeed');
+      if (feedContainer) {
+        feedContainer.innerHTML = `<p>Latest feed updates: ${alerts.length} new alerts.</p>`;
+      }
+    }
+
+    function refreshAlerts() {
       alertsLastFetched = Date.now();
-      renderAlerts(data);
-      // Demo: high risk areas, med resources, weather risk, trends
-      const highRiskAreas = data.filter(a => a.level === 'Emergency' || a.level === 'Watch and Act');
-      const medResources = 3; // demo, count ambulances available
-      const weatherRisk = Math.round(Math.random()*100); // demo
-      updateSummaryCards(data, highRiskAreas, medResources, weatherRisk);
+      renderAlerts(dummyAlerts);
+      updateSummaryCards(dummyAlerts);
       renderTrendGraph('trendFireIncidents', [2,3,5,4,6,7,8], '#c0392b');
       renderTrendGraph('trendResourceUse', [1,2,2,3,4,3,2], '#1976d2');
       renderTrendGraph('trendMedicalCalls', [0,1,2,1,3,2,1], '#27ae60');
-      renderAlertsFeed(data);
+      renderAlertsFeed(dummyAlerts);
     }
-    function refreshAlerts() {
-      fetchAlerts();
-    }
-    setInterval(fetchAlerts, 60000); // auto-refresh every minute
-    document.addEventListener('DOMContentLoaded', fetchAlerts);
+    
+    // Initial render on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshAlerts(); // Call refreshAlerts to render dummy data initially
+    });
 
     // Collapsible alerts section
     document.getElementById('toggle-alerts').onclick = function() {
