@@ -244,6 +244,10 @@
     .alert-card .alert-title { font-weight: bold; font-size: 1.1em; }
     .alert-card .alert-status { font-size: 0.95em; }
     .alert-card .alert-updated { font-size: 0.9em; color: #888; }
+    .alert-card .alert-icon {
+      margin-right: 0.5em;
+      vertical-align: middle;
+    }
     .alerts-header {
       display: flex;
       align-items: center;
@@ -864,6 +868,26 @@
       }
     ];
 
+    function getAlertIcon(alert) {
+      if (alert.title.includes('Bushfire')) {
+        return 'assets/icon-bushfire.svg';
+      }
+      if (alert.title.includes('Storm')) {
+        return 'assets/icon-storm.svg';
+      }
+      // Fallback to level-based icons if no specific hazard icon
+      if (alert.level === 'Emergency') {
+        return 'assets/emergency-icon.svg';
+      }
+      if (alert.level === 'Watch and Act') {
+        return 'assets/watch-icon.svg';
+      }
+      if (alert.level === 'Advice') {
+        return 'assets/advice-icon.svg';
+      }
+      return 'assets/advice-icon.svg'; // Default fallback
+    }
+
     function renderAlerts(alerts) {
       const container = document.getElementById('alertsList');
       container.innerHTML = '';
@@ -874,6 +898,7 @@
         card.setAttribute('data-expanded', 'false'); // Default to collapsed
         card.innerHTML = `
           <div class="alert-header">
+            <img src="${getAlertIcon(alert)}" alt="${alert.level} icon" class="alert-icon" width="24" height="24">
             <div class="alert-title">${alert.title || 'Bushfire Alert'}</div>
             <button class="toggle-btn" aria-expanded="false">▼</button>
           </div>
