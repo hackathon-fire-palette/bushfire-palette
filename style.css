@@ -467,7 +467,7 @@ body::before {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.2; /* Adjust this value for desired transparency */
+  opacity: 0.8; /* Adjust this value for desired transparency */
   z-index: -1; /* Place behind content */
 }
 header {
