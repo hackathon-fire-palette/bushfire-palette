@@ -564,6 +564,22 @@
       <div class="map-medical-stack">
         <section class="map-section">
           <h2>Current Bushfire Alerts</h2>
+          <!-- Add Find Me/Search bar -->
+          <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:0.7em;">
+            <input
+              id="locationSearchInput"
+              type="text"
+              placeholder="Search location or address…"
+              style="flex:1;padding:0.5em 1em;border-radius:6px;border:1px solid #ccc;font-size:1em;"
+              aria-label="Search location"
+            />
+            <button
+              id="findMeBtn"
+              style="padding:0.5em 1em;border-radius:6px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:1em;"
+              aria-label="Find my location"
+              title="Find my location"
+            >📍 Find Me</button>
+          </div>
           <div style="margin-bottom:0.7em;">
             <label><input type="radio" name="mapFilter" value="fires" checked onchange="setMapFilter('fires')"> Fires Only</label>
             <label style="margin-left:1em;"><input type="radio" name="mapFilter" value="medical" onchange="setMapFilter('medical')"> Medical Resources Only</label>
@@ -1409,8 +1425,61 @@
       }
     });
   </script>
-</body>
-</html>
+  <!-- Find Me and Search functionality -->
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+  var findMeBtn = document.getElementById('findMeBtn');
+  var searchInput = document.getElementById('locationSearchInput');
+  if (findMeBtn && window.L && window.map) {
+    findMeBtn.onclick = function() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+      findMeBtn.disabled = true;
+      findMeBtn.textContent = 'Locating...';
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        window.map.setView([lat, lng], 13);
+        L.marker([lat, lng], {
+          icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">📍</span>',iconAnchor:[12,32]})
+        }).addTo(window.map).bindPopup('You are here').openPopup();
+        findMeBtn.disabled = false;
+        findMeBtn.textContent = '📍 Find Me';
+      }, function() {
+        alert('Unable to retrieve your location.');
+        findMeBtn.disabled = false;
+        findMeBtn.textContent = '📍 Find Me';
+      });
+    };
+  }
+  if (searchInput && window.L && window.map) {
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var query = searchInput.value.trim();
+        if (!query) return;
+        // Use Nominatim OpenStreetMap API for geocoding
+        fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query))
+          .then(r => r.json())
+          .then(results => {
+            if (results && results.length > 0) {
+              const lat = parseFloat(results[0].lat);
+              const lon = parseFloat(results[0].lon);
+              window.map.setView([lat, lon], 13);
+              L.marker([lat, lon], {
+                icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">🔎</span>',iconAnchor:[12,32]})
+              }).addTo(window.map).bindPopup(results[0].display_name).openPopup();
+            } else {
+              alert('Location not found.');
+            }
+          })
+          .catch(() => alert('Location search failed.'));
+      }
+    });
+  }
+});
   </script>
 </body>
 </html>
