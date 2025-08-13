@@ -267,6 +267,26 @@
     .alerts-list-section.collapsed .alerts-list {
       display: none;
     }
+    .alert-card .alert-content {
+      display: none;
+    }
+    .alert-card[data-expanded="true"] .alert-content {
+      display: block;
+    }
+    .alert-card .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .alert-card .toggle-btn {
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #555;
+      padding: 0;
+    }
     .alerts-list-section .collapse-btn {
       background: #1976d2;
       color: #fff;
@@ -688,13 +708,28 @@
         const card = document.createElement('div');
         card.className = 'alert-card';
         card.setAttribute('data-level', alert.level || 'Advice');
+        card.setAttribute('data-expanded', 'false'); // Default to collapsed
         card.innerHTML = `
-          <div class="alert-title">${alert.title || 'Bushfire Alert'}</div>
-          <div class="alert-status"><strong>Status:</strong> ${alert.status || 'Unknown'} (${alert.level || 'Advice'})</div>
-          <div><strong>Location:</strong> ${alert.locationDesc || ''}</div>
-          <div class="alert-updated">Updated ${timeAgo(alert.updated || Date.now())}</div>
+          <div class="alert-header">
+            <div class="alert-title">${alert.title || 'Bushfire Alert'}</div>
+            <button class="toggle-btn" aria-expanded="false">▼</button>
+          </div>
+          <div class="alert-content">
+            <div class="alert-status"><strong>Status:</strong> ${alert.status || 'Unknown'} (${alert.level || 'Advice'})</div>
+            <div><strong>Location:</strong> ${alert.locationDesc || ''}</div>
+            <div class="alert-updated">Updated ${timeAgo(alert.updated || Date.now())}</div>
+          </div>
         `;
         container.appendChild(card);
+
+        // Add event listener to toggle button
+        const toggleBtn = card.querySelector('.toggle-btn');
+        toggleBtn.addEventListener('click', () => {
+          const isExpanded = card.getAttribute('data-expanded') === 'true';
+          card.setAttribute('data-expanded', !isExpanded);
+          toggleBtn.setAttribute('aria-expanded', !isExpanded);
+          toggleBtn.textContent = isExpanded ? '▼' : '▲';
+        });
       });
       document.getElementById('alertsLastUpdated').textContent = 'Updated ' + timeAgo(alertsLastFetched);
     }
