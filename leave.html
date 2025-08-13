@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leave Application | Australian Bushfire Alert System</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="leave.css" />
+</head>
+<body>
+  <header>
+    <div class="logo-title">
+      <a href="/">
+        <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
+      </a>
+      <h1>Australian Bushfire Alert System</h1>
+    </div>
+    <nav>
+        <a href="index.html">Dashboard</a>
+        <a href="roster.html">Roster</a>
+        <a href="vehicle.html">Vehicle Tracking</a>
+        <a href="employee.html">Employee Management</a>
+        <a href="leave.html" class="active">Leave Application</a>
+        <a href="compliance.html">Compliance</a>
+        <a href="hazard.html">Hazard Information</a>
+        <a href="about.html">About</a>
+    </nav>
+  </header>
+  <main>
+    <div id="content">
+      <section class="leave-section card">
+        <h2>Leave Applications</h2>
+        <button id="submit-leave-btn">Submit New Leave</button>
+        <div id="leave-list">
+          </div>
+      </section>
+    </div>
+
+    <div id="leave-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>Submit Leave Application</h3>
+            <form id="leave-form">
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" required>
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date" required>
+                <label for="leave-type">Leave Type:</label>
+                <select id="leave-type" required>
+                    <option value="annual">Annual Leave</option>
+                    <option value="sick">Sick Leave</option>
+                    <option value="family">Family Care Leave</option>
+                    <option value="unpaid">Unpaid Leave</option>
+                </select>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+  </main>
+  <footer>
+    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
+  </footer>
+  <script type="module" src="leave.js"></script>
+</body>
+</html>
