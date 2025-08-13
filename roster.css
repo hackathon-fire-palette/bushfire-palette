@@ -1,0 +1,93 @@
+#roster-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+#roster-controls h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #c0392b;
+}
+
+#roster-controls button {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#roster-controls button:hover {
+  background: #e74c3c;
+}
+
+.calendar-header, .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.calendar-header div {
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem 0;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+.calendar-day {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 120px;
+  background-color: #fff;
+  transition: box-shadow 0.2s;
+}
+
+.calendar-day:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.calendar-day ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.calendar-day li {
+  background-color: #e6f0ff;
+  color: #1976d2;
+  padding: 5px;
+  border-radius: 3px;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+}
+
+#employee-availability {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+#employee-availability h4 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  color: #c0392b;
+}
+
+#availability-list {
+  list-style: none;
+  padding: 0;
+}
+
+#availability-list li {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
