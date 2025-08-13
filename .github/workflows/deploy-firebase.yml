@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main  # Deploy only when pushing to main branch
+      - main  # Deploy only on pushes to main
 
 jobs:
   deploy:
@@ -16,13 +16,28 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20' # Or your preferred version
 
+      # Install dependencies if you have a build step
       - name: Install dependencies
         run: npm install
 
+      - name: Build project
+        run: npm run build
+        # Skip if static site is already in "public/"
+
+      # Set up service account authentication
+      - name: Set up Firebase service account
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > $HOME/firebase_key.json
+        shell: bash
+
+      # Install Firebase CLI
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy to Firebase Hosting
-        run: firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}"
+      # Deploy to Firebase Hosting
+      - name: Deploy to Firebase
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.home }}/firebase_key.json
+        run: firebase deploy --only hosting
