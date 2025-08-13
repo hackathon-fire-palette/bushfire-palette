@@ -746,3 +746,67 @@ footer a {
     max-height: 200px;
   }
 }
+
+/* Employee Management Styles */
+#employeeDashboard .card {
+    margin-bottom: 1.5rem;
+}
+
+#add-employee-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+#add-employee-form input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#add-employee-form button {
+    padding: 0.8rem 1.5rem;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#add-employee-form button:hover {
+    background-color: #e74c3c;
+}
+
+#employee-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#employee-table th, #employee-table td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: left;
+}
+
+#employee-table th {
+    background-color: #f2f2f2;
+}
+
+#employee-table button {
+    margin-right: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+}
+
+#employee-table .edit-btn {
+    background-color: #f39c12;
+}
+
+#employee-table .delete-btn {
+    background-color: #c0392b;
+}
