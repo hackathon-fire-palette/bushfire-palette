@@ -13,20 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20' # Or your preferred version
-
-      # Install dependencies if you have a build step
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build project
-        run: npm run build
-        # Skip if static site is already in "public/"
-
-      # Set up service account authentication
+      # Set up Firebase service account
       - name: Set up Firebase service account
         run: |
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > $HOME/firebase_key.json
