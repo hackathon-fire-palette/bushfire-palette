@@ -384,7 +384,7 @@
       <a href="/">
         <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
       </a>
-      <h1>Australian Bushfire Alert System</h1>
+      <h1 style="color: red;">Australian Bushfire Alert System</h1>
     </div>
     <nav>
   <a href="index.html" class="active">Dashboard</a>
@@ -439,6 +439,8 @@
         <div id="alertsFeed" class="alerts-feed" style="margin-bottom:1em;"></div>
         <div id="alertsList" class="alerts-list" role="list"></div>
       </section>
+      <!-- Remove or comment out the weather-chat-section from here -->
+      <!--
       <section class="weather-chat-section" aria-label="AI Weather Predictor">
         <h2>🤖 AI Weather Predictor</h2>
         <div class="quick-questions">
@@ -463,6 +465,98 @@
           </div>
         </div>
       </section>
+      -->
+      <!-- Add a button to open the chatbox -->
+      <button
+        id="openWeatherChatBtn"
+        style="
+          position: fixed;
+          right: 24px;
+          bottom: 24px;
+          z-index: 999;
+          padding: 16px 28px;
+          border-radius: 24px;
+          background: #0078d7;
+          color: #fff;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        "
+      >
+        Open Weather Chat
+      </button>
+      <!-- Chat popup window (initially hidden) -->
+      <div
+        id="weatherChatPopup"
+        style="
+          display: none;
+          position: fixed;
+          right: 24px;
+          bottom: 80px;
+          width: 350px;
+          max-width: 95vw;
+          height: 500px;
+          background: #fff;
+          border-radius: 12px;
+          box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+          z-index: 1000;
+          flex-direction: column;
+          overflow: visible;
+        "
+      >
+        <!-- Chatbox bar/header with close button -->
+        <div style="width:100%;background:#0078d7;color:#fff;padding:10px 16px 10px 0;display:flex;align-items:center;justify-content:space-between;position:relative;box-sizing:border-box;">
+          <span style="font-weight:bold;padding-left:16px;">AI Weather Predictor</span>
+          <button
+            id="closeWeatherChatBtn"
+            style="
+              background: transparent;
+              border: none;
+              font-size: 28px;
+              color: #fff;
+              cursor: pointer;
+              margin-right: 8px;
+              line-height: 1;
+              width: 36px;
+              height: 36px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: static;
+              z-index: 2;
+            "
+            aria-label="Close Chat"
+          >&#10005;</button>
+        </div>
+        <!-- Chat content -->
+        <div style="padding: 0 0 0 0; height: calc(100% - 48px); overflow: hidden;">
+          <section class="weather-chat-section" aria-label="AI Weather Predictor" style="height: 100%; box-shadow: none; border: none;">
+            <h2 style="display:none;">🤖 AI Weather Predictor</h2>
+            <div class="quick-questions">
+              <h4>Quick Questions:</h4>
+              <button class="quick-question-btn" onclick="askWeatherQuestion('What will the weather be like in Perth next week?')">Perth Next Week</button>
+              <button class="quick-question-btn" onclick="askWeatherQuestion('What are the fire risk conditions for next week?')">Fire Risk Analysis</button>
+              <button class="quick-question-btn" onclick="askWeatherQuestion('Should we pre-position resources based on predicted conditions?')">Resource Planning</button>
+            </div>
+            <div class="fire-risk-graph" id="fireRiskGraph" aria-label="Fire risk trend graph">
+              [Fire risk trend graph will appear here]
+            </div>
+            <div class="chat-container">
+              <div id="chatMessages" class="chat-messages" aria-live="polite">
+                <div class="message ai">
+                  Hello! I'm your AI Weather Predictor. Ask me about weather conditions, fire risk assessments, or operational planning for Perth and surrounding areas. How can I help you today?
+                </div>
+              </div>
+              <div class="chat-input-container">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500" aria-label="Weather chat input" />
+                <button id="voiceBtn" class="voice-btn" aria-label="Voice input" tabindex="0">🎤</button>
+                <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">Send</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
       <div class="map-medical-stack">
         <section class="map-section">
           <h2>Current Bushfire Alerts</h2>
@@ -1291,6 +1385,28 @@
       } else setTimeout(waitForMapReady, 400);
     }
     document.addEventListener('DOMContentLoaded', waitForMapReady);
+
+    // Add popup chatbox logic
+    document.addEventListener('DOMContentLoaded', function() {
+      var openBtn = document.getElementById('openWeatherChatBtn');
+      var popup = document.getElementById('weatherChatPopup');
+      var closeBtn = document.getElementById('closeWeatherChatBtn');
+      if (openBtn && popup && closeBtn) {
+        openBtn.onclick = function() {
+          popup.style.display = 'flex';
+          setTimeout(function() {
+            var input = document.getElementById('chatInput');
+            if (input) input.focus();
+          }, 100);
+        };
+        closeBtn.onclick = function() {
+          popup.style.display = 'none';
+        };
+      }
+    });
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
