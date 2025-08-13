@@ -507,6 +507,9 @@ nav a.active, nav a:hover {
   overflow: hidden;
   z-index: 0;
 }
+.map-embed .leaflet-attribution-flag {
+  display: none !important;
+}
 
 /* Ensure Leaflet controls and popups display above map */
 .leaflet-container {
