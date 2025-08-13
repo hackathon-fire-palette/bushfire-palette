@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main  # Deploy only on pushes to main
+      - main
 
 jobs:
   deploy:
@@ -13,18 +13,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up Firebase service account
       - name: Set up Firebase service account
         run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > $HOME/firebase_key.json
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/firebase_key.json
         shell: bash
 
-      # Install Firebase CLI
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      # Deploy to Firebase Hosting
-      - name: Deploy to Firebase
+      - name: Deploy to Firebase Hosting
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.home }}/firebase_key.json
         run: firebase deploy --only hosting
