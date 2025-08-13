@@ -6,31 +6,446 @@
   <title>Australian Bushfire Alert System</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#c0392b" />
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    /* --- Existing styles --- */
+    .dashboard-flex {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .alerts-list-section {
+      flex: 1 1 300px;
+      min-width: 300px;
+      max-width: 450px;
+      margin-bottom: 2rem;
+    }
+    .map-medical-stack {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 300px;
+      min-width: 300px;
+      max-width: 450px;
+      gap: 1rem;
+    }
+    .map-section, .medical-emergency-section {
+      margin-bottom: 0;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border: 1px solid #e0e0e0;
+      padding: 1.5rem;
+    }
+    .medical-emergency-section h2 {
+      margin-top: 0;
+      font-size: 1.3rem;
+      color: #c0392b;
+      letter-spacing: 0.5px;
+    }
+    .med-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .med-tabs button {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.5em 1em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .med-tabs button:hover, .med-tabs button.active {
+      background: #e74c3c;
+    }
+    .med-content {
+      border: 1px solid #e0e0e0;
+      background: #f9f9f9;
+      border-radius: 7px;
+      padding: 1em;
+      min-height: 120px;
+      font-size: 1em;
+      color: #333;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    header, footer {
+      padding: 1rem 2rem;
+    }
+    .logo-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    nav {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    nav a {
+      text-decoration: none;
+      color: #333;
+      padding: 0.5em 1em;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+    nav a.active, nav a:hover {
+      background: #c0392b;
+      color: #fff;
+    }
+    /* Emergency Communication Flow styles */
+    .emergency-flow-section {
+      margin-top: 1rem;
+    }
+    .emergency-flow-steps {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      align-items: flex-end;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .emergency-step-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1rem 0.7rem;
+      min-width: 110px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      border: 2px solid transparent;
+      transition: border 0.2s, background 0.2s;
+      opacity: 0.6;
+    }
+    .emergency-step-card.active {
+      border: 2px solid #c0392b;
+      background: #fff3f0;
+      opacity: 1;
+    }
+    .emergency-step-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .emergency-step-title {
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+      font-size: 1.05rem;
+      text-align: center;
+    }
+    .emergency-step-desc {
+      font-size: 0.95rem;
+      text-align: center;
+      color: #555;
+    }
+    .emergency-flow-nav {
+      display: flex;
+      gap: 0.7rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    .emergency-flow-nav button {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.4em 1em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .emergency-flow-nav button:hover {
+      background: #e74c3c;
+    }
+    /* Responsive styles */
+    @media (max-width: 900px) {
+      .dashboard-flex {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .alerts-list-section,
+      .map-medical-stack {
+        max-width: 100%;
+        min-width: 0;
+      }
+    }
+    @media (max-width: 600px) {
+      header, footer {
+        padding: 1rem;
+      }
+      .logo-title h1 {
+        font-size: 1.1rem;
+      }
+      .card {
+        padding: 1rem;
+      }
+      .med-tabs button {
+        font-size: 0.95em;
+        padding: 0.4em 0.7em;
+      }
+      .med-content {
+        font-size: 0.95em;
+        padding: 0.7em;
+      }
+      nav {
+        gap: 0.5rem;
+      }
+      .emergency-flow-steps {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .emergency-step-card {
+        min-width: 0;
+        width: 100%;
+      }
+    }
+    /* --- New styles --- */
+    body.dark-mode {
+      background: #181818;
+      color: #f2f2f2;
+    }
+    .card, .alerts-list, .med-content, .emergency-step-card {
+      background: var(--card-bg, #fff);
+      color: var(--card-color, #333);
+    }
+    body.dark-mode .card, body.dark-mode .alerts-list, body.dark-mode .med-content, body.dark-mode .emergency-step-card {
+      --card-bg: #232323;
+      --card-color: #f2f2f2;
+      border-color: #444;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .high-contrast {
+      background: #000 !important;
+      color: #fff !important;
+    }
+    .alerts-list .alert-card {
+      border-radius: 8px;
+      margin-bottom: 1em;
+      padding: 1em;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      border-left: 8px solid #ccc;
+      background: #fff;
+      transition: background 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+    }
+    .alert-card[data-level="Emergency"] { border-color: #c0392b; background: #fff3f0; }
+    .alert-card[data-level="Watch and Act"] { border-color: #f39c12; background: #fffbe6; }
+    .alert-card[data-level="Advice"] { border-color: #1976d2; background: #e6f0ff; }
+    .alert-card .alert-title { font-weight: bold; font-size: 1.1em; }
+    .alert-card .alert-status { font-size: 0.95em; }
+    .alert-card .alert-updated { font-size: 0.9em; color: #888; }
+    .alerts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1em;
+    }
+    .alerts-header .last-updated {
+      font-size: 0.95em;
+      color: #888;
+    }
+    .alerts-header .refresh-btn {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      cursor: pointer;
+      font-size: 1em;
+      margin-left: 0.5em;
+    }
+    .alerts-list-section.collapsed .alerts-list {
+      display: none;
+    }
+    .alerts-list-section .collapse-btn {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      cursor: pointer;
+      font-size: 1em;
+      margin-left: 0.5em;
+    }
+    /* Accessibility toggles */
+    .accessibility-bar {
+      display: flex;
+      gap: 1em;
+      align-items: center;
+      margin-bottom: 1em;
+      justify-content: flex-end;
+    }
+    .accessibility-bar button, .accessibility-bar select {
+      background: #eee;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 0.3em 0.8em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .accessibility-bar button.active, .accessibility-bar button:focus {
+      background: #c0392b;
+      color: #fff;
+      outline: 2px solid #c0392b;
+    }
+    /* Voice input button */
+    .voice-btn {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 2.2em;
+      height: 2.2em;
+      font-size: 1.3em;
+      cursor: pointer;
+      margin-left: 0.5em;
+      vertical-align: middle;
+      transition: background 0.2s;
+    }
+    .voice-btn.listening {
+      background: #f39c12;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 #f39c12; }
+      70% { box-shadow: 0 0 0 10px #f39c1200; }
+      100% { box-shadow: 0 0 0 0 #f39c12; }
+    }
+    /* Fire risk graph placeholder */
+    .fire-risk-graph {
+      width: 100%;
+      height: 140px;
+      background: linear-gradient(90deg,#e6f0ff,#fffbe6,#fff3f0);
+      border-radius: 8px;
+      margin: 1em 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 1.1em;
+      border: 1px solid #e0e0e0;
+    }
+    .dashboard-summary-cards {
+      background: linear-gradient(90deg, #ff6a00 0%, #ffd194 100%);
+      padding: 1em 0.5em;
+      border-radius: 12px;
+      margin-bottom: 1.5em;
+    }
+    .dashboard-summary-cards .card {
+      background: rgba(255,255,255,0.85);
+      color: #333;
+      box-shadow: 0 2px 8px rgba(255,106,0,0.08);
+      border: 1px solid #ffd194;
+    }
+    .dashboard-trend-graphs {
+      background: linear-gradient(90deg, #ffd194 0%, #ff6a00 100%);
+      padding: 1em 0.5em;
+      border-radius: 12px;
+      margin-bottom: 1.5em;
+    }
+    .dashboard-trend-graphs .card {
+      background: rgba(255,255,255,0.92);
+      color: #333;
+      box-shadow: 0 2px 8px rgba(255,106,0,0.06);
+      border: 1px solid #ffd194;
+    }
+  </style>
+  <!-- Add Leaflet.markercluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 </head>
 <body>
+  <!-- Accessibility & language toggles -->
+  <div class="accessibility-bar" aria-label="Accessibility and language options">
+    <button id="darkModeToggle" aria-label="Toggle dark mode" tabindex="0">🌙 Dark Mode</button>
+    <button id="contrastToggle" aria-label="Toggle high contrast" tabindex="0">⬛ High Contrast</button>
+    <select id="languageSelect" aria-label="Select language" tabindex="0">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+      <option value="ar">العربية</option>
+      <option value="noongar">Noongar</option>
+    </select>
+  </div>
   <header>
     <div class="logo-title">
       <a href="/">
         <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
       </a>
-      <h1>Australian Bushfire Alert System</h1>
+      <h1 style="color: red;">Australian Bushfire Alert System</h1>
     </div>
     <nav>
   <a href="index.html" class="active">Dashboard</a>
   <a href="roster.html">Roster</a>
   <a href="vehicle.html">Vehicle Tracking</a>
+  <a href="compliance.html">Compliance</a>
+  <a href="hazard.html">Hazard Information</a>
   <a href="about.html">About</a>
     </nav>
   </header>
   <main>
+    <!-- Summary Cards Row
+    <div class="dashboard-summary-cards" style="display:flex;gap:1em;flex-wrap:wrap;margin-bottom:1.5em;">
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>🔥 Active Bushfires</h3>
+        <div id="summaryActiveFires" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>⚠️ High-Risk Areas</h3>
+        <div id="summaryHighRisk" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>🚑 Medical Resources</h3>
+        <div id="summaryMedResources" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+      <div class="card" style="min-width:180px;flex:1;">
+        <h3>🌡️ Weather Risk Index</h3>
+        <div id="summaryWeatherRisk" style="font-size:2em;font-weight:bold;">0</div>
+      </div>
+    </div>
+    --->
+    <!-- Trend Graphs Row
+    <div class="dashboard-trend-graphs" style="display:flex;gap:1em;flex-wrap:wrap;margin-bottom:1.5em;">
+      <div class="card" style="flex:1;min-width:280px;">
+        <h3>📈 Fire Incidents Trend</h3>
+        <div id="trendFireIncidents" style="height:120px;">[Graph]</div>
+      </div>
+      <div class="card" style="flex:1;min-width:280px;">
+        <h3>🛠️ Resource Use Trend</h3>
+        <div id="trendResourceUse" style="height:120px;">[Graph]</div>
+      </div>
+      <div class="card" style="flex:1;min-width:280px;">
+        <h3>🚑 Medical Calls Trend</h3>
+        <div id="trendMedicalCalls" style="height:120px;">[Graph]</div>
+      </div>
+    </div>
+    -->
     <div class="dashboard-flex">
-      <section class="alerts-list-section">
+      <section class="alerts-list-section" aria-label="Active Alerts">
         <div class="alerts-header">
           <h2>Active Alerts</h2>
+          <span class="last-updated" id="alertsLastUpdated">Updated just now</span>
+          <button class="refresh-btn" onclick="refreshAlerts()" aria-label="Refresh alerts">🔄</button>
+          <button class="collapse-btn" id="toggle-alerts" aria-label="Collapse alerts">▼</button>
         </div>
-        <div id="alertsList" class="alerts-list"></div>
+        <div id="alertsFeed" class="alerts-feed" style="margin-bottom:1em;"></div>
+        <div id="alertsList" class="alerts-list" role="list"></div>
       </section>
-      <section class="weather-chat-section">
+      <!-- Remove or comment out the weather-chat-section from here -->
+      <!--
+      <section class="weather-chat-section" aria-label="AI Weather Predictor">
         <h2>🤖 AI Weather Predictor</h2>
         <div class="quick-questions">
           <h4>Quick Questions:</h4>
@@ -38,22 +453,143 @@
           <button class="quick-question-btn" onclick="askWeatherQuestion('What are the fire risk conditions for next week?')">Fire Risk Analysis</button>
           <button class="quick-question-btn" onclick="askWeatherQuestion('Should we pre-position resources based on predicted conditions?')">Resource Planning</button>
         </div>
+        <div class="fire-risk-graph" id="fireRiskGraph" aria-label="Fire risk trend graph">
+          [Fire risk trend graph will appear here]
+        </div>
         <div class="chat-container">
-          <div id="chatMessages" class="chat-messages">
+          <div id="chatMessages" class="chat-messages" aria-live="polite">
             <div class="message ai">
               Hello! I'm your AI Weather Predictor. Ask me about weather conditions, fire risk assessments, or operational planning for Perth and surrounding areas. How can I help you today?
             </div>
           </div>
           <div class="chat-input-container">
-            <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500">
-            <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()">Send</button>
+            <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500" aria-label="Weather chat input" />
+            <button id="voiceBtn" class="voice-btn" aria-label="Voice input" tabindex="0">🎤</button>
+            <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">Send</button>
           </div>
         </div>
       </section>
+      -->
+      <!-- Add a button to open the chatbox -->
+      <button
+        id="openWeatherChatBtn"
+        style="
+          position: fixed;
+          right: 24px;
+          bottom: 24px;
+          z-index: 999;
+          padding: 16px 28px;
+          border-radius: 24px;
+          background: #0078d7;
+          color: #fff;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        "
+      >
+        Open Weather Chat
+      </button>
+      <!-- Chat popup window (initially hidden) -->
+      <div
+        id="weatherChatPopup"
+        style="
+          display: none;
+          position: fixed;
+          right: 24px;
+          bottom: 80px;
+          width: 350px;
+          max-width: 95vw;
+          height: 500px;
+          background: #fff;
+          border-radius: 12px;
+          box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+          z-index: 1000;
+          flex-direction: column;
+          overflow: visible;
+        "
+      >
+        <!-- Chatbox bar/header with close button -->
+        <div style="width:100%;background:#0078d7;color:#fff;padding:10px 16px 10px 0;display:flex;align-items:center;justify-content:space-between;position:relative;box-sizing:border-box;">
+          <span style="font-weight:bold;padding-left:16px;">AI Weather Predictor</span>
+          <button
+            id="closeWeatherChatBtn"
+            style="
+              background: transparent;
+              border: none;
+              font-size: 28px;
+              color: #fff;
+              cursor: pointer;
+              margin-right: 8px;
+              line-height: 1;
+              width: 36px;
+              height: 36px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: static;
+              z-index: 2;
+            "
+            aria-label="Close Chat"
+          >&#10005;</button>
+        </div>
+        <!-- Chat content -->
+        <div style="padding: 0 0 0 0; height: calc(100% - 48px); overflow: hidden;">
+          <section class="weather-chat-section" aria-label="AI Weather Predictor" style="height: 100%; box-shadow: none; border: none;">
+            <h2 style="display:none;">🤖 AI Weather Predictor</h2>
+            <div class="quick-questions">
+              <h4>Quick Questions:</h4>
+              <button class="quick-question-btn" onclick="askWeatherQuestion('What will the weather be like in Perth next week?')">Perth Next Week</button>
+              <button class="quick-question-btn" onclick="askWeatherQuestion('What are the fire risk conditions for next week?')">Fire Risk Analysis</button>
+              <button class="quick-question-btn" onclick="askWeatherQuestion('Should we pre-position resources based on predicted conditions?')">Resource Planning</button>
+            </div>
+            <div class="fire-risk-graph" id="fireRiskGraph" aria-label="Fire risk trend graph">
+              [Fire risk trend graph will appear here]
+            </div>
+            <div class="chat-container">
+              <div id="chatMessages" class="chat-messages" aria-live="polite">
+                <div class="message ai">
+                  Hello! I'm your AI Weather Predictor. Ask me about weather conditions, fire risk assessments, or operational planning for Perth and surrounding areas. How can I help you today?
+                </div>
+              </div>
+              <div class="chat-input-container">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500" aria-label="Weather chat input" />
+                <button id="voiceBtn" class="voice-btn" aria-label="Voice input" tabindex="0">🎤</button>
+                <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">Send</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
       <div class="map-medical-stack">
         <section class="map-section">
           <h2>Current Bushfire Alerts</h2>
+          <!-- Add Find Me/Search bar -->
+          <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:0.7em;">
+            <input
+              id="locationSearchInput"
+              type="text"
+              placeholder="Search location or address…"
+              style="flex:1;padding:0.5em 1em;border-radius:6px;border:1px solid #ccc;font-size:1em;"
+              aria-label="Search location"
+            />
+            <button
+              id="findMeBtn"
+              style="padding:0.5em 1em;border-radius:6px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:1em;"
+              aria-label="Find my location"
+              title="Find my location"
+            >📍 Find Me</button>
+          </div>
+          <div style="margin-bottom:0.7em;">
+            <label><input type="radio" name="mapFilter" value="fires" checked onchange="setMapFilter('fires')"> Fires Only</label>
+            <label style="margin-left:1em;"><input type="radio" name="mapFilter" value="medical" onchange="setMapFilter('medical')"> Medical Resources Only</label>
+            <label style="margin-left:1em;"><input type="radio" name="mapFilter" value="both" onchange="setMapFilter('both')"> Both</label>
+          </div>
           <div id="map" class="map-embed"></div>
+          <div style="margin-top:0.5em;">
+            <button onclick="toggleFireSpreadLayer()" id="fireSpreadBtn">Show Fire Spread Zones</button>
+            <button onclick="toggleRiskLayer()" id="riskLayerBtn" style="margin-left:0.5em;">Show Predicted Risk Areas</button>
+          </div>
         </section>
         <section class="medical-emergency-section card">
           <h2>Medical Emergency Integrations</h2>
@@ -65,213 +601,139 @@
             <button onclick="showMedIntegration(4)">Equipment Tracking</button>
             <button onclick="showMedIntegration(5)">Predictive Alerts</button>
             <button onclick="showMedIntegration(6)">Incident Analytics</button>
+            <button onclick="showMedIntegration(7)">Live Status</button>
+            <button onclick="showMedIntegration(8)">Request Medical Support</button>
           </div>
           <div id="med-integration-content" class="med-content">
             <!-- Details will appear here -->
+          </div>
+        </section>
+        <!-- Emergency Communication Flow Section -->
+        <section class="emergency-flow-section card">
+          <h2>Emergency Communication Flow</h2>
+          <div id="emergency-flow-steps" class="emergency-flow-steps"></div>
+          <div class="emergency-flow-nav">
+            <button onclick="prevFlowStep()">Previous</button>
+            <button onclick="nextFlowStep()">Next</button>
+            <button onclick="restartFlowStep()">Restart</button>
+          </div>
+        </section>
+        <!-- Medical Dispatch Coordination Panel -->
+        <section class="medical-dispatch-panel card" aria-label="Medical Dispatch Coordination">
+          <h2>🚑 Medical Dispatch Coordination</h2>
+          <div class="med-dispatch-tabs" style="display:flex;gap:0.5em;margin-bottom:1em;">
+            <button onclick="showMedDispatchTab(0)" id="tab-dispatch" aria-label="Dispatch Workflow">Dispatch</button>
+            <button onclick="showMedDispatchTab(1)" id="tab-comm" aria-label="Communication Log">Comm Log</button>
+            <button onclick="showMedDispatchTab(2)" id="tab-triage" aria-label="Triage Tracker">Triage</button>
+            <button onclick="showMedDispatchTab(3)" id="tab-report" aria-label="Post-Incident Report">Report</button>
+            <button onclick="showMedDispatchTab(4)" id="tab-sync" aria-label="Offline Sync">Offline Sync</button>
+          </div>
+          <div id="med-dispatch-content" class="med-content" style="min-height:180px;">
+            <!-- Content will be injected here -->
           </div>
         </section>
       </div>
     </div>
   </main>
   <footer>
-    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
+    <div style="font-weight:bold;color:#c0392b;">
+      ⚠️ Not for Operational Use. For demonstration only.<br>
+      Data sources: <a href="https://www.bom.gov.au/" target="_blank">Bureau of Meteorology</a>, <a href="https://afdrs.com.au/" target="_blank">AFDRS</a>, <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank">NASA FIRMS</a>
+    </div>
+    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>.</p>
+    <form id="feedbackForm" style="margin-top:1em;" aria-label="Feedback form">
+      <label for="feedbackInput">Feedback for improvement:</label>
+      <input type="text" id="feedbackInput" maxlength="200" style="width:60%;" aria-label="Feedback input" />
+      <button type="submit" aria-label="Submit feedback">Submit</button>
+      <span id="feedbackStatus" style="margin-left:1em;color:#1976d2;"></span>
+    </form>
   </footer>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="script.js"></script>
   <script>
-    // --- Bushfire Incidents Overlay (via serverless function) ---
-    // Fetches and displays live bushfire incidents from your serverless API endpoint
-    function addBushfireIoIncidents() {
-      if (!window.L || !window.map) return;
-      fetch('/api/bushfireio')
-        .then(r => r.json())
-        .then(data => {
-          if (!Array.isArray(data)) return;
-          data.forEach(incident => {
-            if (!incident.location || !incident.location.lat || !incident.location.lng) return;
-            const lat = incident.location.lat;
-            const lng = incident.location.lng;
-            const icon = L.icon({
-              iconUrl: 'assets/icon-bushfire.svg',
-              iconSize: [36, 36],
-              iconAnchor: [18, 36],
-              popupAnchor: [0, -30],
-            });
-            const popup = `<b>${incident.title || 'Bushfire Incident'}</b><br>` +
-              `<b>Status:</b> ${incident.status || 'Unknown'}<br>` +
-              `<b>Location:</b> ${incident.locationDesc || ''}<br>` +
-              `<b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`;
-            L.marker([lat, lng], { icon }).addTo(window.map).bindPopup(popup);
-          });
-        })
-        .catch(err => {
-          console.error('Failed to fetch bushfire incidents:', err);
-        });
-    }
-    // Wait for map to be ready
-    (function waitForBushfireIo() {
-      if (window.L && window.map) { addBushfireIoIncidents(); }
-      else setTimeout(waitForBushfireIo, 400);
-    })();
-  </script>
-  <script>
-    // --- Weather & Wind Overlay for Major Australian Cities ---
-    // Uses Open-Meteo free API (no key required)
-    const majorCities = [
-      { name: 'Sydney', coords: [-33.8688, 151.2093] },
-      { name: 'Melbourne', coords: [-37.8136, 144.9631] },
-      { name: 'Brisbane', coords: [-27.4698, 153.0251] },
-      { name: 'Perth', coords: [-31.9505, 115.8605] },
-      { name: 'Adelaide', coords: [-34.9285, 138.6007] },
-      { name: 'Canberra', coords: [-35.2809, 149.1300] },
-      { name: 'Hobart', coords: [-42.8821, 147.3272] },
-      { name: 'Darwin', coords: [-12.4634, 130.8456] },
-      { name: 'Alice Springs', coords: [-23.6980, 133.8807] },
-      { name: 'Cairns', coords: [-16.9203, 145.7703] }
-    ];
-    // Weather code to icon mapping (Open-Meteo standard)
-    const weatherIcons = {
-      0: '☀️', // Clear
-      1: '🌤️', 2: '⛅', 3: '☁️', // Mainly clear, partly cloudy, overcast
-      45: '🌫️', 48: '🌫️', // Fog
-      51: '🌦️', 53: '🌦️', 55: '🌦️', // Drizzle
-      61: '🌧️', 63: '🌧️', 65: '🌧️', // Rain
-      71: '🌨️', 73: '🌨️', 75: '🌨️', // Snow
-      80: '🌦️', 81: '🌦️', 82: '🌦️', // Showers
-      95: '⛈️', 96: '⛈️', 99: '⛈️' // Thunderstorm
+    // --- Accessibility & Language ---
+    document.getElementById('darkModeToggle').onclick = function() {
+      document.body.classList.toggle('dark-mode');
+      this.classList.toggle('active');
     };
-    function getWeatherIcon(code) {
-      return weatherIcons[code] || '❓';
-    }
-    function getWindArrow(deg) {
-      // Unicode arrow, rotate with CSS
-      return `<span style="display:inline-block;transform:rotate(${deg}deg);font-size:1.5em;">➤</span>`;
-    }
-    function addWeatherToMap() {
-      if (!window.L || !window.map) return;
-      majorCities.forEach(city => {
-        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.coords[0]}&longitude=${city.coords[1]}&current_weather=true`)
-          .then(r => r.json())
-          .then(data => {
-            if (!data.current_weather) return;
-            const icon = getWeatherIcon(data.current_weather.weathercode);
-            const temp = Math.round(data.current_weather.temperature);
-            const windSpeed = Math.round(data.current_weather.windspeed);
-            const windDir = Math.round(data.current_weather.winddirection);
-            // Draw multiple dashed lines to simulate wind
-            const numLines = 5;
-            const spread = 18; // degrees, total spread
-            const length = 0.18 + 0.01 * windSpeed; // degrees, proportional to speed
-            const lat1 = city.coords[0];
-            const lon1 = city.coords[1];
-            for (let i = 0; i < numLines; i++) {
-              const offset = (i - (numLines - 1) / 2) * (spread / (numLines - 1));
-              const dir = windDir + offset;
-              const rad = (dir - 90) * Math.PI / 180;
-              const lat2 = lat1 + length * Math.sin(rad);
-              const lon2 = lon1 + length * Math.cos(rad);
-              L.polyline([[lat1, lon1], [lat2, lon2]], {
-                color: '#1976d2',
-                weight: 2,
-                dashArray: '6, 8',
-                opacity: 0.7
-              }).addTo(window.map);
-            }
-            // Weather/City marker
-            const windArrow = getWindArrow(windDir);
-            const marker = L.marker(city.coords, {
-              icon: L.divIcon({
-                className: 'weather-city-icon',
-                html: `<div style=\"font-size:2em;line-height:1;\">${icon}</div><div style=\"font-size:1em;font-weight:bold;\">${temp}&deg;C</div><div style=\"font-size:1em;\">${windArrow} <span style='font-size:0.95em;'>${windSpeed} km/h</span></div><div style=\"font-size:0.9em;\">${city.name}</div>`,
-                iconAnchor: [20, 48]
-              })
-            }).addTo(window.map);
-            marker.bindPopup(`<b>${city.name}</b><br>Weather: ${icon} ${temp}&deg;C<br>Wind: ${windArrow} ${windSpeed} km/h (${windDir}&deg;)`);
-          });
-      });
-    }
-    // Wait for map to be ready
-    function addBushfireIoIncidents() {
-      if (!window.L || !window.map) return;
-      fetch('/api/bushfireio')
-        .then(r => r.json())
-        .then(data => {
-          if (!Array.isArray(data)) return;
-          data.forEach(incident => {
-            if (!incident.location || !incident.location.lat || !incident.location.lng) return;
-            const lat = incident.location.lat;
-            const lng = incident.location.lng;
-            const icon = L.icon({
-              iconUrl: 'assets/icon-bushfire.svg',
-              iconSize: [36, 36],
-              iconAnchor: [18, 36],
-              popupAnchor: [0, -30],
-            });
-            const popup = `<b>${incident.title || 'Bushfire Incident'}</b><br>` +
-              `<b>Status:</b> ${incident.status || 'Unknown'}<br>` +
-              `<b>Location:</b> ${incident.locationDesc || ''}<br>` +
-              `<b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`;
-            L.marker([lat, lng], { icon }).addTo(window.map).bindPopup(popup);
-          });
-        })
-        .catch(err => {
-          console.error('Failed to fetch bushfire incidents:', err);
-        });
-    }
-    (function waitForMap() {
-      if (window.L && window.map) {
-        addWeatherToMap();
-        addBushfireIoIncidents();
-      } else setTimeout(waitForMap, 400);
-    })();
-  </script>
-  <script>
-    // Collapsible alerts section
-    const alertsSection = document.querySelector('.alerts-list-section');
-    const toggleBtn = document.getElementById('toggle-alerts');
-    if (alertsSection && toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        alertsSection.classList.toggle('collapsed');
-      });
-    }
-  </script>
-  <script>
-    // Medical Integration Dashboard Interactivity
-    const medIntegrationDetails = [
-      `<strong>Real-Time Medical Dispatch Coordination:</strong><br>
-      Integrate with ambulance dispatch systems for coordinated fire and medical response.<br>
-      Enable dual-response alerts for incidents involving injury, smoke inhalation, or burns.`,
-      `<strong>Health Risk Mapping:</strong><br>
-      Overlay vulnerable population data (aged care, hospitals, disability services) on bushfire prediction maps.<br>
-      Prioritize evacuation and medical support based on risk zones.`,
-      `<strong>First Responder Medical Profiles:</strong><br>
-      Include paramedic certifications and first aid skills in the roster system.<br>
-      Auto-assign medically trained firefighters to incidents with injury potential.`,
-      `<strong>Integration with Emergency Health Services:</strong><br>
-      Connect with state health databases to access nearest trauma centers, air ambulance availability, and real-time hospital capacity.`,
-      `<strong>Medical Equipment Tracking:</strong><br>
-      Link inventory systems to track medical kits, oxygen tanks, and burn treatment supplies on each fire vehicle.<br>
-      Alert roster managers when equipment is low or expired.`,
-      `<strong>Predictive Health Alerts:</strong><br>
-      Use bushfire simulation data to forecast smoke exposure zones.<br>
-      Trigger alerts for respiratory risk and deploy medical teams proactively.`,
-      `<strong>Incident Reporting and Analytics:</strong><br>
-      Add modules for medical incident logging during bushfire events.<br>
-      Analyze trends in injuries, response times, and treatment outcomes.`
-    ];
-    function showMedIntegration(idx) {
-      document.getElementById('med-integration-content').innerHTML = medIntegrationDetails[idx];
-      // Highlight active tab
-      const btns = document.querySelectorAll('.med-tabs button');
-      btns.forEach((btn, i) => btn.classList.toggle('active', i === idx));
-    }
-    // Show first tab by default
-    showMedIntegration(0);
-  </script>
-  <script>
-    // AI Weather Chat Functionality
-    let isLoading = false;
+    document.getElementById('contrastToggle').onclick = function() {
+      document.body.classList.toggle('high-contrast');
+      this.classList.toggle('active');
+    };
+    document.getElementById('languageSelect').onchange = function() {
+      // Simple demo: just change html lang attribute
+      document.documentElement.lang = this.value;
+    };
 
+    // --- Feedback Form ---
+    document.getElementById('feedbackForm').onsubmit = function(e) {
+      e.preventDefault();
+      const val = document.getElementById('feedbackInput').value.trim();
+      if (!val) return;
+      document.getElementById('feedbackStatus').textContent = 'Thank you for your feedback!';
+      setTimeout(() => { document.getElementById('feedbackStatus').textContent = ''; }, 4000);
+      document.getElementById('feedbackInput').value = '';
+      // Optionally send to backend
+      // fetch('/api/feedback', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feedback:val})});
+    };
+
+    // --- Alerts: Color-coded, last updated, auto-refresh ---
+    let alertsLastFetched = Date.now();
+    function renderAlerts(alerts) {
+      const container = document.getElementById('alertsList');
+      container.innerHTML = '';
+      alerts.forEach(alert => {
+        const card = document.createElement('div');
+        card.className = 'alert-card';
+        card.setAttribute('data-level', alert.level || 'Advice');
+        card.innerHTML = `
+          <div class="alert-title">${alert.title || 'Bushfire Alert'}</div>
+          <div class="alert-status"><strong>Status:</strong> ${alert.status || 'Unknown'} (${alert.level || 'Advice'})</div>
+          <div><strong>Location:</strong> ${alert.locationDesc || ''}</div>
+          <div class="alert-updated">Updated ${timeAgo(alert.updated || Date.now())}</div>
+        `;
+        container.appendChild(card);
+      });
+      document.getElementById('alertsLastUpdated').textContent = 'Updated ' + timeAgo(alertsLastFetched);
+    }
+    function timeAgo(ts) {
+      const now = Date.now();
+      const diff = Math.floor((now - ts) / 1000);
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff/60)} mins ago`;
+      return `${Math.floor(diff/3600)} hrs ago`;
+    }
+    async function fetchAlerts() {
+      // Replace with your API endpoint
+      const res = await fetch('/api/alerts');
+      const data = await res.json();
+      alertsLastFetched = Date.now();
+      renderAlerts(data);
+      // Demo: high risk areas, med resources, weather risk, trends
+      const highRiskAreas = data.filter(a => a.level === 'Emergency' || a.level === 'Watch and Act');
+      const medResources = 3; // demo, count ambulances available
+      const weatherRisk = Math.round(Math.random()*100); // demo
+      updateSummaryCards(data, highRiskAreas, medResources, weatherRisk);
+      renderTrendGraph('trendFireIncidents', [2,3,5,4,6,7,8], '#c0392b');
+      renderTrendGraph('trendResourceUse', [1,2,2,3,4,3,2], '#1976d2');
+      renderTrendGraph('trendMedicalCalls', [0,1,2,1,3,2,1], '#27ae60');
+      renderAlertsFeed(data);
+    }
+    function refreshAlerts() {
+      fetchAlerts();
+    }
+    setInterval(fetchAlerts, 60000); // auto-refresh every minute
+    document.addEventListener('DOMContentLoaded', fetchAlerts);
+
+    // Collapsible alerts section
+    document.getElementById('toggle-alerts').onclick = function() {
+      document.querySelector('.alerts-list-section').classList.toggle('collapsed');
+    };
+
+    // --- AI Weather Chat: Voice input, confidence, graph placeholder ---
+    let isLoading = false;
+    let recognition;
     function addMessage(content, isUser = false) {
       const messagesContainer = document.getElementById('chatMessages');
       const messageDiv = document.createElement('div');
@@ -341,7 +803,8 @@
         
         const data = await response.json();
         removeLoadingMessage();
-        addMessage(data.response);
+        addMessage(data.response + (data.confidence ? `<br><strong>Confidence:</strong> ${data.confidence}` : ''));
+        if (data.riskGraphData) renderFireRiskGraph(data.riskGraphData);
         
       } catch (error) {
         console.error('Chat error:', error);
@@ -359,6 +822,44 @@
       sendMessage();
     }
 
+    // Voice input integration
+    document.getElementById('voiceBtn').onclick = function() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Voice input not supported in this browser.');
+        return;
+      }
+      if (recognition && recognition.recognizing) {
+        recognition.stop();
+        this.classList.remove('listening');
+        return;
+      }
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = document.documentElement.lang || 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.onstart = () => this.classList.add('listening');
+      recognition.onend = () => this.classList.remove('listening');
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('chatInput').value = transcript;
+        sendMessage();
+      };
+      recognition.start();
+    };
+    // Fire risk graph rendering (placeholder)
+    function renderFireRiskGraph(data) {
+      // For demo, just show JSON or simple SVG
+      const graph = document.getElementById('fireRiskGraph');
+      if (!data || !Array.isArray(data)) {
+        graph.textContent = '[Fire risk trend graph will appear here]';
+        return;
+      }
+      // Simple SVG line graph
+      const max = Math.max(...data.map(d=>d.value));
+      const min = Math.min(...data.map(d=>d.value));
+      const points = data.map((d,i) => `${i*30+10},${120-((d.value-min)/(max-min+0.01))*100}`).join(' ');
+      graph.innerHTML = `<svg width="100%" height="120"><polyline points="${points}" fill="none" stroke="#c0392b" stroke-width="3"/><text x="10" y="20" font-size="14" fill="#333">Risk</text></svg>`;
+    }
     // Enter key support
     document.getElementById('chatInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter' && !isLoading) {
@@ -370,6 +871,615 @@
     document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('chatInput').focus();
     });
+
+    // --- Medical Dispatch Coordination Panel ---
+    let medDispatchTab = 0;
+    let medIncidentStatus = "Pending";
+    let medIncidentMessages = [
+      { sender: "Fire Command", text: "Medical request created.", ts: Date.now() }
+    ];
+    let medTriageList = [
+      { name: "Patient A", level: "Yellow", ts: Date.now() },
+      { name: "Patient B", level: "Green", ts: Date.now() }
+    ];
+    let medReport = {
+      injured: 2,
+      treated: 2,
+      green: 1,
+      yellow: 1,
+      red: 0,
+      transport: "Royal Perth Hospital",
+      dispatchTime: Date.now() - 1000*60*8,
+      arrivalTime: Date.now() - 1000*60*2,
+      treatmentStart: Date.now() - 1000*60*1
+    };
+    let offlineQueue = [
+      { type: "message", data: "Need 2 additional ambulances", ts: Date.now()-1000*60 }
+    ];
+    function statusBadge(status) {
+      const map = {
+        "Pending": 'bg-gray-200 text-gray-800',
+        "En Route": 'bg-blue-100 text-blue-800',
+        "On Scene": 'bg-orange-100 text-orange-800',
+        "Completed": 'bg-green-100 text-green-800'
+      };
+      return `<span class="${map[status]||'bg-gray-200 text-gray-800'} px-2 py-1 rounded text-sm" style="font-weight:bold;">${status}</span>`;
+    }
+    function triageBadge(level) {
+      const map = {
+        "Green": 'bg-green-100 text-green-800',
+        "Yellow": 'bg-yellow-100 text-yellow-800',
+        "Red": 'bg-red-100 text-red-800'
+      };
+      return `<span class="${map[level]||'bg-gray-200 text-gray-800'} px-2 py-1 rounded text-sm">${level}</span>`;
+    }
+    function showMedDispatchTab(idx) {
+      medDispatchTab = idx;
+      document.querySelectorAll('.med-dispatch-tabs button').forEach((btn,i)=>btn.classList.toggle('active',i===idx));
+      const c = document.getElementById('med-dispatch-content');
+      if (idx===0) {
+        // Dispatch Workflow
+        c.innerHTML = `
+          <div><strong>Status:</strong> ${statusBadge(medIncidentStatus)}</div>
+          <div style="margin:1em 0;">
+            <button onclick="setMedStatus('Pending')">🕓 Pending</button>
+            <button onclick="setMedStatus('En Route')">🚑 En Route</button>
+            <button onclick="setMedStatus('On Scene')">📍 On Scene</button>
+            <button onclick="setMedStatus('Completed')">✅ Completed</button>
+          </div>
+          <div><em>${{
+            "Pending":"Request created, not yet accepted.",
+            "En Route":"Medical team assigned and on the way.",
+            "On Scene":"Team arrived at incident location.",
+            "Completed":"Incident resolved, report submitted."
+          }[medIncidentStatus]}</em></div>
+        `;
+      } else if (idx===1) {
+        // Communication Log
+        c.innerHTML = `<div style="max-height:120px;overflow-y:auto;border:1px solid #eee;padding:0.5em;">
+          ${medIncidentMessages.map(m=>`
+            <div style="margin-bottom:0.5em;">
+              <span style="font-weight:bold;">${m.sender}:</span>
+              <span>${m.text}</span>
+              <span style="color:#888;font-size:0.9em;">(${timeAgo(m.ts)})</span>
+            </div>
+          `).join('')}
+        </div>
+        <input type="text" id="medMsgInput" placeholder="Send message..." style="width:70%;margin-top:0.5em;" aria-label="Send message" />
+        <button onclick="sendMedMessage()">Send</button>
+        `;
+      } else if (idx===2) {
+        // Triage Tracker
+        c.innerHTML = `
+          <div>
+            ${medTriageList.map(p=>`
+              <div style="margin-bottom:0.5em;">
+                <span style="font-weight:bold;">${p.name}</span>
+                ${triageBadge(p.level)}
+                <span style="color:#888;font-size:0.9em;">(${timeAgo(p.ts)})</span>
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top:0.5em;">
+            <input type="text" id="triageName" placeholder="Patient name" style="width:40%;" />
+            <select id="triageLevel">
+              <option value="Green">Green</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Red">Red</option>
+            </select>
+            <button onclick="addTriage()">Add</button>
+          </div>
+          <div style="margin-top:1em;">
+            <strong>Triage Summary:</strong>
+            🟢 ${medTriageList.filter(p=>p.level==="Green").length}
+            🟡 ${medTriageList.filter(p=>p.level==="Yellow").length}
+            🔴 ${medTriageList.filter(p=>p.level==="Red").length}
+          </div>
+        `;
+      } else if (idx===3) {
+        // Post-Incident Report
+        c.innerHTML = `
+          <div><strong>Number injured:</strong> ${medReport.injured}</div>
+          <div><strong>Treated:</strong> ${medReport.treated}</div>
+          <div><strong>Triage breakdown:</strong> 🟢 ${medReport.green}, 🟡 ${medReport.yellow}, 🔴 ${medReport.red}</div>
+          <div><strong>Transport:</strong> ${medReport.transport}</div>
+          <div><strong>Dispatch → Arrival:</strong> ${Math.round((medReport.arrivalTime-medReport.dispatchTime)/60000)} min</div>
+          <div><strong>Arrival → Treatment:</strong> ${Math.round((medReport.treatmentStart-medReport.arrivalTime)/60000)} min</div>
+          <div style="margin-top:1em;"><em>Report auto-saved for analytics.</em></div>
+        `;
+      } else if (idx===4) {
+        // Offline Sync
+        c.innerHTML = `
+          <div><strong>Offline Records Queued:</strong></div>
+          <ul>
+            ${offlineQueue.map(r=>`<li>${r.type}: ${r.data} <span style="color:#888;">(${timeAgo(r.ts)})</span></li>`).join('')}
+          </ul>
+          <div style="margin-top:1em;"><em>Records will auto-sync when connection resumes.</em></div>
+        `;
+      }
+    }
+    function setMedStatus(status) {
+      medIncidentStatus = status;
+      showMedDispatchTab(medDispatchTab);
+    }
+    function sendMedMessage() {
+      const inp = document.getElementById('medMsgInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      medIncidentMessages.push({ sender: "Medical Team", text: val, ts: Date.now() });
+      inp.value = '';
+      showMedDispatchTab(medDispatchTab);
+      // Optionally push to backend or offline queue
+    }
+    function addTriage() {
+      const name = document.getElementById('triageName').value.trim();
+      const level = document.getElementById('triageLevel').value;
+      if (!name) return;
+      medTriageList.push({ name, level, ts: Date.now() });
+      showMedDispatchTab(medDispatchTab);
+    }
+    // Show first tab by default
+    showMedDispatchTab(0);
+    // --- Medical Integration Demo Data ---
+    const hospitals = [
+      { id: 1, name: "Royal Perth Hospital", status: "Available", capacity: 70, erLoad: 30, lat: -31.951, lng: 115.860 },
+      { id: 2, name: "Fiona Stanley Hospital", status: "Busy", capacity: 95, erLoad: 80, lat: -32.081, lng: 115.857 },
+      { id: 3, name: "Sir Charles Gairdner", status: "Full", capacity: 100, erLoad: 100, lat: -31.943, lng: 115.814 }
+    ];
+    const ambulances = [
+      { id: 1, name: "Ambulance 12", status: "Available", lat: -31.95, lng: 115.86 },
+      { id: 2, name: "Ambulance 22", status: "Busy", lat: -32.08, lng: 115.85 },
+      { id: 3, name: "Ambulance 33", status: "En Route", lat: -31.94, lng: 115.81 }
+    ];
+
+    function hospitalStatusColor(status) {
+      if (status === "Available") return "background:#d4f8e8;color:#218838;";
+      if (status === "Busy") return "background:#fff3cd;color:#856404;";
+      if (status === "Full") return "background:#f8d7da;color:#721c24;";
+      return "background:#e2e3e5;color:#383d41;";
+    }
+    function ambulanceStatusColor(status) {
+      if (status === "Available") return "background:#d4f8e8;color:#218838;";
+      if (status === "Busy") return "background:#fff3cd;color:#856404;";
+      if (status === "En Route") return "background:#cce5ff;color:#004085;";
+      return "background:#e2e3e5;color:#383d41;";
+    }
+
+    // --- Map Overlay for Medical Resources ---
+    function updateMedicalMapOverlay(selectedIncident = null) {
+      if (!window.L || !window.map) return;
+      // Remove previous markers
+      if (window.medMarkers) { window.medMarkers.forEach(m=>window.map.removeLayer(m)); }
+      window.medMarkers = [];
+      // Hospitals
+      hospitals.forEach(h=>{
+        const marker = L.marker([h.lat,h.lng],{
+          icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🏥</span>`,iconAnchor:[16,32]})
+        }).addTo(window.map).bindPopup(
+          `<b>${h.name}</b><br>Status: <span style="${hospitalStatusColor(h.status)}">${h.status}</span><br>Capacity: ${h.capacity}%<br>ER Load: ${h.erLoad}%`
+        );
+        window.medMarkers.push(marker);
+      });
+      // Ambulances
+      ambulances.forEach(a=>{
+        const marker = L.marker([a.lat,a.lng],{
+          icon:L.divIcon({className:'',html:`<span style="font-size:1.5em;">🚑</span>`,iconAnchor:[16,32]})
+        }).addTo(window.map).bindPopup(
+          `<b>${a.name}</b><br>Status: <span style="${ambulanceStatusColor(a.status)}">${a.status}</span>`
+        );
+        window.medMarkers.push(marker);
+      });
+      // If incident selected, show nearest resources
+      if (selectedIncident && selectedIncident.location) {
+        // Find nearest hospital and ambulance
+        function dist(a, b) {
+          const dx = a.lat - b.lat, dy = a.lng - b.lng;
+          return Math.sqrt(dx*dx + dy*dy);
+        }
+        const incidentLoc = selectedIncident.location;
+        const nearestHospital = hospitals.reduce((min, h) => dist(h, incidentLoc) < dist(min, incidentLoc) ? h : min, hospitals[0]);
+        const nearestAmbulance = ambulances.reduce((min, a) => dist(a, incidentLoc) < dist(min, incidentLoc) ? a : min, ambulances[0]);
+        // Estimate travel time (simple, not real routing)
+        function estTime(a, b) {
+          return Math.round(dist(a, b) * 80); // ~80 min/degree for demo
+        }
+        L.popup()
+          .setLatLng([incidentLoc.lat, incidentLoc.lng])
+          .setContent(
+            `<b>Nearest Hospital:</b> ${nearestHospital.name} (${estTime(incidentLoc, nearestHospital)} min)<br>
+             <b>Nearest Ambulance:</b> ${nearestAmbulance.name} (${estTime(incidentLoc, nearestAmbulance)} min)`
+          )
+          .openOn(window.map);
+      }
+    }
+
+    // --- Medical Integration Tabs ---
+    function showMedIntegration(idx) {
+      const content = document.getElementById('med-integration-content');
+      // Dispatch Coordination tab
+      if (idx === 0) {
+        content.innerHTML = `
+          <div><strong>Status:</strong> ${statusBadge(medIncidentStatus)}</div>
+          <div style="margin:1em 0;">
+            <button onclick="setMedStatus('Pending')">🕓 Pending</button>
+            <button onclick="setMedStatus('En Route')">🚑 En Route</button>
+            <button onclick="setMedStatus('On Scene')">📍 On Scene</button>
+            <button onclick="setMedStatus('Completed')">✅ Completed</button>
+          </div>
+          <div><em>${{
+            "Pending":"Request created, not yet accepted.",
+            "En Route":"Medical team assigned and on the way.",
+            "On Scene":"Team arrived at incident location.",
+            "Completed":"Incident resolved, report submitted."
+          }[medIncidentStatus]}</em></div>
+        `;
+      } else if (idx === 1) {
+        // Health Risk Mapping tab (demo content)
+        content.innerHTML = `
+          <h3>🌏 Health Risk Mapping (Demo)</h3>
+          <p>Map showing health risks based on latest data.</p>
+          <div id="healthRiskMap" style="height:200px;position:relative;">
+            <div style="position:absolute;top:10px;right:10px;background:white;padding:0.5em;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+              <strong>Legend:</strong><br>
+              <span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:0.5em;"></span> High Risk<br>
+              <span style="display:inline-block;width:10px;height:10px;background:#f39c12;margin-right:0.5em;"></span> Moderate Risk<br>
+              <span style="display:inline-block;width:10px;height:10px;background:#2ecc71;margin-right:0.5em;"></span> Low Risk
+            </div>
+            <!-- Demo map, replace with real data/map -->
+            <img src="https://via.placeholder.com/400x200.png?text=Health+Risk+Map" alt="Health Risk Map" style="width:100%;height:auto;border-radius:8px;">
+          </div>
+        `;
+      } else if (idx === 2) {
+        // Responder Profiles tab (demo content)
+        content.innerHTML = `
+          <h3>👨‍⚕️ Responder Profiles (Demo)</h3>
+          <p>List of available responders and their status.</p>
+          <div style="max-height:150px;overflow-y:auto;">
+            ${Array.from({length: 10}, (_,i)=>
+              `<div style="padding:0.5em;border-bottom:1px solid #eee;">
+                <strong>Responder ${i+1}</strong> - ${i%3===0 ? 'Available' : i%3===1 ? 'Busy' : 'On Leave'}
+              </div>`
+            ).join('')}
+          </div>
+        `;
+      } else if (idx === 3) {
+        // Health Services tab (demo content)
+        content.innerHTML = `
+          <h3>🏥 Health Services (Demo)</h3>
+          <p>Information about nearby health services.</p>
+          <ul style="list-style:none;padding:0;">
+            <li style="padding:0.5em;border-bottom:1px solid #eee;">
+              <strong>Royal Perth Hospital</strong><br>
+              197 Wellington St, Perth WA 6000<br>
+              <em>Emergency Department: Open 24/7</em>
+            </li>
+            <li style="padding:0.5em;border-bottom:1px solid #eee;">
+              <strong>Fiona Stanley Hospital</strong><br>
+              102 Shenton Ave, Murdoch WA 6150<br>
+              <em>Emergency Department: Open 24/7</em>
+            </li>
+            <li style="padding:0.5em;border-bottom:1px solid #eee;">
+              <strong>Sir Charles Gairdner Hospital</strong><br>
+              Hospital Ave, Nedlands WA 6009<br>
+              <em>Emergency Department: Open 24/7</em>
+            </li>
+          </ul>
+        `;
+      } else if (idx === 4) {
+        // Equipment Tracking tab (demo content)
+        content.innerHTML = `
+          <h3>🧰 Equipment Tracking (Demo)</h3>
+          <p>Status of critical equipment and supplies.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1em;">
+            ${['Defibrillator','Ventilator','Syringe Pump','Thermal Scanner'].map(eq=>`
+              <div style="padding:1em;border-radius:8px;box-shadow:0 1px 4px #0001;background:#f9f9f9;">
+                <strong>${eq}</strong>
+                <div style="font-size:0.9em;color:#666;">${Math.random() > 0.5 ? '✅ Available' : '❌ Not Available'}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (idx === 5) {
+        // Predictive Alerts tab (demo content)
+        content.innerHTML = `
+          <h3>🔮 Predictive Alerts (Demo)</h3>
+          <p>Forecast of potential health incidents based on data trends.</p>
+          <div style="height:200px;position:relative;">
+            <!-- Demo graph, replace with real data -->
+            <img src="https://via.placeholder.com/400x200.png?text=Predictive+Alerts+Graph" alt="Predictive Alerts Graph" style="width:100%;height:auto;border-radius:8px;">
+            <div style="position:absolute;top:10px;right:10px;background:white;padding:0.5em;border-radius:5px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+              <strong>Legend:</strong><br>
+              <span style="display:inline-block;width=10px;height=10px;background:#c0392b;margin-right:0.5em;"></span> High Alert<br>
+              <span style="display:inline-block;width=10px;height=10px;background:#f39c12;margin-right:0.5em;"></span> Medium Alert<br>
+              <span style="display:inline-block;width=10px;height=10px;background:#2ecc71;margin-right:0.5em;"></span> Low Alert
+            </div>
+          </div>
+        `;
+      } else if (idx === 6) {
+        // Incident Analytics tab (demo content)
+        content.innerHTML = `
+          <h3>📊 Incident Analytics (Demo)</h3>
+          <p>Analysis of past incidents and response effectiveness.</p>
+          <div style="height:200px;position:relative;">
+            <!-- Demo chart, replace with real data -->
+            <img src="https://via.placeholder.com/400x200.png?text=Incident+Analytics+Chart" alt="Incident Analytics Chart" style="width:100%;height:auto;border-radius:8px;">
+          </div>
+        `;
+      } else if (idx === 7) {
+        // Live Status Dashboard
+        content.innerHTML = `
+          <div>
+            <h3>🏥 Hospital Status</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1em;">
+              ${hospitals.map(h=>`
+                <div style="padding:1em;border-radius:8px;box-shadow:0 1px 4px #0001;${hospitalStatusColor(h.status)}">
+                  <strong>${h.name}</strong><br>
+                  Status: ${h.status}<br>
+                  Capacity: ${h.capacity}%<br>
+                  ER Load: ${h.erLoad}%
+                </div>
+              `).join('')}
+            </div>
+            <h3 style="margin-top:1em;">🚑 Ambulance Status</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1em;">
+              ${ambulances.map(a=>`
+                <div style="padding:0.7em;border-radius:8px;box-shadow:0 1px 4px #0001;${ambulanceStatusColor(a.status)}">
+                  <strong>${a.name}</strong><br>
+                  Status: ${a.status}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        updateMedicalMapOverlay();
+      } else if (idx === 8) {
+        // Request Medical Support Form
+        content.innerHTML = `
+          <form id="medRequestForm" style="margin-top:0.5em;">
+            <label>Incident Location:<br><input type="text" id="medReqLoc" required style="width:80%;" /></label><br>
+            <label>Severity:<br>
+              <select id="medReqSeverity">
+                <option value="Minor">Minor</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </label><br>
+            <label>Patient Condition:<br><input type="text" id="medReqCond" required style="width:80%;" /></label><br>
+            <button type="submit" style="margin-top:0.7em;">Request Support</button>
+          </form>
+          <div id="medReqStatus" style="margin-top:0.7em;color:#218838;"></div>
+        `;
+        document.getElementById('medRequestForm').onsubmit = function(e) {
+          e.preventDefault();
+          document.getElementById('medReqStatus').textContent = 'Medical support requested! (Demo only)';
+          setTimeout(()=>{document.getElementById('medReqStatus').textContent='';},4000);
+          // Optionally send to backend/Firestore/Twilio/email
+        };
+      }
+      // Highlight active tab
+      const btns = document.querySelectorAll('.med-tabs button');
+      btns.forEach((btn, i) => btn.classList.toggle('active', i === idx));
+    }
+    // Show first tab by default
+    showMedIntegration(0);
+
+    // --- Incident selection integration ---
+    // Example: When a bushfire incident is selected, show nearest medical resources
+    window.selectIncidentForMedical = function(incident) {
+      showMedIntegration(7);
+      updateMedicalMapOverlay(incident);
+    };
+
+    // --- Debugging / Demo tools ---
+    window.dumpData = function() {
+      console.log('Hospitals:', hospitals);
+      console.log('Ambulances:', ambulances);
+      console.log('Medical Incident Status:', medIncidentStatus);
+      console.log('Medical Incident Messages:', medIncidentMessages);
+      console.log('Triage List:', medTriageList);
+      console.log('Post-Incident Report:', medReport);
+      console.log('Offline Queue:', offlineQueue);
+    };
+
+    // --- Map Interactivity: Cluster Markers, Filters, Dynamic Layers ---
+    let mapFilter = 'fires';
+    let fireMarkers = [];
+    let medicalMarkers = [];
+    let fireCluster, medicalCluster;
+    let fireSpreadLayer = null;
+    let riskLayer = null;
+
+    function setMapFilter(val) {
+      mapFilter = val;
+      updateMapLayers();
+    }
+
+    function updateMapLayers() {
+      if (!window.map) return;
+      // Remove all clusters/layers
+      if (fireCluster) window.map.removeLayer(fireCluster);
+      if (medicalCluster) window.map.removeLayer(medicalCluster);
+      // Fires only
+      if (mapFilter === 'fires') {
+        if (fireCluster) window.map.addLayer(fireCluster);
+      }
+      // Medical only
+      else if (mapFilter === 'medical') {
+        if (medicalCluster) window.map.addLayer(medicalCluster);
+      }
+      // Both
+      else {
+        if (fireCluster) window.map.addLayer(fireCluster);
+        if (medicalCluster) window.map.addLayer(medicalCluster);
+      }
+    }
+
+    // --- Fire Spread Zones Layer (demo polygon) ---
+    function toggleFireSpreadLayer() {
+      if (!window.map) return;
+      if (fireSpreadLayer) {
+        window.map.removeLayer(fireSpreadLayer);
+        fireSpreadLayer = null;
+        document.getElementById('fireSpreadBtn').textContent = 'Show Fire Spread Zones';
+      } else {
+        fireSpreadLayer = L.polygon([
+          [-31.96, 115.85], [-31.95, 115.87], [-31.94, 115.86], [-31.95, 115.84]
+        ], {color:'#ff6a00',fillColor:'#ffd194',fillOpacity:0.4}).addTo(window.map);
+        document.getElementById('fireSpreadBtn').textContent = 'Hide Fire Spread Zones';
+      }
+    }
+
+    // --- Predicted Risk Areas Layer (demo circle) ---
+    function toggleRiskLayer() {
+      if (!window.map) return;
+      if (riskLayer) {
+        window.map.removeLayer(riskLayer);
+        riskLayer = null;
+        document.getElementById('riskLayerBtn').textContent = 'Show Predicted Risk Areas';
+      } else {
+        riskLayer = L.circle([-31.95, 115.86], {radius: 4000, color:'#c0392b',fillColor:'#ffd194',fillOpacity:0.3}).addTo(window.map);
+        document.getElementById('riskLayerBtn').textContent = 'Hide Predicted Risk Areas';
+      }
+    }
+
+    // --- Cluster Marker Setup ---
+    function setupMapClusters(fireIncidents, medicalResources) {
+      if (!window.map || !window.L) return;
+      // Remove previous clusters
+      if (fireCluster) window.map.removeLayer(fireCluster);
+      if (medicalCluster) window.map.removeLayer(medicalCluster);
+      fireCluster = L.markerClusterGroup();
+      medicalCluster = L.markerClusterGroup();
+      fireMarkers = [];
+      medicalMarkers = [];
+      // Fires
+      fireIncidents.forEach(incident => {
+        if (!incident.location) return;
+        const marker = L.marker([incident.location.lat, incident.location.lng], {
+          icon: L.icon({
+            iconUrl: 'assets/icon-bushfire.svg',
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+            popupAnchor: [0, -30],
+          })
+        }).bindPopup(`<b>${incident.title || 'Bushfire Incident'}</b><br>
+          <b>Status:</b> ${incident.status || 'Unknown'}<br>
+          <b>Location:</b> ${incident.locationDesc || ''}<br>
+          <b>Updated:</b> ${incident.updated ? new Date(incident.updated).toLocaleString() : ''}`);
+        fireCluster.addLayer(marker);
+        fireMarkers.push(marker);
+      });
+      // Medical
+      medicalResources.forEach(resource => {
+        const marker = L.marker([resource.lat, resource.lng], {
+          icon: L.divIcon({
+            className: '',
+            html: `<span style="font-size:1.5em;">${resource.type === 'hospital' ? '🏥' : '🚑'}</span>`,
+            iconAnchor: [16, 32]
+          })
+        }).bindPopup(`<b>${resource.name}</b><br>Status: ${resource.status}`);
+        medicalCluster.addLayer(marker);
+        medicalMarkers.push(marker);
+      });
+      updateMapLayers();
+    }
+
+    // --- Demo: Hook into bushfire and medical data ---
+    function loadMapData() {
+      // Demo: Use hospitals/ambulances from previous code
+      const medicalResources = [
+        ...hospitals.map(h => ({...h, type:'hospital'})),
+        ...ambulances.map(a => ({...a, type:'ambulance'}))
+      ];
+      // Demo: Fetch fire incidents from alerts (if available)
+      fetch('/api/alerts')
+        .then(r => r.json())
+        .then(data => {
+          setupMapClusters(data, medicalResources);
+        });
+    }
+    // Initial map setup after Leaflet ready
+    function waitForMapReady() {
+      if (window.map && window.L) {
+        loadMapData();
+      } else setTimeout(waitForMapReady, 400);
+    }
+    document.addEventListener('DOMContentLoaded', waitForMapReady);
+
+    // Add popup chatbox logic
+    document.addEventListener('DOMContentLoaded', function() {
+      var openBtn = document.getElementById('openWeatherChatBtn');
+      var popup = document.getElementById('weatherChatPopup');
+      var closeBtn = document.getElementById('closeWeatherChatBtn');
+      if (openBtn && popup && closeBtn) {
+        openBtn.onclick = function() {
+          popup.style.display = 'flex';
+          setTimeout(function() {
+            var input = document.getElementById('chatInput');
+            if (input) input.focus();
+          }, 100);
+        };
+        closeBtn.onclick = function() {
+          popup.style.display = 'none';
+        };
+      }
+    });
+  </script>
+  <!-- Find Me and Search functionality -->
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+  var findMeBtn = document.getElementById('findMeBtn');
+  var searchInput = document.getElementById('locationSearchInput');
+  if (findMeBtn && window.L && window.map) {
+    findMeBtn.onclick = function() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+      findMeBtn.disabled = true;
+      findMeBtn.textContent = 'Locating...';
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        window.map.setView([lat, lng], 13);
+        L.marker([lat, lng], {
+          icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">📍</span>',iconAnchor:[12,32]})
+        }).addTo(window.map).bindPopup('You are here').openPopup();
+        findMeBtn.disabled = false;
+        findMeBtn.textContent = '📍 Find Me';
+      }, function() {
+        alert('Unable to retrieve your location.');
+        findMeBtn.disabled = false;
+        findMeBtn.textContent = '📍 Find Me';
+      });
+    };
+  }
+  if (searchInput && window.L && window.map) {
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var query = searchInput.value.trim();
+        if (!query) return;
+        // Use Nominatim OpenStreetMap API for geocoding
+        fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query))
+          .then(r => r.json())
+          .then(results => {
+            if (results && results.length > 0) {
+              const lat = parseFloat(results[0].lat);
+              const lon = parseFloat(results[0].lon);
+              window.map.setView([lat, lon], 13);
+              L.marker([lat, lon], {
+                icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">🔎</span>',iconAnchor:[12,32]})
+              }).addTo(window.map).bindPopup(results[0].display_name).openPopup();
+            } else {
+              alert('Location not found.');
+            }
+          })
+          .catch(() => alert('Location search failed.'));
+      }
+    });
+  }
+});
   </script>
 </body>
 </html>
