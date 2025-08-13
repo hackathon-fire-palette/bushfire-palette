@@ -73,76 +73,6 @@ function renderVehicleMap() {
 }
 // Australian Bushfire Alert System - Mock Data & Logic
 
-// Bushfire alert data (replace with real data as needed)
-const alerts = [
-  {
-    id: 1,
-    title: 'Bushfire Emergency Warning',
-    location: 'Blue Mountains, NSW',
-    severity: 'critical',
-    type: 'bushfire',
-    summary: 'A fast-moving bushfire is threatening homes and lives. Leave immediately if safe to do so.',
-    actions: 'Follow your bushfire survival plan. Leave now if not prepared. Stay tuned to emergency services.',
-    coordinates: [-33.7, 150.3],
-    updated: '2025-08-09 13:00',
-  },
-  {
-    id: 2,
-    title: 'Burn Off - Planned',
-    location: 'Wagga Wagga, NSW',
-    severity: 'low',
-    type: 'burn off',
-    summary: 'A planned burn off is scheduled in this area. Smoke may be visible.',
-    actions: 'No action required. Stay informed.',
-    coordinates: [-35.1, 147.4],
-    updated: '2025-08-09 12:50',
-  },
-  {
-    id: 3,
-    title: 'Storm Advice',
-    location: 'Mandurah, WA',
-    severity: 'medium',
-    type: 'storm advice',
-    summary: 'Severe weather is expected. Prepare for possible power outages and flooding.',
-    actions: 'Secure loose items and stay indoors during the storm.',
-    coordinates: [-32.5, 115.7],
-    updated: '2025-08-09 12:40',
-  },
-  {
-    id: 4,
-    title: 'Bushfire Advice',
-    location: 'Perth Hills, WA',
-    severity: 'low',
-    type: 'bushfire advice',
-    summary: 'Smoke may be visible. No immediate threat, but stay informed.',
-    actions: 'Stay up to date. Review your bushfire plan.',
-    coordinates: [-31.9, 116.1],
-    updated: '2025-08-09 12:30',
-  },
-  {
-    id: 5,
-    title: 'Active Alarm',
-    location: 'Adelaide CBD, SA',
-    severity: 'critical',
-    type: 'active alarm',
-    summary: 'An active fire alarm has been triggered in a commercial building.',
-    actions: 'Evacuate the building and follow emergency services instructions.',
-    coordinates: [-34.9285, 138.6007],
-    updated: '2025-08-09 12:20',
-  },
-  {
-    id: 6,
-    title: 'Road Crash',
-    location: 'Pacific Hwy, NSW',
-    severity: 'medium',
-    type: 'road crash',
-    summary: 'A multi-vehicle crash has occurred. Emergency services are on scene.',
-    actions: 'Avoid the area and follow detour signs.',
-    coordinates: [-33.2, 151.5],
-    updated: '2025-08-09 12:10',
-  },
-];
-
 // Severity icon mapping for list and map
 
 // Custom icons for each incident type
@@ -165,44 +95,61 @@ const severityIcons = {
 function renderAlertsList() {
   const list = document.getElementById('alertsList');
   if (!list) return;
-  list.innerHTML = alerts.map((alert, idx) => {
-    const iconUrl = incidentIcons[alert.type] || severityIcons[alert.severity] || 'assets/icon-advice.svg';
-    return `
-      <div class="alert-card alert-severity-${alert.severity} collapsed" data-alert-idx="${idx}">
-        <img src="${iconUrl}" alt="${alert.severity} icon" class="alert-icon" />
-        <div class="alert-info-collapsed">
-          <div class="alert-title">${alert.title}</div>
-        </div>
-        <div class="alert-info-full">
-          <div class="alert-title">${alert.title}</div>
-          <div class="alert-location">${alert.location}</div>
-          <div class="alert-summary">${alert.summary}</div>
-          <div class="alert-actions">${alert.actions}</div>
-          <div class="alert-updated">Last updated: ${alert.updated}</div>
-          <a href="alert.html?id=${alert.id}" class="alert-details-link">View Details</a>
-        </div>
-      </div>
-    `;
-  }).join('');
-  // Add click handlers for collapse/expand
-  setTimeout(() => {
-    const cards = list.querySelectorAll('.alert-card');
-    cards.forEach(card => {
-      card.addEventListener('click', function(e) {
-        // Only expand/collapse if not clicking a link
-        if (e.target.tagName === 'A') return;
-        cards.forEach(c => c.classList.add('collapsed'));
-        cards.forEach(c => c.classList.remove('expanded'));
-        this.classList.remove('collapsed');
-        this.classList.add('expanded');
-      });
+
+  fetch('/api/rfs-incidents.js')
+    .then(response => response.json())
+    .then(data => {
+      list.innerHTML = data.features.map((feature, idx) => {
+        const props = feature.properties;
+        const severity = props.category.includes('Emergency Warning') ? 'critical' : props.category.includes('Watch and Act') ? 'medium' : 'low';
+        const iconUrl = incidentIcons['bushfire'] || severityIcons[severity] || 'assets/icon-advice.svg';
+        
+        // Extract details from description HTML
+        const descriptionDoc = new DOMParser().parseFromString(props.description, 'text/html');
+        const location = descriptionDoc.querySelector('strong:contains("LOCATION:")')?.nextSibling.textContent.trim() || 'N/A';
+        const summary = descriptionDoc.body.textContent.split('LOCATION:')[0].trim(); // Basic summary extraction
+
+        return `
+          <div class="alert-card alert-severity-${severity} collapsed" data-alert-idx="${idx}">
+            <img src="${iconUrl}" alt="${severity} icon" class="alert-icon" />
+            <div class="alert-info-collapsed">
+              <div class="alert-title">${props.title}</div>
+            </div>
+            <div class="alert-info-full">
+              <div class="alert-title">${props.title}</div>
+              <div class="alert-location">${location}</div>
+              <div class="alert-summary">${summary}</div>
+              <div class="alert-updated">Last updated: ${new Date(props.pubDate).toLocaleString()}</div>
+              <a href="${props.guid}" target="_blank" class="alert-details-link">View Details on RFS</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Add click handlers for collapse/expand
+      setTimeout(() => {
+        const cards = list.querySelectorAll('.alert-card');
+        cards.forEach(card => {
+          card.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') return;
+            const isExpanded = this.classList.contains('expanded');
+            cards.forEach(c => {
+              c.classList.add('collapsed');
+              c.classList.remove('expanded');
+            });
+            if (!isExpanded) {
+              this.classList.remove('collapsed');
+              this.classList.add('expanded');
+            }
+          });
+        });
+        // Expand the first card by default
+        if (cards[0]) {
+          cards[0].classList.remove('collapsed');
+          cards[0].classList.add('expanded');
+        }
+      }, 10);
     });
-    // Expand the first card by default
-    if (cards[0]) {
-      cards[0].classList.remove('collapsed');
-      cards[0].classList.add('expanded');
-    }
-  }, 10);
 }
 
 
@@ -307,66 +254,40 @@ function renderMap() {
     mapDiv._leaflet_id = null;
     mapDiv.innerHTML = '';
   }
-  // Center on Perth, WA (zoomed in)
-  const map = L.map(mapDiv).setView([-31.9505, 115.8605], 11);
+  // Center on NSW, where the RFS data is.
+  const map = L.map(mapDiv).setView([-33.8688, 151.2093], 6);
   window.map = map; // Expose dashboard map for weather overlay
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
-  // Add alert markers
-  alerts.forEach(alert => {
-    const iconUrl = incidentIcons[alert.type] || severityIcons[alert.severity] || 'assets/icon-advice.svg';
-    const icon = L.icon({
-      iconUrl,
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -35],
+
+  fetch('/api/rfs-incidents.js')
+    .then(response => response.json())
+    .then(data => {
+      L.geoJSON(data, {
+        pointToLayer: function (feature, latlng) {
+          const category = feature.properties.category;
+          let iconUrl = 'assets/icon-bushfire.svg'; // Default icon
+          if (category.includes('Fire')) {
+            iconUrl = 'assets/icon-bushfire.svg';
+          }
+          const icon = L.icon({
+            iconUrl: iconUrl,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -35],
+          });
+          return L.marker(latlng, { icon: icon });
+        },
+        onEachFeature: function (feature, layer) {
+          if (feature.properties && feature.properties.title) {
+            layer.bindPopup(`<h3>${feature.properties.title}</h3><p><strong>Category:</strong> ${feature.properties.category}</p><div>${feature.properties.description}</div>`);
+          }
+        }
+      }).addTo(map);
     });
-    L.marker(alert.coordinates, { icon })
-      .addTo(map)
-      .bindPopup(
-        `<b>${alert.title}</b><br>${alert.location}<br><span style='color:#b71c1c;font-weight:bold;'>${alert.severity ? alert.severity.toUpperCase() : ''}</span><br>${alert.summary}`
-      );
-  });
+
   setTimeout(() => { map.invalidateSize(); }, 200);
-// Simulate live vehicle data updates every 10 seconds
-if (window.location.pathname.endsWith('vehicle.html')) {
-  setInterval(() => {
-    // Simulate random vehicle movement and status change
-    vehicles.forEach(v => {
-      // Move location slightly
-      v.location = [
-        v.location[0] + (Math.random() - 0.5) * 0.02,
-        v.location[1] + (Math.random() - 0.5) * 0.02
-      ];
-      // Randomly change status
-      if (Math.random() < 0.2) {
-        const statuses = ['active', 'standby', 'out-of-service'];
-        v.status = statuses[Math.floor(Math.random() * statuses.length)];
-      }
-      // Update lastCheckIn
-      v.lastCheckIn = new Date().toISOString().slice(0,16).replace('T',' ');
-    });
-    renderVehicleTrackingDashboard();
-  }, 10000);
-}
-
-// (restore bushPolygonCoords assignment in renderMap, not here)
-
-  // Add alert markers
-  alerts.forEach(alert => {
-    const icon = L.icon({
-      iconUrl: severityIcons[alert.severity],
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-      popupAnchor: [0, -35],
-    });
-    L.marker(alert.coordinates, { icon })
-      .addTo(map)
-      .bindPopup(
-        `<b>${alert.title}</b><br>${alert.location}<br><span style='color:#b71c1c;font-weight:bold;'>${alert.severity.toUpperCase()}</span><br>${alert.summary}`
-      );
-  });
 }
 
 // Page routing
