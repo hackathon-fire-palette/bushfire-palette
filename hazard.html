@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hazard Information - Australian Bushfire Alert System</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#c0392b" />
+</head>
+<body>
+  <div class="accessibility-bar" aria-label="Accessibility and language options">
+    <button id="darkModeToggle" aria-label="Toggle dark mode" tabindex="0">🌙 Dark Mode</button>
+    <button id="contrastToggle" aria-label="Toggle high contrast" tabindex="0">⬛ High Contrast</button>
+    <select id="languageSelect" aria-label="Select language" tabindex="0">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+      <option value="ar">العربية</option>
+      <option value="noongar">Noongar</option>
+    </select>
+  </div>
+  <header>
+    <div class="logo-title">
+      <a href="/">
+        <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
+      </a>
+      <h1 style="color: red;">Australian Bushfire Alert System</h1>
+    </div>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <a href="roster.html">Roster</a>
+      <a href="vehicle.html">Vehicle Tracking</a>
+      <a href="compliance.html">Compliance</a>
+      <a href="hazard.html" class="active">Hazard Information</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hazard-map-section card">
+      <h2>Live Hazard Map</h2>
+      <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:0.7em;">
+        <input
+          id="locationSearchInput"
+          type="text"
+          placeholder="Search location or address…"
+          style="flex:1;padding:0.5em 1em;border-radius:6px;border:1px solid #ccc;font-size:1em;"
+          aria-label="Search location"
+        />
+        <button
+          id="findMeBtn"
+          style="padding:0.5em 1em;border-radius:6px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:1em;"
+          aria-label="Find my location"
+          title="Find my location"
+        >📍 Find Me</button>
+      </div>
+      <div style="margin-bottom:0.7em;">
+        <label><input type="checkbox" id="toggleBushfires" checked> Bushfires</label>
+        <label style="margin-left:1em;"><input type="checkbox" id="toggleFloods"> Floods</label>
+        <label style="margin-left:1em;"><input type="checkbox" id="toggleStormDamage"> Storm Damage</label>
+        <label style="margin-left:1em;"><input type="checkbox" id="toggleHeatwaveWarnings"> Heatwave Warnings</label>
+        <label style="margin-left:1em;"><input type="checkbox" id="togglePredictiveRisk"> Predictive Risk Areas</label>
+      </div>
+      <div id="hazardMap" style="height: 500px; width: 100%;"></div>
+    </section>
+
+    <!-- Placeholder for other sections -->
+    <section class="interactive-timeline-section card" style="margin-top: 1.5em;">
+      <h2>Interactive Timeline (Coming Soon)</h2>
+      <p>A horizontal scrollable timeline showing hazard events over the past 48 hours and upcoming forecasts.</p>
+    </section>
+
+    <section class="personalised-alerts-section card" style="margin-top: 1.5em;">
+      <h2>Personalised Alerts (Coming Soon)</h2>
+      <p>Input your postcode/suburb to filter hazards in your area and subscribe for updates.</p>
+    </section>
+
+    <section class="hazard-impact-simulator-section card" style="margin-top: 1.5em;">
+      <h2>Hazard Impact Simulator (Coming Soon)</h2>
+      <p>“What if?” tool where a user can select hazard type and severity level.</p>
+    </section>
+
+    <section class="community-safety-checklist-section card" style="margin-top: 1.5em;">
+      <h2>Community Safety Checklist (Coming Soon)</h2>
+      <p>A collapsible accordion with ready-to-action checklists and a download PDF button.</p>
+    </section>
+
+  </main>
+  <footer>
+    <div style="font-weight:bold;color:#c0392b;">
+      ⚠️ Not for Operational Use. For demonstration only.<br>
+      Data sources: <a href="https://www.bom.gov.au/" target="_blank">Bureau of Meteorology</a>, <a href="https://afdrs.com.au/" target="_blank">AFDRS</a>, <a href="https://firms.modaps.eosdis.nasa.gov/" target="_blank">NASA FIRMS</a>
+    </div>
+    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>.</p>
+  </footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="hazard.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
