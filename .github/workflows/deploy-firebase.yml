@@ -1,0 +1,27 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Save Firebase service account key
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "${HOME}/firebase_key.json"
+        shell: bash
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.home }}/firebase_key.json
+        run: firebase deploy --only hosting

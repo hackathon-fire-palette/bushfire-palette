@@ -1,16 +1,20 @@
 /* === Moved from index.html for shared use === */
 .dashboard-flex {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 2rem;
   align-items: flex-start;
-  justify-content: space-between;
+  margin-top: 2rem;
 }
 .alerts-list-section {
-  flex: 0 0 270px;
-  min-width: 200px;
-  max-width: 405px;
-  margin-bottom: 2rem;
+  flex: 0 0 340px;
+  min-width: 280px;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(183,28,28,0.08);
+  border: 1.5px solid #f3e5e5;
+  padding: 1.5rem 1.2rem;
   transition: width 0.3s, min-width 0.3s, max-width 0.3s;
   position: relative;
 }
@@ -52,10 +56,17 @@
   flex-direction: column;
   flex: 1 1 300px;
   min-width: 300px;
-  /* max-width removed to allow full width */
   gap: 1rem;
 }
-.map-section, .medical-emergency-section {
+.map-section {
+  flex: 1 1 0%;
+  background: #fafbfc;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(33,33,33,0.07);
+  border: 1.5px solid #e3e3e3;
+  padding: 1.5rem 1.2rem;
+}
+.medical-emergency-section {
   margin-bottom: 0;
 }
 .card {
@@ -180,29 +191,11 @@ nav a.active, nav a:hover {
   }
 }
 /* Enhanced dashboard appearance */
-.dashboard-flex {
-  margin-top: 2rem;
-}
-.alerts-list-section {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(183,28,28,0.08);
-  border: 1.5px solid #f3e5e5;
-  padding: 1.5rem 1.2rem 1.5rem 1.2rem;
-  margin-bottom: 1.5rem;
-}
 .alerts-list-section h2 {
   color: #b71c1c;
   font-size: 1.3rem;
   margin-bottom: 1.2rem;
   letter-spacing: 0.01em;
-}
-.map-section {
-  background: #fafbfc;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(33,33,33,0.07);
-  border: 1.5px solid #e3e3e3;
-  padding: 1.5rem 1.2rem 1.5rem 1.2rem;
 }
 .map-section h2 {
   color: #1976d2;
@@ -288,23 +281,8 @@ nav a.active, nav a:hover {
   }
 }
 /* Dashboard flex layout: alerts left, map right */
-.dashboard-flex {
-  display: flex;
-  flex-direction: row;
-  gap: 2rem;
-  align-items: flex-start;
-}
-.alerts-list-section {
-  flex: 0 0 340px;
-  min-width: 280px;
-  max-width: 400px;
-}
-.map-section {
-  flex: 1 1 0%;
-}
 @media (max-width: 900px) {
   .dashboard-flex {
-    flex-direction: column;
     gap: 1.2rem;
   }
   .alerts-list-section, .map-section {
@@ -522,6 +500,9 @@ nav a.active, nav a:hover {
   position: relative;
   overflow: hidden;
   z-index: 0;
+}
+.map-embed .leaflet-attribution-flag {
+  display: none !important;
 }
 
 /* Ensure Leaflet controls and popups display above map */
@@ -764,4 +745,119 @@ footer a {
     min-height: 150px;
     max-height: 200px;
   }
+}
+
+/* Employee Management Styles */
+#employeeDashboard .card {
+    margin-bottom: 1.5rem;
+}
+
+#add-employee-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+#add-employee-form input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#add-employee-form button {
+    padding: 0.8rem 1.5rem;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#add-employee-form button:hover {
+    background-color: #e74c3c;
+}
+
+#employee-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#employee-table th, #employee-table td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: left;
+}
+
+#employee-table th {
+    background-color: #f2f2f2;
+}
+
+#employee-table button {
+    margin-right: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+}
+
+#employee-table .edit-btn {
+    background-color: #f39c12;
+}
+
+#employee-table .delete-btn {
+    background-color: #c0392b;
+}
+
+/* Dropdown menu styles */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-toggle {
+  text-decoration: none;
+  color: #333;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  transition: background 0.2s;
+  cursor: pointer;
+  display: inline-block;
+}
+.dropdown-toggle:hover,
+.dropdown-toggle:focus {
+  background: #c0392b;
+  color: #fff;
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 110%;
+  min-width: 200px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+  z-index: 100;
+  flex-direction: column;
+  padding: 0.5em 0;
+}
+.dropdown-menu a {
+  display: block;
+  padding: 0.6em 1.2em;
+  color: #333;
+  text-decoration: none;
+  border-radius: 0;
+  background: none;
+  transition: background 0.2s;
+}
+.dropdown-menu a:hover,
+.dropdown-menu a:focus {
+  background: #f2f2f2;
+  color: #c0392b;
+}
+.dropdown:hover .dropdown-menu,
+.dropdown:focus-within .dropdown-menu {
+  display: flex;
 }

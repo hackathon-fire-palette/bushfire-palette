@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee Management | Australian Bushfire Alert System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo-title">
+      <a href="/">
+        <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
+      </a>
+      <h1>Australian Bushfire Alert System</h1>
+    </div>
+    <nav>
+  <div class="dropdown">
+    <a href="#" class="dropdown-toggle" id="operationsMenu" aria-haspopup="true" aria-expanded="false">
+      Operations ▼
+    </a>
+    <div class="dropdown-menu" aria-labelledby="operationsMenu">
+      <a href="roster.html">Roster Management</a>
+      <a href="vehicle.html">Vehicle Tracking</a>
+      <a href="employee.html" class="active">Employee Management</a>
+      <a href="leave.html">Leave Application</a>
+      <a href="compliance.html">Compliance</a>
+    </div>
+  </div>
+  <a href="hazard.html">Hazard Information</a>
+  <a href="about.html">About</a>
+    </nav>
+  </header>
+  <main>
+    <div id="content">
+      <section class="roster-section card">
+        <h2>Employee Management</h2>
+        <div id="employeeDashboard">
+            <!-- Add Employee Form -->
+            <div class="card">
+                <h3>Add New Employee</h3>
+                <form id="add-employee-form">
+                    <input type="text" id="name" placeholder="Name" required>
+                    <input type="text" id="role" placeholder="Role" required>
+                    <input type="text" id="availability" placeholder="Availability" required>
+                    <button type="submit">Add Employee</button>
+                </form>
+            </div>
+
+            <!-- Employee List -->
+            <div class="card">
+                <h3>Employee List</h3>
+                <table id="employee-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Availability</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer>
+    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
+  </footer>
+  <script type="module" src="employee.js"></script>
+</body>
+</html>

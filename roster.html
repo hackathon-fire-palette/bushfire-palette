@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Roster Management | Australian Bushfire Alert System</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="roster.css" />
 </head>
 <body>
   <header>
@@ -15,9 +16,19 @@
       <h1>Australian Bushfire Alert System</h1>
     </div>
     <nav>
-  <a href="index.html">Dashboard</a>
-  <a href="roster.html" class="active">Roster</a>
-  <a href="vehicle.html">Vehicle Tracking</a>
+  <div class="dropdown">
+    <a href="#" class="dropdown-toggle" id="operationsMenu" aria-haspopup="true" aria-expanded="false">
+      Operations ▼
+    </a>
+    <div class="dropdown-menu" aria-labelledby="operationsMenu">
+      <a href="roster.html" class="active">Roster Management</a>
+      <a href="vehicle.html">Vehicle Tracking</a>
+      <a href="employee.html">Employee Management</a>
+      <a href="leave.html">Leave Application</a>
+      <a href="compliance.html">Compliance</a>
+    </div>
+  </div>
+  <a href="hazard.html">Hazard Information</a>
   <a href="about.html">About</a>
     </nav>
   </header>
@@ -25,13 +36,23 @@
     <div id="content">
       <section class="roster-section card">
         <h2>Roster Management</h2>
-        <div id="rosterDashboard"></div>
+        <div id="roster-controls">
+          <button id="prev-month">Previous Month</button>
+          <h3 id="month-year"></h3>
+          <button id="next-month">Next Month</button>
+        </div>
+        <div id="roster-calendar"></div>
+        <div id="employee-availability">
+          <h4>Employee Availability</h4>
+          <ul id="availability-list"></ul>
+        </div>
       </section>
     </div>
   </main>
   <footer>
     <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
   </footer>
-  <script src="script.js"></script>
+  <script src="rosterData.js"></script>
+  <script src="roster.js"></script>
 </body>
 </html>
