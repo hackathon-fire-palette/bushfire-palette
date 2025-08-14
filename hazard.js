@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
   map.addLayer(bushfireCluster);
 
   // Load initial data
-  loadHazardData();
+  loadHazardData().then(updateLegend); // Call updateLegend after data is loaded
 
   // Event listeners for toggles
   document.getElementById('toggleBushfires').addEventListener('change', toggleLayer);
@@ -232,6 +232,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.documentElement.lang = this.value;
   };
 });
+
+function updateLegend() {
+  const legendContent = document.getElementById('legendContent');
+  if (!legendContent) return;
+
+  let html = '<h4>Hazard Types:</h4>';
+  html += `<div><img src="${incidentIcons['bushfire']}" width="24" height="24" style="vertical-align:middle;"> Bushfires (Hotspots & Boundaries)</div>`;
+  html += `<div><span style="display:inline-block;width:24px;height:24px;background:#e74c3c;border:1px solid #c0392b;vertical-align:middle;"></span> Bushfire Boundary</div>`;
+  html += `<div><span style="font-size:1.5em;vertical-align:middle;">🌊</span> Floods</div>`;
+  html += `<div><span style="font-size:1.5em;vertical-align:middle;">⛈️</span> Storm Damage</div>`;
+  html += `<div><span style="font-size:1.5em;vertical-align:middle;">☀️</span> Heatwave Warnings</div>`;
+  html += `<div><span style="display:inline-block;width:24px;height:24px;background:#f1c40f;border:1px solid #f39c12;vertical-align:middle;"></span> Predictive Risk Area</div>`;
+
+  html += '<h4 style="margin-top:1em;">Severity Levels:</h4>';
+  html += `<div><span style="display:inline-block;width:20px;height:10px;background:#c0392b;vertical-align:middle;"></span> Emergency (Immediate Threat)</div>`;
+  html += `<div><span style="display:inline-block;width:20px;height:10px;background:#f39c12;vertical-align:middle;"></span> Watch and Act (High Alert)</div>`;
+  html += `<div><span style="display:inline-block;width:20px;height:10px;background:#1976d2;vertical-align:middle;"></span> Advice (Monitor Conditions)</div>`;
+
+  legendContent.innerHTML = html;
+}
 
 async function loadHazardData() {
   // Load Bushfire data (FIRMS hotspots and Digital Atlas boundaries)
