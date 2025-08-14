@@ -127,127 +127,6 @@ async function fetchPredictiveRiskZoneData() {
   }), 700));
 }
 
-// Mock GeoJSON data for Digital Atlas bushfire boundaries
-const mockDigitalAtlasData = {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "DA001",
-        "name": "Perth Hills Fire",
-        "status": "Active",
-        "area_km2": 50,
-        "updated": "2025-08-14T12:00:00Z"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[
-          [116.0, -31.9],
-          [116.1, -31.9],
-          [116.1, -32.0],
-          [116.0, -32.0],
-          [116.0, -31.9]
-        ]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "DA002",
-        "name": "Margaret River Burn",
-        "status": "Contained",
-        "area_km2": 10,
-        "updated": "2025-08-14T11:30:00Z"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[
-          [115.0, -33.9],
-          [115.1, -33.9],
-          [115.1, -34.0],
-          [115.0, -34.0],
-          [115.0, -33.9]
-        ]]
-      }
-    }
-  ]
-};
-
-// Mock GeoJSON data for NASA FIRMS fire hotspots
-const mockFIRMSData = {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "FIRMS001",
-        "confidence": "high",
-        "brightness": 320,
-        "acq_date": "2025-08-14",
-        "acq_time": "03:45",
-        "instrument": "MODIS"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [116.05, -31.95]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "FIRMS002",
-        "confidence": "nominal",
-        "brightness": 300,
-        "acq_date": "2025-08-14",
-        "acq_time": "04:15",
-        "instrument": "VIIRS"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [115.05, -33.95]
-      }
-    }
-  ]
-};
-
-// Mock function to fetch Digital Atlas data
-async function fetchDigitalAtlasData() {
-  return new Promise(resolve => setTimeout(() => resolve(mockDigitalAtlasData), 500));
-}
-
-// Mock function to fetch NASA FIRMS data
-async function fetchFIRMSData() {
-  return new Promise(resolve => setTimeout(() => resolve(mockFIRMSData), 600));
-}
-
-// Mock function to fetch Predictive Risk Zone data (reusing existing structure)
-async function fetchPredictiveRiskZoneData() {
-  return new Promise(resolve => setTimeout(() => resolve({
-    "type": "FeatureCollection",
-    "features": [
-      {
-        "type": "Feature",
-        "properties": {
-          "id": "PRZ001",
-          "risk_level": "High",
-          "prediction_time": "2025-08-14T18:00:00Z"
-        },
-        "geometry": {
-          "type": "Polygon",
-          "coordinates": [[
-            [116.02, -31.92],
-            [116.12, -31.92],
-            [116.12, -32.02],
-            [116.02, -32.02],
-            [116.02, -31.92]
-          ]]
-        }
-      }
-    ]
-  }), 700));
-}
-
 function renderVehicleTrackingDashboard() {
   let html = '<div class="vehicle-map-container"><div id="vehicleMap" class="map-embed" style="height:350px;margin-bottom:1.5rem;"></div></div>';
   html += '<table class="roster-table" id="vehicleTable"><thead><tr><th>Callsign</th><th>Type</th><th>Status</th><th>Crew</th><th>Last Check-In</th></tr></thead><tbody>';
@@ -624,31 +503,32 @@ function renderMap() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
-  fetch('/api/rfs-incidents.js')
-    .then(response => response.json())
-    .then(data => {
-      L.geoJSON(data, {
-        pointToLayer: function (feature, latlng) {
-          const category = feature.properties.category;
-          let iconUrl = 'assets/icon-bushfire.svg'; // Default icon
-          if (category.includes('Fire')) {
-            iconUrl = 'assets/icon-bushfire.svg';
-          }
-          const icon = L.icon({
-            iconUrl: iconUrl,
-            iconSize: [40, 40],
-            iconAnchor: [20, 40],
-            popupAnchor: [0, -35],
-          });
-          return L.marker(latlng, { icon: icon });
-        },
-        onEachFeature: function (feature, layer) {
-          if (feature.properties && feature.properties.title) {
-            layer.bindPopup(`<h3>${feature.properties.title}</h3><p><strong>Category:</strong> ${feature.properties.category}</p><div>${feature.properties.description}</div>`);
-          }
-        }
-      }).addTo(map);
-    });
+  // Temporarily remove RFS data fetching to check map initialization
+  // fetch('/api/rfs-incidents.js')
+  //   .then(response => response.json())
+  //   .then(data => {
+  //     L.geoJSON(data, {
+  //       pointToLayer: function (feature, latlng) {
+  //         const category = feature.properties.category;
+  //         let iconUrl = 'assets/icon-bushfire.svg'; // Default icon
+  //         if (category.includes('Fire')) {
+  //           iconUrl = 'assets/icon-bushfire.svg';
+  //         }
+  //         const icon = L.icon({
+  //           iconUrl: iconUrl,
+  //           iconSize: [40, 40],
+  //           iconAnchor: [20, 40],
+  //           popupAnchor: [0, -35],
+  //         });
+  //         return L.marker(latlng, { icon: icon });
+  //       },
+  //       onEachFeature: function (feature, layer) {
+  //         if (feature.properties && feature.properties.title) {
+  //           layer.bindPopup(`<h3>${feature.properties.title}</h3><p><strong>Category:</strong> ${feature.properties.category}</p><div>${feature.properties.description}</div>`);
+  //         }
+  //       }
+  //     }).addTo(map);
+  //   });
 
   setTimeout(() => { map.invalidateSize(); }, 200);
 }
