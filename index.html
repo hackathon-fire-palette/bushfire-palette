@@ -1709,12 +1709,36 @@
         ...hospitals.map(h => ({...h, type:'hospital'})),
         ...ambulances.map(a => ({...a, type:'ambulance'}))
       ];
-      // Demo: Fetch fire incidents from alerts (if available)
-      fetch('/api/alerts')
-        .then(r => r.json())
+      // Fetch fire incidents from the RFS feed and then set up map clusters
+      fetch('https://www.rfs.nsw.gov.au/feeds/majorIncidents.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
-          setupMapClusters(data, medicalResources);
-        });
+          // Process the RFS data to extract location for map markers
+          const fireIncidents = data.features.map(feature => {
+            const props = feature.properties;
+            const descriptionDoc = new DOMParser().parseFromString(props.description, 'text/html');
+            const locationMatch = descriptionDoc.body.textContent.match(/Lat\/Long:\s*(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+            let location = null;
+            if (locationMatch && locationMatch.length === 3) {
+              location = { lat: parseFloat(locationMatch[1]), lng: parseFloat(locationMatch[2]) };
+            }
+            return {
+              title: props.title,
+              status: props.category.split(' - ')[1] || 'Unknown',
+              locationDesc: descriptionDoc.querySelector('strong:contains("LOCATION:")')?.nextSibling.textContent.trim() || 'N/A',
+              updated: new Date(props.pubDate).getTime(),
+              location: location // Add location for map marker
+            };
+          }).filter(incident => incident.location !== null); // Filter out incidents without valid location
+
+          setupMapClusters(fireIncidents, medicalResources);
+        })
+        .catch(error => console.error('Error fetching RFS incidents for map:', error));
     }
     // Initial map setup after Leaflet ready
     function waitForMapReady() {
