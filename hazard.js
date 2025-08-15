@@ -1,4 +1,4 @@
-// Mock GeoJSON data for Digital Atlas bushfire boundaries
+o// Mock GeoJSON data for Digital Atlas bushfire boundaries
 const mockDigitalAtlasData = {
   "type": "FeatureCollection",
   "features": [

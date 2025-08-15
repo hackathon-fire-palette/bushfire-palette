@@ -426,10 +426,10 @@ nav a.active, nav a:hover {
 
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f7f7f7; /* Fallback background color */
+  background-color: #ffffff; /* white */
   margin: 0;
   padding: 0;
-  color: #222;
+  color: #333333; /* dark gray */
   position: relative; /* Needed for pseudo-element positioning */
   z-index: 1; /* Ensure content is above pseudo-element */
 }
