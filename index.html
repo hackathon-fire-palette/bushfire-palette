@@ -506,6 +506,16 @@
       font-size: 1em;
       margin-left: 0.5em;
     }
+    /* Styles for priority badge */
+    .alert-priority-badge {
+      display: inline-block;
+      padding: 0.2em 0.5em;
+      border-radius: 5px;
+      font-size: 0.8em;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-left: auto; /* Pushes the badge to the right */
+    }
   </style>
   <!-- Add Leaflet.markercluster CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
@@ -850,38 +860,58 @@
       {
         title: "Bushfire Emergency Warning",
         level: "Emergency",
+        priority: "Critical", // AIIMS Priority
         status: "Immediate Threat",
         locationDesc: "PERTH METROPOLITAN, CITY OF SWAN",
+        requiredResources: ["Fire Trucks: 5", "Personnel: 20", "Medical Teams: 2"], // AIIMS Resources
         updated: Date.now() - 1000 * 60 * 5, // 5 minutes ago
         details: "There is a bushfire in your area. You are in danger and need to act immediately to survive. Leave now if the path is clear. If you cannot leave, you need to shelter."
       },
       {
         title: "Bushfire Watch and Act",
         level: "Watch and Act",
+        priority: "High", // AIIMS Priority
         status: "High Alert",
         locationDesc: "SOUTH WEST, SHIRE OF AUGUSTA-MARGARET RIVER",
+        requiredResources: ["Fire Trucks: 3", "Personnel: 10"],
         updated: Date.now() - 1000 * 60 * 30, // 30 minutes ago
         details: "A bushfire is burning and conditions are changing. There is a possible threat to lives and homes. Stay alert and monitor your surroundings. Prepare to leave or defend."
       },
       {
         title: "Storm Advice",
         level: "Advice",
+        priority: "Medium", // AIIMS Priority
         status: "Monitor Conditions",
         locationDesc: "LOWER SOUTH WEST, CITY OF ALBANY",
+        requiredResources: ["SES Teams: 2"],
         updated: Date.now() - 1000 * 60 * 60 * 2, // 2 hours ago
         details: "A severe thunderstorm is possible. Stay informed and be aware of the situation. Take precautions such as securing loose items and preparing an emergency kit."
       },
       {
         title: "Bushfire Advice",
         level: "Advice",
+        priority: "Low", // AIIMS Priority
         status: "Threat Reduced",
         locationDesc: "ROEBUCK, SHIRE OF BROOME",
+        requiredResources: [],
         updated: Date.now() - 1000 * 60 * 60 * 6, // 6 hours ago
         details: "The immediate threat has passed, but remain vigilant. There may still be smoke and hazards in the area. Stay up to date with official information."
       }
     ];
 
+    const priorityIcons = {
+      "Critical": "assets/emergency-icon.svg",
+      "High": "assets/watch-icon.svg",
+      "Medium": "assets/advice-icon.svg",
+      "Low": "assets/advice-icon.svg"
+    };
+
     function getAlertIcon(alert) {
+      // Prefer priority-based icons if available
+      if (alert.priority && priorityIcons[alert.priority]) {
+        return priorityIcons[alert.priority];
+      }
+      // Fallback to hazard-specific icons
       if (alert.title.includes('Bushfire')) {
         return 'assets/icon-bushfire.svg';
       }
@@ -908,16 +938,19 @@
         const card = document.createElement('div');
         card.className = 'alert-card';
         card.setAttribute('data-level', alert.level || 'Advice');
+        card.setAttribute('data-priority', alert.priority || 'Low'); // Add data-priority attribute
         card.setAttribute('data-expanded', 'false'); // Default to collapsed
         card.innerHTML = `
           <div class="alert-header">
             <img src="${getAlertIcon(alert)}" alt="${alert.level} icon" class="alert-icon" width="24" height="24">
             <div class="alert-title">${alert.title || 'Bushfire Alert'}</div>
+            <div class="alert-priority-badge" style="background-color:${getPriorityColor(alert.priority)};color:white;padding:0.2em 0.5em;border-radius:5px;font-size:0.8em;margin-left:auto;">${alert.priority || 'Low'}</div>
             <button class="toggle-btn" aria-expanded="false">▼</button>
           </div>
           <div class="alert-content">
             <div class="alert-status"><strong>Status:</strong> ${alert.status || 'Unknown'} (${alert.level || 'Advice'})</div>
             <div><strong>Location:</strong> ${alert.locationDesc || ''}</div>
+            ${alert.requiredResources && alert.requiredResources.length > 0 ? `<div><strong>Required Resources:</strong> ${alert.requiredResources.join(', ')}</div>` : ''}
             <div class="alert-updated">Updated ${timeAgo(alert.updated || Date.now())}</div>
             <p>${alert.details || 'No additional details provided.'}</p>
           </div>
@@ -941,6 +974,16 @@
       if (diff < 60) return `${diff}s ago`;
       if (diff < 3600) return `${Math.floor(diff/60)} mins ago`;
       return `${Math.floor(diff/3600)} hrs ago`;
+    }
+
+    function getPriorityColor(priority) {
+      switch (priority) {
+        case "Critical": return "#c0392b"; // Red
+        case "High": return "#f39c12";     // Orange
+        case "Medium": return "#1976d2";   // Blue
+        case "Low": return "#2ecc71";      // Green
+        default: return "#888";            // Grey
+      }
     }
     
     // Function to update summary cards (dummy data)
@@ -981,17 +1024,24 @@
 
     function refreshAlerts() {
       alertsLastFetched = Date.now();
-      renderAlerts(dummyAlerts);
-      updateSummaryCards(dummyAlerts);
+      // Call renderAlertsList from script.js to fetch and render real data
+      if (typeof renderAlertsList === 'function') {
+        renderAlertsList();
+      } else {
+        console.error("renderAlertsList function not found in script.js.");
+        // Fallback to dummy data if renderAlertsList is not available
+        renderAlerts(dummyAlerts);
+      }
+      updateSummaryCards(dummyAlerts); // These still use dummyAlerts for now
       renderTrendGraph('trendFireIncidents', [2,3,5,4,6,7,8], '#c0392b');
       renderTrendGraph('trendResourceUse', [1,2,2,3,4,3,2], '#1976d2');
       renderTrendGraph('trendMedicalCalls', [0,1,2,1,3,2,1], '#27ae60');
-      renderAlertsFeed(dummyAlerts);
+      renderAlertsFeed(dummyAlerts); // This also uses dummyAlerts for now
     }
     
     // Initial render on DOMContentLoaded
     document.addEventListener('DOMContentLoaded', () => {
-      refreshAlerts(); // Call refreshAlerts to render dummy data initially
+      refreshAlerts(); // Call refreshAlerts to render data initially
     });
 
     // Collapsible alerts section

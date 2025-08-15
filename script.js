@@ -75,64 +75,43 @@ function renderVehicleMap() {
 // Australian Bushfire Alert System - Mock Data & Logic
 
 // Render alerts list on dashboard
-function renderAlertsList() {
-  const list = document.getElementById('alertsList');
-  if (!list) return;
+function getPriorityFromCategory(category) {
+  if (category.includes('Emergency Warning')) return 'Critical';
+  if (category.includes('Watch and Act')) return 'High';
+  return 'Low'; // Default for Advice or other categories
+}
 
+function renderAlertsList() {
+  // This function will now fetch real data and integrate with the renderAlerts function in index.html
   fetch('/api/rfs-incidents.js')
     .then(response => response.json())
     .then(data => {
-      list.innerHTML = data.features.map((feature, idx) => {
+      const processedAlerts = data.features.map(feature => {
         const props = feature.properties;
-        const severity = props.category.includes('Emergency Warning') ? 'critical' : props.category.includes('Watch and Act') ? 'medium' : 'low';
-        const iconUrl = incidentIcons['bushfire'] || severityIcons[severity] || 'assets/icon-advice.svg';
-        
-        // Extract details from description HTML
         const descriptionDoc = new DOMParser().parseFromString(props.description, 'text/html');
         const location = descriptionDoc.querySelector('strong:contains("LOCATION:")')?.nextSibling.textContent.trim() || 'N/A';
-        const summary = descriptionDoc.body.textContent.split('LOCATION:')[0].trim(); // Basic summary extraction
+        const details = descriptionDoc.body.textContent.trim();
 
-        return `
-          <div class="alert-card alert-severity-${severity} collapsed" data-alert-idx="${idx}">
-            <img src="${iconUrl}" alt="${severity} icon" class="alert-icon" />
-            <div class="alert-info-collapsed">
-              <div class="alert-title">${props.title}</div>
-            </div>
-            <div class="alert-info-full">
-              <div class="alert-title">${props.title}</div>
-              <div class="alert-location">${location}</div>
-              <div class="alert-summary">${summary}</div>
-              <div class="alert-updated">Last updated: ${new Date(props.pubDate).toLocaleString()}</div>
-              <a href="${props.guid}" target="_blank" class="alert-details-link">View Details on RFS</a>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Add click handlers for collapse/expand
-      setTimeout(() => {
-        const cards = list.querySelectorAll('.alert-card');
-        cards.forEach(card => {
-          card.addEventListener('click', function(e) {
-            if (e.target.tagName === 'A') return;
-            const isExpanded = this.classList.contains('expanded');
-            cards.forEach(c => {
-              c.classList.add('collapsed');
-              c.classList.remove('expanded');
-            });
-            if (!isExpanded) {
-              this.classList.remove('collapsed');
-              this.classList.add('expanded');
-            }
-          });
-        });
-        // Expand the first card by default
-        if (cards[0]) {
-          cards[0].classList.remove('collapsed');
-          cards[0].classList.add('expanded');
-        }
-      }, 10);
-    });
+        return {
+          title: props.title,
+          level: props.category.includes('Emergency Warning') ? 'Emergency' : props.category.includes('Watch and Act') ? 'Watch and Act' : 'Advice',
+          priority: getPriorityFromCategory(props.category),
+          status: props.category.split(' - ')[1] || 'Unknown', // Extract status from category
+          locationDesc: location,
+          requiredResources: [], // Placeholder for now, could be derived from severity/priority
+          updated: new Date(props.pubDate).getTime(),
+          details: details,
+          link: props.guid
+        };
+      });
+      // Call the renderAlerts function defined in index.html
+      if (typeof renderAlerts === 'function') {
+        renderAlerts(processedAlerts);
+      } else {
+        console.error("renderAlerts function not found in index.html. Ensure script.js is loaded after index.html's inline script.");
+      }
+    })
+    .catch(error => console.error('Error fetching RFS incidents:', error));
 }
 
 
