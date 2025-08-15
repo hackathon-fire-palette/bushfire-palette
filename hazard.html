@@ -72,8 +72,28 @@
 
     <!-- Placeholder for other sections -->
     <section class="interactive-timeline-section card" style="margin-top: 1.5em;">
-      <h2>Interactive Timeline (Coming Soon)</h2>
-      <p>A horizontal scrollable timeline showing hazard events over the past 48 hours and upcoming forecasts.</p>
+      <h2>Interactive Timeline</h2>
+      <div class="timeline-controls" style="margin-bottom: 1em; display: flex; gap: 0.5em; flex-wrap: wrap;">
+        <button id="timelineNowBtn">Now</button>
+        <button id="timelinePrev24Btn">-24 h</button>
+        <button id="timelineNext24Btn">+24 h</button>
+        <label style="margin-left: 1em;"><input type="checkbox" id="timelineFilterBushfires" checked> Bushfires</label>
+        <label style="margin-left: 0.5em;"><input type="checkbox" id="timelineFilterFloods"> Floods</label>
+        <label style="margin-left: 0.5em;"><input type="checkbox" id="timelineFilterStorms"> Storms</label>
+        <label style="margin-left: 0.5em;"><input type="checkbox" id="timelineFilterHeatwaves"> Heatwaves</label>
+      </div>
+      <div class="timeline-container" style="overflow-x: auto; padding-bottom: 1em;">
+        <div id="timeline" class="timeline" style="display: flex; position: relative; height: 100px; align-items: center;">
+          <!-- Timeline events will be injected here -->
+        </div>
+      </div>
+      <div id="timelineDetails" class="card" style="margin-top: 1em; padding: 1em; display: none;">
+        <h3>Event Details</h3>
+        <p id="timelineEventTitle"></p>
+        <p id="timelineEventTime"></p>
+        <p id="timelineEventDescription"></p>
+        <a id="timelineEventLink" href="#" target="_blank" style="display: none;">View Details</a>
+      </div>
     </section>
 
     <section class="personalised-alerts-section card" style="margin-top: 1.5em;">
