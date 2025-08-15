@@ -193,8 +193,70 @@
 
 
     <section class="community-safety-checklist-section card" style="margin-top: 1.5em;">
-      <h2>Community Safety Checklist (Coming Soon)</h2>
-      <p>A collapsible accordion with ready-to-action checklists and a download PDF button.</p>
+      <h2>Community Safety Checklist</h2>
+      <p>Prepare for emergencies with our interactive checklist, based on trusted sources like AAMI, DFES WA, and Tasmanian Fire Service.</p>
+
+      <div class="checklist-progress-bar" style="margin-bottom: 1.5em; background-color: #e0e0e0; border-radius: 5px; height: 20px; overflow: hidden;">
+        <div id="checklistProgressBar" style="width: 0%; height: 100%; background-color: #28a745; border-radius: 5px; text-align: center; color: white; line-height: 20px; font-size: 0.8em; transition: width 0.5s ease-in-out;">0% Complete</div>
+      </div>
+
+      <div class="checklist-accordion">
+        <div class="accordion-item">
+          <button class="accordion-header" aria-expanded="false">
+            <h3>Before a Fire</h3>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <ul class="checklist-items">
+              <li><label><input type="checkbox" data-tip="Clear leaves, twigs, and other flammable materials from gutters and around your home."> Clean gutters and clear defendable space around home <span class="info-icon" title="What counts as 'defendable space'?">ℹ️</span></label></li>
+              <li><label><input type="checkbox" data-tip="Ensure your emergency kit includes first aid, medications, important documents, food, water, and a battery-powered radio."> Prepare an emergency kit with essentials <span class="info-icon" title="What should be in my emergency kit?">ℹ️</span></label></li>
+              <li><label><input type="checkbox" data-tip="Have at least 3 days of water per person and pet, stored in sealed containers."> Have 3 days of water supply <span class="info-icon" title="How much water is sufficient—and how to store it?">ℹ️</span></label></li>
+              <li><label><input type="checkbox" data-tip="Develop a clear plan for what to do if a fire threatens, including evacuation routes and meeting points."> Develop a bushfire survival plan</label></li>
+              <li><label><input type="checkbox" data-tip="Ensure all family members know the plan and practice it regularly."> Discuss plan with all household members</label></li>
+              <li><label><input type="checkbox" data-tip="Check and maintain smoke alarms regularly."> Check smoke alarms</label></li>
+              <li><label><input type="checkbox" data-tip="Ensure hoses are long enough to reach all parts of your property and are in good working order."> Check hose lengths and water pressure</label></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header" aria-expanded="false">
+            <h3>During a Fire</h3>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <ul class="checklist-items">
+              <li><label><input type="checkbox" data-tip="Stay informed by monitoring official emergency broadcasts (radio, TV, emergency apps)."> Monitor emergency broadcasts</label></li>
+              <li><label><input type="checkbox" data-tip="If advised to evacuate, do so immediately. Follow designated routes."> Evacuate if advised</label></li>
+              <li><label><input type="checkbox" data-tip="If staying, wear protective clothing (long sleeves, pants, sturdy shoes, hat, mask)."> Wear protective clothing</label></li>
+              <li><label><input type="checkbox" data-tip="Close all windows and doors to prevent embers from entering."> Close windows and doors</label></li>
+              <li><label><input type="checkbox" data-tip="Turn off gas and electricity if safe to do so."> Turn off gas and electricity</label></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header" aria-expanded="false">
+            <h3>After a Fire</h3>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <ul class="checklist-items">
+              <li><label><input type="checkbox" data-tip="Do not return to your property until authorities declare it safe."> Wait for official 'all clear'</label></li>
+              <li><label><input type="checkbox" data-tip="Be aware of hazards like hot spots, unstable structures, and fallen power lines."> Check for hazards (hot spots, power lines)</label></li>
+              <li><label><input type="checkbox" data-tip="Contact your insurance company as soon as possible."> Contact insurance company</label></li>
+              <li><label><input type="checkbox" data-tip="Seek support from emergency services or community groups if needed."> Seek support if needed</label></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="checklist-actions" style="margin-top: 2em; display: flex; flex-wrap: wrap; gap: 1em;">
+        <button id="downloadChecklistPdf" style="padding:0.7em 1.5em;border-radius:6px;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:1em;">Download Checklist PDF</button>
+        <button id="emailChecklist" style="padding:0.7em 1.5em;border-radius:6px;background:#007bff;color:#fff;border:none;cursor:pointer;font-size:1em;">Email My Checklist</button>
+        <button id="saveChecklistProgress" style="padding:0.7em 1.5em;border-radius:6px;background:#6c757d;color:#fff;border:none;cursor:pointer;font-size:1em;">Save Progress</button>
+        <button id="loadChecklistProgress" style="padding:0.7em 1.5em;border-radius:6px;background:#6c757d;color:#fff;border:none;cursor:pointer;font-size:1em;">Load Progress</button>
+      </div>
     </section>
   </main>
   <footer>

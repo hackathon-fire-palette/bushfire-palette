@@ -386,7 +386,105 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initial render of timeline
   loadTimelineData().then(renderTimeline);
+
+  // Community Safety Checklist: Accordion and Progress
+  const accordionHeaders = document.querySelectorAll('.accordion-header');
+  accordionHeaders.forEach(header => {
+    header.addEventListener('click', function() {
+      const accordionItem = this.closest('.accordion-item');
+      const content = accordionItem.querySelector('.accordion-content');
+      const icon = this.querySelector('.accordion-icon');
+
+      const isExpanded = this.getAttribute('aria-expanded') === 'true';
+      this.setAttribute('aria-expanded', !isExpanded);
+      content.style.display = isExpanded ? 'none' : 'block';
+      icon.textContent = isExpanded ? '▼' : '▲';
+    });
+  });
+
+  const checklistItems = document.querySelectorAll('.checklist-items input[type="checkbox"]');
+  checklistItems.forEach(checkbox => {
+    checkbox.addEventListener('change', updateChecklistProgress);
+  });
+
+  // Info icons for checklist items
+  document.querySelectorAll('.checklist-items .info-icon').forEach(icon => {
+    icon.addEventListener('click', function(e) {
+      e.stopPropagation(); // Prevent checkbox from toggling
+      const tip = this.closest('label').querySelector('input[type="checkbox"]').dataset.tip;
+      if (tip) {
+        alert(tip); // Simple alert for now, could be a custom tooltip
+      }
+    });
+  });
+
+  // Checklist action buttons
+  document.getElementById('downloadChecklistPdf').addEventListener('click', function() {
+    alert('Downloading checklist as PDF... (This feature requires a PDF generation library or server-side rendering.)');
+    // Example: Generate PDF using jsPDF or similar library
+    // const { jsPDF } = window.jspdf;
+    // const doc = new jsPDF();
+    // doc.text("My Emergency Checklist", 10, 10);
+    // // Add checklist items
+    // doc.save("emergency_checklist.pdf");
+  });
+
+  document.getElementById('emailChecklist').addEventListener('click', function() {
+    alert('Emailing checklist summary... (This feature requires backend integration for sending emails.)');
+    // Example: Collect data and send via fetch API to a backend endpoint
+    // const checklistData = getChecklistProgress();
+    // fetch('/api/email-checklist', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(checklistData)
+    // });
+  });
+
+  document.getElementById('saveChecklistProgress').addEventListener('click', saveChecklistProgress);
+  document.getElementById('loadChecklistProgress').addEventListener('click', loadChecklistProgress);
+
+  // Initial load of checklist progress
+  loadChecklistProgress();
+  updateChecklistProgress(); // Update progress bar on load
 });
+
+function updateChecklistProgress() {
+  const checklistItems = document.querySelectorAll('.checklist-items input[type="checkbox"]');
+  const totalItems = checklistItems.length;
+  const completedItems = Array.from(checklistItems).filter(checkbox => checkbox.checked).length;
+  const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+
+  const progressBar = document.getElementById('checklistProgressBar');
+  progressBar.style.width = `${progress.toFixed(0)}%`;
+  progressBar.textContent = `${completedItems} of ${totalItems} items done - ${progress.toFixed(0)}% complete`;
+}
+
+function saveChecklistProgress() {
+  const checklistItems = document.querySelectorAll('.checklist-items input[type="checkbox"]');
+  const progress = {};
+  checklistItems.forEach((checkbox, index) => {
+    progress[index] = checkbox.checked;
+  });
+  localStorage.setItem('bushfireChecklistProgress', JSON.stringify(progress));
+  alert('Checklist progress saved locally!');
+}
+
+function loadChecklistProgress() {
+  const savedProgress = localStorage.getItem('bushfireChecklistProgress');
+  if (savedProgress) {
+    const progress = JSON.parse(savedProgress);
+    const checklistItems = document.querySelectorAll('.checklist-items input[type="checkbox"]');
+    checklistItems.forEach((checkbox, index) => {
+      if (progress[index] !== undefined) {
+        checkbox.checked = progress[index];
+      }
+    });
+    updateChecklistProgress();
+    alert('Checklist progress loaded!');
+  } else {
+    alert('No saved checklist progress found.');
+  }
+}
 
 function updateLegend() {
   const legendContent = document.getElementById('legendContent');
