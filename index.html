@@ -518,6 +518,17 @@
     <button id="contrastToggle" aria-label="Toggle high contrast" tabindex="0">⬛ High Contrast</button>
     <select id="languageSelect" aria-label="Select language" tabindex="0">
       <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="es">Español</option>
+      <option value="de">Deutsch</option>
+      <option value="it">Italiano</option>
+      <option value="pt">Português</option>
+      <option value="hi">हिन्दी</option>
+      <option value="jp">日本語</option>
+      <option value="ko">한국어</option>
+      <option value="vi">Tiếng Việt</option>
+      <option value="th">ภาษาไทย</option>
+      <option value="id">Bahasa Indonesia</option>
       <option value="zh">中文</option>
       <option value="ar">العربية</option>
       <option value="noongar">Noongar</option>
@@ -532,8 +543,18 @@
     </div>
     <nav>
   <a href="index.html" class="active">Dashboard</a>
-  <a href="roster.html">Roster</a>
-  <a href="vehicle.html">Vehicle Tracking</a>
+  <div class="dropdown">
+    <a href="#" class="dropdown-toggle" id="operationsMenu" aria-haspopup="true" aria-expanded="false">
+      Operations ▼
+    </a>
+    <div class="dropdown-menu" aria-labelledby="operationsMenu">
+      <a href="roster.html">Roster Management</a>
+      <a href="vehicle.html">Vehicle Tracking</a>
+      <a href="employee.html">Employee Management</a>
+      <a href="leave.html" class="active">Leave Application</a>
+      <a href="compliance.html">Compliance</a>
+    </div>
+  </div>
   <a href="compliance.html">Compliance</a>
   <a href="hazard.html">Hazard Information</a>
   <a href="about.html">About</a>
