@@ -82,9 +82,8 @@ function getPriorityFromCategory(category) {
 }
 
 function renderAlertsList() {
-  // This function will now fetch real data and integrate with the renderAlerts function in index.html
-  // Directly fetch from the RFS JSON feed as this is a client-side application
-  fetch('https://www.rfs.nsw.gov.au/feeds/majorIncidents.json')
+  // This function will now fetch real data from the local JSON file and integrate with the renderAlerts function in index.html
+  fetch('data/rfs-incidents.json')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

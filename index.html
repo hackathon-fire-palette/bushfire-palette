@@ -1709,8 +1709,8 @@
         ...hospitals.map(h => ({...h, type:'hospital'})),
         ...ambulances.map(a => ({...a, type:'ambulance'}))
       ];
-      // Fetch fire incidents from the RFS feed and then set up map clusters
-      fetch('https://www.rfs.nsw.gov.au/feeds/majorIncidents.json')
+      // Fetch fire incidents from the local JSON file and then set up map clusters
+      fetch('data/rfs-incidents.json')
         .then(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
