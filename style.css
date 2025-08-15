@@ -1098,7 +1098,7 @@ footer a {
   min-width: 2000px; /* Base width for scrollability */
   display: flex;
   align-items: center;
-  border: 5px solid green !important; /* DEBUG: Strong green border */
+  /* border: 5px solid green !important; /* DEBUG: Strong green border */ */
 }
 
 .timeline-event {

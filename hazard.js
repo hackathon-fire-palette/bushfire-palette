@@ -163,6 +163,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load initial data
   loadHazardData().then(updateLegend); // Call updateLegend after data is loaded
 
+  // Set up real-time updates for hazard data
+  const mapUpdateIntervalMinutes = 5;
+  setInterval(() => {
+    console.log(`Refreshing map hazard data...`);
+    loadHazardData();
+  }, mapUpdateIntervalMinutes * 60 * 1000);
+
   // Event listeners for toggles
   document.getElementById('toggleBushfires').addEventListener('change', toggleLayer);
   document.getElementById('toggleFloods').addEventListener('change', toggleLayer);
@@ -342,6 +349,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const locationText = selectedAlertLocation.textContent;
       alert(`Subscription preferences for ${locationText}:\n${JSON.stringify(preferences, null, 2)}\n(This is a demo. Actual subscription requires backend integration.)`);
       // In a real application, you would send this data to a backend API
+    });
+  }
+
+  const testAlertBtn = document.getElementById('testAlertBtn');
+  if (testAlertBtn) {
+    testAlertBtn.addEventListener('click', function() {
+      const locationText = selectedAlertLocation.textContent;
+      alert(`Sending a test alert to your preferred methods for ${locationText}. (This is a demo. Actual alert delivery requires backend integration.)`);
     });
   }
 
@@ -1099,10 +1114,19 @@ function scrollToCurrentTime() {
 
   const minTime = timelineEvents[0].timestamp;
   const maxTime = timelineEvents[timelineEvents.length - 1].timestamp;
-  const timeSpan = maxTime - minTime;
-  const scaleFactor = timeSpan > 0 ? timeline.offsetWidth / timeSpan : 0;
+  const totalTimelineWidth = timeline.scrollWidth; // Use scrollWidth for actual content width
 
-  const scrollPosition = (currentTimelineDate.getTime() - minTime) * scaleFactor - (timelineContainer.offsetWidth / 2);
+  // Calculate the position of the current date relative to the timeline's total time span
+  let positionRatio;
+  if (maxTime === minTime) { // Handle case where all events are at the same timestamp
+    positionRatio = 0.5; // Center if only one point in time
+  } else {
+    positionRatio = (currentTimelineDate.getTime() - minTime) / (maxTime - minTime);
+  }
+
+  // Calculate the scroll position to center the current date
+  const scrollPosition = (totalTimelineWidth * positionRatio) - (timelineContainer.offsetWidth / 2);
+
   timelineContainer.scrollLeft = scrollPosition;
 }
 
