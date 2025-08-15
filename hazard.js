@@ -1174,3 +1174,86 @@ function toggleLayer(event) {
       break;
   }
 }
+// --- Last fire in the news (UI -> API -> render) ---
+const fireForm = document.getElementById('fireNewsForm');
+const fireInput = document.getElementById('fireNewsLocation');
+const fireBox   = document.getElementById('fireNewsResult');
+
+async function fetchLastFireNews(location) {
+  const url = `/api/last-fire-news?location=${encodeURIComponent(location)}&country=AU&lang=en`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('news fetch failed');
+  return r.json();
+}
+
+function renderFireNews(resp) {
+  fireBox.style.display = 'block';
+  const { ok, item, error, near } = resp || {};
+  if (!ok || !item) {
+    fireBox.innerHTML = `<strong>No recent bushfire news found for “${near || fireInput.value}”.</strong>` +
+                        (error ? `<div style="opacity:.7">${error}</div>` : '');
+    return;
+  }
+  const dt = new Date(item.publishedAt).toLocaleString();
+  fireBox.innerHTML = `
+    <div style="font-weight:600; margin-bottom:6px;">Last reported fire near <em>${item.near}</em></div>
+    <div style="margin:6px 0;"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></div>
+    <div style="opacity:.8">${item.source || 'News'} • ${dt}</div>
+    ${item.snippet ? `<div style="margin-top:8px">${item.snippet}</div>` : ''}
+  `;
+}
+
+fireForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const loc = fireInput.value.trim();
+  if (!loc) return;
+  fireBox.style.display = 'block';
+  fireBox.textContent = 'Searching…';
+  try {
+    const data = await fetchLastFireNews(loc);
+    renderFireNews(data);
+  } catch (err) {
+    renderFireNews({ ok:false, error:String(err) });
+  }
+});// --- Last fire in the news (UI -> API -> render) ---
+const fireForm = document.getElementById('fireNewsForm');
+const fireInput = document.getElementById('fireNewsLocation');
+const fireBox   = document.getElementById('fireNewsResult');
+
+async function fetchLastFireNews(location) {
+  const url = `/api/last-fire-news?location=${encodeURIComponent(location)}&country=AU&lang=en`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('news fetch failed');
+  return r.json();
+}
+
+function renderFireNews(resp) {
+  fireBox.style.display = 'block';
+  const { ok, item, error, near } = resp || {};
+  if (!ok || !item) {
+    fireBox.innerHTML = `<strong>No recent bushfire news found for “${near || fireInput.value}”.</strong>` +
+                        (error ? `<div style="opacity:.7">${error}</div>` : '');
+    return;
+  }
+  const dt = new Date(item.publishedAt).toLocaleString();
+  fireBox.innerHTML = `
+    <div style="font-weight:600; margin-bottom:6px;">Last reported fire near <em>${item.near}</em></div>
+    <div style="margin:6px 0;"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></div>
+    <div style="opacity:.8">${item.source || 'News'} • ${dt}</div>
+    ${item.snippet ? `<div style="margin-top:8px">${item.snippet}</div>` : ''}
+  `;
+}
+
+fireForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const loc = fireInput.value.trim();
+  if (!loc) return;
+  fireBox.style.display = 'block';
+  fireBox.textContent = 'Searching…';
+  try {
+    const data = await fetchLastFireNews(loc);
+    renderFireNews(data);
+  } catch (err) {
+    renderFireNews({ ok:false, error:String(err) });
+  }
+});
