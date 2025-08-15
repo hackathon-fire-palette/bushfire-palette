@@ -892,3 +892,119 @@ footer a {
 #legendContent img, #legendContent span {
   margin-right: 0.5em;
 }
+
+/* Styles for Interactive Timeline */
+.timeline-container {
+  position: relative;
+  height: 120px; /* Increased height to accommodate markers and labels */
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fcfcfc;
+  overflow-x: auto;
+  white-space: nowrap; /* Prevent wrapping of timeline events */
+  padding: 1em 0;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.timeline {
+  position: relative;
+  height: 100%;
+  min-width: 2000px; /* Base width for scrollability */
+  display: flex;
+  align-items: center;
+}
+
+.timeline-event {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s, opacity 0.2s;
+  padding: 0.5em;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  z-index: 10; /* Ensure events are above the line */
+}
+
+.timeline-event:hover {
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 11;
+}
+
+.timeline-marker {
+  font-size: 1.2em;
+  margin-bottom: 0.3em;
+}
+
+.timeline-label {
+  font-size: 0.8em;
+  color: #555;
+  white-space: normal; /* Allow label to wrap */
+  max-width: 80px; /* Limit label width */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Severity-based coloring for timeline events */
+.timeline-severity-emergency {
+  border-color: #c0392b;
+  background: #fff3f0;
+}
+.timeline-severity-critical {
+  border-color: #c0392b;
+  background: #fff3f0;
+}
+.timeline-severity-medium {
+  border-color: #f39c12;
+  background: #fffbe6;
+}
+.timeline-severity-low {
+  border-color: #1976d2;
+  background: #e6f0ff;
+}
+.timeline-severity-advice {
+  border-color: #1976d2;
+  background: #e6f0ff;
+}
+
+/* Timeline controls */
+.timeline-controls button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5em 1em;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.timeline-controls button:hover {
+  background: #1565c0;
+}
+
+/* Timeline details panel */
+#timelineDetails {
+  border-left: 5px solid #1976d2;
+}
+#timelineDetails h3 {
+  color: #1976d2;
+  margin-top: 0;
+  font-size: 1.1em;
+}
+#timelineDetails p {
+  margin-bottom: 0.5em;
+  font-size: 0.95em;
+  color: #333;
+}
+#timelineDetails a {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: bold;
+}
+#timelineDetails a:hover {
+  text-decoration: underline;
+}

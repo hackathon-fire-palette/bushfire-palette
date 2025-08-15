@@ -139,6 +139,9 @@ let map;
 let bushfireLayer, floodLayer, stormDamageLayer, heatwaveLayer, predictiveRiskLayer;
 let bushfireCluster, floodCluster, stormDamageCluster, heatwaveCluster;
 
+let timelineEvents = []; // Array to hold all timeline events
+let currentTimelineDate = new Date(); // Current date for timeline view
+
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize map
   map = L.map('hazardMap').setView([-25.2744, 133.7751], 4); // Center on Australia
@@ -231,6 +234,19 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('languageSelect').onchange = function() {
     document.documentElement.lang = this.value;
   };
+
+  // Timeline event listeners
+  document.getElementById('timelineNowBtn').addEventListener('click', () => setTimelineView('now'));
+  document.getElementById('timelinePrev24Btn').addEventListener('click', () => setTimelineView('prev24'));
+  document.getElementById('timelineNext24Btn').addEventListener('click', () => setTimelineView('next24'));
+
+  document.getElementById('timelineFilterBushfires').addEventListener('change', renderTimeline);
+  document.getElementById('timelineFilterFloods').addEventListener('change', renderTimeline);
+  document.getElementById('timelineFilterStorms').addEventListener('change', renderTimeline);
+  document.getElementById('timelineFilterHeatwaves').addEventListener('change', renderTimeline);
+
+  // Initial render of timeline
+  loadTimelineData().then(renderTimeline);
 });
 
 function updateLegend() {
@@ -356,6 +372,222 @@ async function loadHazardData() {
     }).bindPopup(`<b>${data.title}</b><br>${data.details}`);
     heatwaveCluster.addLayer(marker);
   });
+}
+
+async function loadTimelineData() {
+  // Fetch data from existing mock sources and transform for timeline
+  const firmsData = await fetchFIRMSData();
+  const digitalAtlasData = await fetchDigitalAtlasData();
+  const predictiveRiskData = await fetchPredictiveRiskZoneData();
+
+  // Clear previous events
+  timelineEvents = [];
+
+  // Process FIRMS data for timeline
+  firmsData.features.forEach(feature => {
+    if (feature.geometry.type === 'Point') {
+      const timestamp = new Date(`${feature.properties.acq_date}T${feature.properties.acq_time.substring(0, 2)}:${feature.properties.acq_time.substring(2, 4)}:00`).getTime();
+      timelineEvents.push({
+        id: feature.properties.id,
+        timestamp: timestamp,
+        type: 'bushfire',
+        severity: 'critical', // FIRMS are hotspots, so critical
+        title: 'Bushfire Hotspot Detected',
+        description: `Confidence: ${feature.properties.confidence}, Brightness: ${feature.properties.brightness}`,
+        link: null // No direct link for FIRMS data in this mock
+      });
+    }
+  });
+
+  // Process Digital Atlas data for timeline
+  digitalAtlasData.features.forEach(feature => {
+    if (feature.geometry.type === 'Polygon') {
+      const timestamp = new Date(feature.properties.updated).getTime();
+      timelineEvents.push({
+        id: feature.properties.id,
+        timestamp: timestamp,
+        type: 'bushfire',
+        severity: feature.properties.status === 'Active' ? 'emergency' : 'advice',
+        title: `Bushfire: ${feature.properties.name}`,
+        description: `Status: ${feature.properties.status}, Area: ${feature.properties.area_km2} km²`,
+        link: null // No direct link for Digital Atlas data in this mock
+      });
+    }
+  });
+
+  // Process Predictive Risk Data for timeline
+  predictiveRiskData.features.forEach(feature => {
+    if (feature.geometry.type === 'Polygon') {
+      const timestamp = new Date(feature.properties.prediction_time).getTime();
+      timelineEvents.push({
+        id: feature.properties.id,
+        timestamp: timestamp,
+        type: 'predictive-risk',
+        severity: feature.properties.risk_level === 'High' ? 'emergency' : 'advice',
+        title: `Predicted Risk: ${feature.properties.risk_level}`,
+        description: `Forecasted risk area.`,
+        link: null
+      });
+    }
+  });
+
+  // Add dummy data for other hazard types for timeline
+  const now = Date.now();
+  const oneHour = 1000 * 60 * 60;
+  const oneDay = oneHour * 24;
+
+  // Floods
+  timelineEvents.push({
+    id: 'flood1', timestamp: now - oneHour * 5, type: 'flood', severity: 'medium',
+    title: 'Minor Flood Warning Issued', description: 'River levels rising in Swan River.', link: '#'
+  });
+  timelineEvents.push({
+    id: 'flood2', timestamp: now + oneHour * 10, type: 'flood', severity: 'medium',
+    title: 'Flood Watch for Coastal Areas', description: 'Heavy rainfall expected in next 12 hours.', link: '#'
+  });
+
+  // Storms
+  timelineEvents.push({
+    id: 'storm1', timestamp: now - oneDay * 0.5, type: 'storm', severity: 'critical',
+    title: 'Severe Thunderstorm Alert', description: 'Damaging winds and large hail reported.', link: '#'
+  });
+  timelineEvents.push({
+    id: 'storm2', timestamp: now + oneDay * 1, type: 'storm', severity: 'low',
+    title: 'Storm Damage Clean-up', description: 'Minor power outages and tree debris.', link: '#'
+  });
+
+  // Heatwaves
+  timelineEvents.push({
+    id: 'heatwave1', timestamp: now - oneDay * 1.5, type: 'heatwave', severity: 'critical',
+    title: 'Extreme Heatwave Advisory', description: 'Temperatures exceeding 40°C for 3 days.', link: '#'
+  });
+  timelineEvents.push({
+    id: 'heatwave2', timestamp: now + oneDay * 2, type: 'heatwave', severity: 'low',
+    title: 'Heatwave Conditions Expected', description: 'Stay hydrated and avoid direct sun.', link: '#'
+  });
+
+  // Sort events by timestamp
+  timelineEvents.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function renderTimeline() {
+  const timelineContainer = document.getElementById('timeline');
+  const timelineDetails = document.getElementById('timelineDetails');
+  const filterBushfires = document.getElementById('timelineFilterBushfires').checked;
+  const filterFloods = document.getElementById('timelineFilterFloods').checked;
+  const filterStorms = document.getElementById('timelineFilterStorms').checked;
+  const filterHeatwaves = document.getElementById('timelineFilterHeatwaves').checked;
+
+  timelineContainer.innerHTML = '';
+  timelineDetails.style.display = 'none'; // Hide details panel by default
+
+  const filteredEvents = timelineEvents.filter(event => {
+    if (event.type === 'bushfire' || event.type === 'predictive-risk') return filterBushfires;
+    if (event.type === 'flood') return filterFloods;
+    if (event.type === 'storm') return filterStorms;
+    if (event.type === 'heatwave') return filterHeatwaves;
+    return false;
+  });
+
+  // Calculate timeline width based on event spread (simple approach)
+  if (filteredEvents.length === 0) {
+    timelineContainer.style.width = '100%';
+    timelineContainer.innerHTML = '<p style="text-align:center; width:100%;">No events to display for selected filters.</p>';
+    return;
+  }
+
+  const minTime = filteredEvents[0].timestamp;
+  const maxTime = filteredEvents[filteredEvents.length - 1].timestamp;
+  const timeSpan = maxTime - minTime; // Total time span in milliseconds
+
+  // Ensure a minimum width for scrollability, e.g., 2000px
+  const baseWidth = 2000;
+  let scaleFactor;
+  if (timeSpan > 0) {
+    scaleFactor = baseWidth / timeSpan;
+  } else {
+    // If all events have the same timestamp, distribute them evenly
+    scaleFactor = 0; // Will be handled by event positioning logic below
+  }
+
+  timelineContainer.style.width = `${baseWidth}px`; // Set a fixed width for now
+
+  filteredEvents.forEach((event, index) => {
+    const eventElement = document.createElement('div');
+    eventElement.className = `timeline-event timeline-event-${event.type} timeline-severity-${event.severity}`;
+    
+    let leftPosition;
+    if (timeSpan > 0) {
+      leftPosition = (event.timestamp - minTime) * scaleFactor;
+    } else {
+      // Distribute evenly if all events are at the same timestamp
+      leftPosition = (baseWidth / (filteredEvents.length + 1)) * (index + 1);
+    }
+    
+    eventElement.style.left = `${leftPosition}px`;
+    eventElement.style.position = 'absolute'; // Enable absolute positioning
+
+    // Icon for event
+    let iconHtml = '';
+    if (event.type === 'bushfire') iconHtml = `<img src="${incidentIcons['bushfire']}" width="24" height="24">`;
+    else if (event.type === 'flood') iconHtml = `<span style="font-size:1.5em;">🌊</span>`;
+    else if (event.type === 'storm') iconHtml = `<span style="font-size:1.5em;">⛈️</span>`;
+    else if (event.type === 'heatwave') iconHtml = `<span style="font-size:1.5em;">☀️</span>`;
+    else if (event.type === 'predictive-risk') iconHtml = `<span style="display:inline-block;width:24px;height:24px;background:#f1c40f;border:1px solid #f39c12;vertical-align:middle;"></span>`;
+
+    eventElement.innerHTML = `
+      <div class="timeline-marker">${iconHtml}</div>
+      <div class="timeline-label">${event.title}</div>
+    `;
+    eventElement.title = `${event.title} (${new Date(event.timestamp).toLocaleString()})`; // Tooltip
+
+    eventElement.addEventListener('click', () => showTimelineDetails(event));
+    timelineContainer.appendChild(eventElement);
+  });
+
+  // Scroll to "Now" or current date
+  scrollToCurrentTime();
+}
+
+function showTimelineDetails(event) {
+  const timelineDetails = document.getElementById('timelineDetails');
+  document.getElementById('timelineEventTitle').textContent = event.title;
+  document.getElementById('timelineEventTime').textContent = new Date(event.timestamp).toLocaleString();
+  document.getElementById('timelineEventDescription').textContent = event.description;
+  const linkElement = document.getElementById('timelineEventLink');
+  if (event.link) {
+    linkElement.href = event.link;
+    linkElement.style.display = 'inline';
+  } else {
+    linkElement.style.display = 'none';
+  }
+  timelineDetails.style.display = 'block';
+}
+
+function setTimelineView(view) {
+  const now = new Date();
+  if (view === 'now') {
+    currentTimelineDate = now;
+  } else if (view === 'prev24') {
+    currentTimelineDate.setTime(currentTimelineDate.getTime() - (1000 * 60 * 60 * 24));
+  } else if (view === 'next24') {
+    currentTimelineDate.setTime(currentTimelineDate.getTime() + (1000 * 60 * 60 * 24));
+  }
+  scrollToCurrentTime();
+}
+
+function scrollToCurrentTime() {
+  const timelineContainer = document.querySelector('.timeline-container');
+  const timeline = document.getElementById('timeline');
+  if (!timelineContainer || !timeline || timelineEvents.length === 0) return;
+
+  const minTime = timelineEvents[0].timestamp;
+  const maxTime = timelineEvents[timelineEvents.length - 1].timestamp;
+  const timeSpan = maxTime - minTime;
+  const scaleFactor = timeSpan > 0 ? timeline.offsetWidth / timeSpan : 0;
+
+  const scrollPosition = (currentTimelineDate.getTime() - minTime) * scaleFactor - (timelineContainer.offsetWidth / 2);
+  timelineContainer.scrollLeft = scrollPosition;
 }
 
 function toggleLayer(event) {
