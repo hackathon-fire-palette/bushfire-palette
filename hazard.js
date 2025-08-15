@@ -127,12 +127,14 @@ const incidentIcons = {
   'bushfire advice': 'assets/icon-advice.svg',
   'active alarm': 'assets/icon-alarm.svg',
   'road crash': 'assets/icon-roadcrash.svg',
+  'watch and act': 'assets/watch-icon.svg', // Added Watch and Act icon
 };
 
 const severityIcons = {
   low: 'assets/icon-advice.svg',
   medium: 'assets/icon-storm.svg',
   critical: 'assets/icon-alarm.svg',
+  'watch and act': 'assets/watch-icon.svg', // Added Watch and Act icon
 };
 
 let map;
@@ -514,9 +516,9 @@ function updateLegend() {
   html += `<div><span style="display:inline-block;width:24px;height:24px;background:#f1c40f;border:1px solid #f39c12;vertical-align:middle;"></span> Predictive Risk Area</div>`;
 
   html += '<h4 style="margin-top:1em;">Severity Levels:</h4>';
-  html += `<div><span style="display:inline-block;width:20px;height:10px;background:#c0392b;vertical-align:middle;"></span> Emergency (Immediate Threat)</div>`;
-  html += `<div><span style="display:inline-block;width:20px;height:10px;background:#f39c12;vertical-align:middle;"></span> Watch and Act (High Alert)</div>`;
-  html += `<div><span style="display:inline-block;width:20px;height:10px;background:#1976d2;vertical-align:middle;"></span> Advice (Monitor Conditions)</div>`;
+  html += `<div><img src="${severityIcons['critical']}" width="24" height="24" style="vertical-align:middle;"> Emergency (Immediate Threat)</div>`;
+  html += `<div><img src="${severityIcons['watch and act']}" width="24" height="24" style="vertical-align:middle;"> Watch and Act (High Alert)</div>`;
+  html += `<div><img src="${severityIcons['low']}" width="24" height="24" style="vertical-align:middle;"> Advice (Monitor Conditions)</div>`;
 
   legendContent.innerHTML = html;
 }
