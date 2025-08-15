@@ -69,8 +69,6 @@
       </div>
     </section>
 
-
-    <!-- Placeholder for other sections -->
     <section class="interactive-timeline-section card" style="margin-top: 1.5em;">
       <h2>Interactive Timeline</h2>
       <div class="timeline-controls" style="margin-bottom: 1em; display: flex; gap: 0.5em; flex-wrap: wrap;">
@@ -96,21 +94,108 @@
       </div>
     </section>
 
+    <!--
     <section class="personalised-alerts-section card" style="margin-top: 1.5em;">
-      <h2>Personalised Alerts (Coming Soon)</h2>
-      <p>Input your postcode/suburb to filter hazards in your area and subscribe for updates.</p>
+      <h2>Personalised Alerts</h2>
+      <p>Receive real-time updates for hazards in your area. Enter your location or use GPS to get started.</p>
+
+      <div class="alert-setup-container">
+        <h3>1. Set Your Location</h3>
+        <div style="display:flex;align-items:center;gap:0.5em;margin-bottom:0.7em;">
+          <input
+            id="alertLocationInput"
+            type="text"
+            placeholder="Enter suburb or postcode"
+            style="flex:1;padding:0.5em 1em;border-radius:6px;border:1px solid #ccc;font-size:1em;"
+            aria-label="Enter suburb or postcode for alerts"
+          />
+          <button
+            id="alertFindMeBtn"
+            style="padding:0.5em 1em;border-radius:6px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:1em;"
+            aria-label="Find my current location for alerts"
+            title="Find my current location"
+          >📍 Use My Location</button>
+        </div>
+        <p id="selectedAlertLocation" style="font-weight: bold; margin-top: 0.5em;">Location: Not set</p>
+      </div>
+
+      <div class="local-hazard-dashboard" style="margin-top: 1.5em;">
+        <h3>2. Local Hazard Dashboard</h3>
+        <p id="dashboardStatus">Loading hazards for your location...</p>
+        <div id="activeIncidentsList" style="margin-top: 1em;">
+          <!-- Active incidents will be displayed here -->
+          <p>No active incidents found within 50 km of your location.</p>
+        </div>
+        <div id="dashboardMap" style="height: 300px; width: 100%; margin-top: 1em; border-radius: 8px; display: none;"></div>
+      </div>
+
+      <div class="subscription-options" style="margin-top: 1.5em;">
+        <h3>3. Subscription Options</h3>
+        <form id="alertSubscriptionForm">
+          <div style="margin-bottom: 1em;">
+            <h4>Receive alerts via:</h4>
+            <label><input type="checkbox" name="alertMethod" value="email" checked> Email</label>
+            <label style="margin-left: 1em;"><input type="checkbox" name="alertMethod" value="sms"> SMS</label>
+            <label style="margin-left: 1em;"><input type="checkbox" name="alertMethod" value="push"> Push Notifications</label>
+          </div>
+
+          <div style="margin-bottom: 1em;">
+            <h4>Alert Preferences:</h4>
+            <label><input type="radio" name="alertRiskLevel" value="all" checked> All hazards</label><br>
+            <label><input type="radio" name="alertRiskLevel" value="high-risk"> High-risk only (Emergency & Watch/Act)</label><br>
+            <label><input type="radio" name="alertRiskLevel" value="specific"> Specific hazard types:</label>
+            <div style="margin-left: 1.5em;">
+              <label><input type="checkbox" name="specificHazardType" value="fire"> Fire</label><br>
+              <label><input type="checkbox" name="specificHazardType" value="flood"> Flood</label><br>
+              <label><input type="checkbox" name="specificHazardType" value="storm"> Storm</label><br>
+              <label><input type="checkbox" name="specificHazardType" value="heatwave"> Heatwave</label>
+            </div>
+          </div>
+
+          <button type="submit" style="padding:0.7em 1.5em;border-radius:6px;background:#28a745;color:#fff;border:none;cursor:pointer;font-size:1em;">Subscribe to Alerts</button>
+        </form>
+      </div>
+
+      <div class="alert-examples" style="margin-top: 1.5em;">
+        <h3>4. Alert Examples</h3>
+        <div class="card" style="padding: 1em; border-left: 5px solid #c0392b;">
+          <h4>Email Alert Example:</h4>
+          <p><strong>Subject: Bushfire Watch - Near Perth Hills</strong></p>
+          <p>Dear User,</p>
+          <p>A Bushfire Watch and Act alert has been issued <strong>8 km NE from your location (Perth Hills)</strong>. Stay alert and monitor conditions.</p>
+          <p><strong>Status:</strong> Watch and Act</p>
+          <p><strong>Distance:</strong> 8 km NE</p>
+          <p><strong>Actions:</strong> View DFES emergency page: [Link to DFES]</p>
+          <p>Stay safe,</p>
+          <p>Australian Bushfire Alert System Team</p>
+        </div>
+        <div class="card" style="padding: 1em; border-left: 5px solid #1976d2; margin-top: 1em;">
+          <h4>SMS Alert Example:</h4>
+          <p><strong>BUSHFIRE ADVICE:</strong> 15km SW from Bunbury. Monitor conditions. Info: [Link]</p>
+        </div>
+      </div>
+
+      <div class="emergency-quick-actions" style="margin-top: 1.5em;">
+        <h3>5. Emergency Quick Actions</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 1em;">
+          <button class="quick-action-btn" style="padding:0.7em 1.2em;border-radius:6px;background:#dc3545;color:#fff;border:none;cursor:pointer;font-size:0.9em;">
+            <img src="assets/emergency-icon.svg" alt="Evacuation" width="20" height="20" style="vertical-align:middle; margin-right: 5px;"> Find nearest evacuation centre
+          </button>
+          <button class="quick-action-btn" style="padding:0.7em 1.2em;border-radius:6px;background:#007bff;color:#fff;border:none;cursor:pointer;font-size:0.9em;">
+            <img src="assets/advice-icon.svg" alt="DFES" width="20" height="20" style="vertical-align:middle; margin-right: 5px;"> View DFES emergency page
+          </button>
+          <button class="quick-action-btn" style="padding:0.7em 1.2em;border-radius:6px;background:#6c757d;color:#fff;border:none;cursor:pointer;font-size:0.9em;">
+            <img src="assets/ew-storm-damage.svg" alt="Checklist" width="20" height="20" style="vertical-align:middle; margin-right: 5px;"> Download emergency checklist
+          </button>
+        </div>
+      </div>
     </section>
 
-    <section class="hazard-impact-simulator-section card" style="margin-top: 1.5em;">
-      <h2>Hazard Impact Simulator (Coming Soon)</h2>
-      <p>“What if?” tool where a user can select hazard type and severity level.</p>
-    </section>
 
     <section class="community-safety-checklist-section card" style="margin-top: 1.5em;">
       <h2>Community Safety Checklist (Coming Soon)</h2>
       <p>A collapsible accordion with ready-to-action checklists and a download PDF button.</p>
     </section>
-
   </main>
   <footer>
     <div style="font-weight:bold;color:#c0392b;">
@@ -121,6 +206,8 @@
   </footer>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- Google Places API for Autocomplete -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
   <script src="hazard.js"></script>
   <script src="script.js"></script>
 </body>

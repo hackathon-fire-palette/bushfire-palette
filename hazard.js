@@ -142,8 +142,10 @@ let bushfireCluster, floodCluster, stormDamageCluster, heatwaveCluster;
 let timelineEvents = []; // Array to hold all timeline events
 let currentTimelineDate = new Date(); // Current date for timeline view
 
+let alertMap; // Separate map for the personalised alerts dashboard
+
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize map
+  // Initialize main hazard map
   map = L.map('hazardMap').setView([-25.2744, 133.7751], 4); // Center on Australia
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -168,9 +170,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('toggleHeatwaveWarnings').addEventListener('change', toggleLayer);
   document.getElementById('togglePredictiveRisk').addEventListener('change', toggleLayer);
 
-  // Find Me and Search functionality
-  var findMeBtn = document.getElementById('findMeBtn');
-  var searchInput = document.getElementById('locationSearchInput');
+  // Main Map: Find Me and Search functionality
+  const findMeBtn = document.getElementById('findMeBtn');
+  const searchInput = document.getElementById('locationSearchInput');
 
   if (findMeBtn) {
     findMeBtn.onclick = function() {
@@ -198,29 +200,166 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (searchInput) {
+    const autocompleteMain = new google.maps.places.Autocomplete(searchInput, {
+      types: ['(regions)'],
+      componentRestrictions: { 'country': 'au' }
+    });
+
+    autocompleteMain.addListener('place_changed', function() {
+      const place = autocompleteMain.getPlace();
+      if (!place.geometry) {
+        alert("No details available for input: '" + place.name + "'");
+        return;
+      }
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+      } else {
+        map.setView([place.geometry.location.lat(), place.geometry.location.lng()], 13);
+      }
+      L.marker([place.geometry.location.lat(), place.geometry.location.lng()], {
+        icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">🔎</span>',iconAnchor:[12,32]})
+      }).addTo(map).bindPopup(place.formatted_address).openPopup();
+    });
+
     searchInput.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
-        var query = searchInput.value.trim();
-        if (!query) return;
-        fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query))
-          .then(r => r.json())
-          .then(results => {
-            if (results && results.length > 0) {
-              const lat = parseFloat(results[0].lat);
-              const lon = parseFloat(results[0].lon);
-              map.setView([lat, lon], 13);
-              L.marker([lat, lon], {
-                icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">🔎</span>',iconAnchor:[12,32]})
-              }).addTo(map).bindPopup(results[0].display_name).openPopup();
-            } else {
-              alert('Location not found.');
-            }
-          })
-          .catch(() => alert('Location search failed.'));
       }
     });
   }
+
+  // Personalised Alerts: Location Entry Smart
+  const alertLocationInput = document.getElementById('alertLocationInput');
+  const alertFindMeBtn = document.getElementById('alertFindMeBtn');
+  const selectedAlertLocation = document.getElementById('selectedAlertLocation');
+  const dashboardMapDiv = document.getElementById('dashboardMap');
+
+  if (alertLocationInput) {
+    const autocompleteAlerts = new google.maps.places.Autocomplete(alertLocationInput, {
+      types: ['(regions)'],
+      componentRestrictions: { 'country': 'au' }
+    });
+
+    autocompleteAlerts.addListener('place_changed', function() {
+      const place = autocompleteAlerts.getPlace();
+      if (!place.geometry) {
+        selectedAlertLocation.textContent = "Location: Invalid place selected.";
+        return;
+      }
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      selectedAlertLocation.textContent = `Location: ${place.formatted_address} (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})`;
+      
+      // Initialize or update dashboard map
+      if (!alertMap) {
+        dashboardMapDiv.style.display = 'block';
+        alertMap = L.map('dashboardMap').setView([lat, lng], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(alertMap);
+      } else {
+        alertMap.setView([lat, lng], 12);
+      }
+      // Clear existing markers and add a new one for the selected location
+      alertMap.eachLayer(function (layer) {
+        if (layer instanceof L.Marker) {
+          alertMap.removeLayer(layer);
+        }
+      });
+      L.marker([lat, lng], {
+        icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">📍</span>',iconAnchor:[12,32]})
+      }).addTo(alertMap).bindPopup(place.formatted_address).openPopup();
+
+      // Trigger hazard data load for the new location
+      loadLocalHazardData(lat, lng);
+    });
+
+    alertLocationInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+      }
+    });
+  }
+
+  if (alertFindMeBtn) {
+    alertFindMeBtn.onclick = function() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+      alertFindMeBtn.disabled = true;
+      alertFindMeBtn.textContent = 'Locating...';
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        selectedAlertLocation.textContent = `Location: Your Current Location (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})`;
+        
+        // Initialize or update dashboard map
+        if (!alertMap) {
+          dashboardMapDiv.style.display = 'block';
+          alertMap = L.map('dashboardMap').setView([lat, lng], 12);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(alertMap);
+        } else {
+          alertMap.setView([lat, lng], 12);
+        }
+        // Clear existing markers and add a new one for the current location
+        alertMap.eachLayer(function (layer) {
+          if (layer instanceof L.Marker) {
+            alertMap.removeLayer(layer);
+          }
+        });
+        L.marker([lat, lng], {
+          icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">📍</span>',iconAnchor:[12,32]})
+        }).addTo(alertMap).bindPopup('Your current location').openPopup();
+
+        // Trigger hazard data load for the new location
+        loadLocalHazardData(lat, lng);
+
+        alertFindMeBtn.disabled = false;
+        alertFindMeBtn.textContent = '📍 Use My Location';
+      }, function() {
+        alert('Unable to retrieve your location.');
+        alertFindMeBtn.disabled = false;
+        alertFindMeBtn.textContent = '📍 Use My Location';
+        selectedAlertLocation.textContent = "Location: Failed to get current location.";
+      });
+    };
+  }
+
+  // Subscription form submission
+  const alertSubscriptionForm = document.getElementById('alertSubscriptionForm');
+  if (alertSubscriptionForm) {
+    alertSubscriptionForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(alertSubscriptionForm);
+      const preferences = {
+        alertMethods: formData.getAll('alertMethod'),
+        alertRiskLevel: formData.get('alertRiskLevel'),
+        specificHazardTypes: formData.getAll('specificHazardType')
+      };
+      const locationText = selectedAlertLocation.textContent;
+      alert(`Subscription preferences for ${locationText}:\n${JSON.stringify(preferences, null, 2)}\n(This is a demo. Actual subscription requires backend integration.)`);
+      // In a real application, you would send this data to a backend API
+    });
+  }
+
+  // Emergency Quick Actions
+  document.querySelectorAll('.quick-action-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const actionText = this.textContent.trim();
+      if (actionText.includes('evacuation centre')) {
+        alert('Finding nearest evacuation centre... (This would link to a map/list)');
+        // window.open('https://www.google.com/maps/search/evacuation+center+near+me', '_blank');
+      } else if (actionText.includes('DFES emergency page')) {
+        window.open('https://www.dfes.wa.gov.au/alerts/', '_blank');
+      } else if (actionText.includes('emergency checklist')) {
+        alert('Downloading emergency checklist... (This would trigger a PDF download)');
+        // window.open('assets/emergency-checklist.pdf', '_blank'); // Assuming a PDF exists
+      }
+    });
+  });
 
   // Accessibility toggles (copied from index.html)
   document.getElementById('darkModeToggle').onclick = function() {
@@ -469,6 +608,285 @@ async function loadTimelineData() {
   // Sort events by timestamp
   timelineEvents.sort((a, b) => a.timestamp - b.timestamp);
 }
+
+// Function to calculate distance between two lat/lng points (Haversine formula)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+}
+
+// Function to calculate bearing/direction
+function calculateBearing(lat1, lon1, lat2, lon2) {
+  const toRad = (deg) => deg * Math.PI / 180;
+  const toDeg = (rad) => rad * 180 / Math.PI;
+
+  const φ1 = toRad(lat1);
+  const φ2 = toRad(lat2);
+  const Δλ = toRad(lon2 - lon1);
+
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) -
+            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const θ = Math.atan2(y, x);
+
+  const bearing = (toDeg(θ) + 360) % 360; // in degrees
+  
+  if (bearing >= 337.5 || bearing < 22.5) return 'N';
+  else if (bearing >= 22.5 && bearing < 67.5) return 'NE';
+  else if (bearing >= 67.5 && bearing < 112.5) return 'E';
+  else if (bearing >= 112.5 && bearing < 157.5) return 'SE';
+  else if (bearing >= 157.5 && bearing < 202.5) return 'S';
+  else if (bearing >= 202.5 && bearing < 247.5) return 'SW';
+  else if (bearing >= 247.5 && bearing < 292.5) return 'W';
+  else if (bearing >= 292.5 && bearing < 337.5) return 'NW';
+  return '';
+}
+
+// Function to get color based on hazard status/severity
+function getStatusColor(status) {
+  switch (status.toLowerCase()) {
+    case 'emergency': return '#c0392b'; // Red
+    case 'watch and act': return '#f39c12'; // Orange
+    case 'advice': return '#1976d2'; // Blue
+    case 'active': return '#c0392b'; // Red for active incidents
+    case 'contained': return '#28a745'; // Green for contained
+    default: return '#6c757d'; // Grey
+  }
+}
+
+let currentAlertLocation = null; // To store the lat/lng of the selected alert location
+let alertMapMarkers = L.featureGroup(); // Layer for incidents on alertMap
+
+async function loadLocalHazardData(lat, lng) {
+  currentAlertLocation = { lat, lng };
+  const dashboardStatus = document.getElementById('dashboardStatus');
+  const activeIncidentsList = document.getElementById('activeIncidentsList');
+  const dashboardMapDiv = document.getElementById('dashboardMap');
+
+  dashboardStatus.textContent = 'Loading hazards for your location...';
+  activeIncidentsList.innerHTML = '';
+  alertMapMarkers.clearLayers(); // Clear existing markers on alert map
+
+  // Show the map if it's not already visible
+  dashboardMapDiv.style.display = 'block';
+
+  const radiusKm = 50; // Incidents within 50 km radius
+
+  try {
+    const [firmsData, digitalAtlasData, predictiveRiskData] = await Promise.all([
+      fetchFIRMSData(),
+      fetchDigitalAtlasData(),
+      fetchPredictiveRiskZoneData()
+    ]);
+
+    let incidents = [];
+
+    // Process FIRMS data
+    firmsData.features.forEach(feature => {
+      if (feature.geometry.type === 'Point') {
+        const incidentLat = feature.geometry.coordinates[1];
+        const incidentLng = feature.geometry.coordinates[0];
+        const distance = calculateDistance(lat, lng, incidentLat, incidentLng);
+        if (distance <= radiusKm) {
+          incidents.push({
+            type: 'Bushfire Hotspot',
+            status: 'Emergency', // FIRMS are critical
+            distance: distance.toFixed(1),
+            direction: calculateBearing(lat, lng, incidentLat, incidentLng),
+            name: `Hotspot (Confidence: ${feature.properties.confidence})`,
+            coords: [incidentLat, incidentLng],
+            icon: incidentIcons['bushfire']
+          });
+        }
+      }
+    });
+
+    // Process Digital Atlas data
+    digitalAtlasData.features.forEach(feature => {
+      if (feature.geometry.type === 'Polygon') {
+        // For polygons, use the centroid or a representative point for distance calculation
+        const bounds = L.geoJSON(feature).getBounds();
+        const incidentLat = bounds.getCenter().lat;
+        const incidentLng = bounds.getCenter().lng;
+        const distance = calculateDistance(lat, lng, incidentLat, incidentLng);
+        if (distance <= radiusKm) {
+          incidents.push({
+            type: 'Bushfire Boundary',
+            status: feature.properties.status,
+            distance: distance.toFixed(1),
+            direction: calculateBearing(lat, lng, incidentLat, incidentLng),
+            name: feature.properties.name,
+            coords: [incidentLat, incidentLng], // Store centroid for marker
+            geoJson: feature.geometry // Store full geometry for polygon on map
+          });
+        }
+      }
+    });
+
+    // Process Predictive Risk Data
+    predictiveRiskData.features.forEach(feature => {
+      if (feature.geometry.type === 'Polygon') {
+        const bounds = L.geoJSON(feature).getBounds();
+        const incidentLat = bounds.getCenter().lat;
+        const incidentLng = bounds.getCenter().lng;
+        const distance = calculateDistance(lat, lng, incidentLat, incidentLng);
+        if (distance <= radiusKm) {
+          incidents.push({
+            type: 'Predictive Risk Area',
+            status: feature.properties.risk_level,
+            distance: distance.toFixed(1),
+            direction: calculateBearing(lat, lng, incidentLat, incidentLng),
+            name: `Predicted Risk: ${feature.properties.risk_level}`,
+            coords: [incidentLat, incidentLng],
+            geoJson: feature.geometry
+          });
+        }
+      }
+    });
+
+    // Add dummy data for other hazard types (Floods, Storm Damage, Heatwave Warnings)
+    // Filter these based on proximity as well
+    const dummyFloodData = [
+      { lat: -31.9, lng: 115.9, title: "Minor Flood Warning", status: "Advice", icon: '🌊' },
+      { lat: -32.1, lng: 115.8, title: "Flood Watch", status: "Watch and Act", icon: '🌊' }
+    ];
+    dummyFloodData.forEach(data => {
+      const distance = calculateDistance(lat, lng, data.lat, data.lng);
+      if (distance <= radiusKm) {
+        incidents.push({
+          type: 'Flood',
+          status: data.status,
+          distance: distance.toFixed(1),
+          direction: calculateBearing(lat, lng, data.lat, data.lng),
+          name: data.title,
+          coords: [data.lat, data.lng],
+          icon: data.icon
+        });
+      }
+    });
+
+    const dummyStormData = [
+      { lat: -31.95, lng: 115.85, title: "Severe Thunderstorm Warning", status: "Emergency", icon: '⛈️' },
+      { lat: -32.0, lng: 116.0, title: "Storm Damage Report", status: "Advice", icon: '⛈️' }
+    ];
+    dummyStormData.forEach(data => {
+      const distance = calculateDistance(lat, lng, data.lat, data.lng);
+      if (distance <= radiusKm) {
+        incidents.push({
+          type: 'Storm',
+          status: data.status,
+          distance: distance.toFixed(1),
+          direction: calculateBearing(lat, lng, data.lat, data.lng),
+          name: data.title,
+          coords: [data.lat, data.lng],
+          icon: data.icon
+        });
+      }
+    });
+
+    const dummyHeatwaveData = [
+      { lat: -31.9, lng: 115.8, title: "Extreme Heatwave Warning", status: "Emergency", icon: '☀️' },
+      { lat: -32.0, lng: 115.9, title: "Heatwave Advice", status: "Advice", icon: '☀️' }
+    ];
+    dummyHeatwaveData.forEach(data => {
+      const distance = calculateDistance(lat, lng, data.lat, data.lng);
+      if (distance <= radiusKm) {
+        incidents.push({
+          type: 'Heatwave',
+          status: data.status,
+          distance: distance.toFixed(1),
+          direction: calculateBearing(lat, lng, data.lat, data.lng),
+          name: data.title,
+          coords: [data.lat, data.lng],
+          icon: data.icon
+        });
+      }
+    });
+
+    if (incidents.length > 0) {
+      dashboardStatus.textContent = `Active incidents within ${radiusKm} km of your location:`;
+      incidents.sort((a, b) => a.distance - b.distance); // Sort by distance
+
+      incidents.forEach(incident => {
+        const incidentDiv = document.createElement('div');
+        incidentDiv.style.marginBottom = '0.5em';
+        incidentDiv.style.padding = '0.5em';
+        incidentDiv.style.borderLeft = `5px solid ${getStatusColor(incident.status)}`;
+        incidentDiv.style.backgroundColor = `rgba(${parseInt(getStatusColor(incident.status).slice(1,3), 16)}, ${parseInt(getStatusColor(incident.status).slice(3,5), 16)}, ${parseInt(getStatusColor(incident.status).slice(5,7), 16)}, 0.1)`;
+        incidentDiv.innerHTML = `
+          <strong>${incident.name}</strong> (${incident.type})<br>
+          Status: <span style="font-weight:bold; color:${getStatusColor(incident.status)};">${incident.status}</span><br>
+          Distance: ${incident.distance} km ${incident.direction} from your location
+        `;
+        activeIncidentsList.appendChild(incidentDiv);
+
+        // Add to alertMap
+        if (incident.geoJson) {
+          L.geoJSON(incident.geoJson, {
+            style: function(feature) {
+              return {
+                color: getStatusColor(incident.status),
+                weight: 2,
+                opacity: 0.7,
+                fillColor: getStatusColor(incident.status),
+                fillOpacity: 0.3
+              };
+            },
+            onEachFeature: function (feature, layer) {
+              layer.bindPopup(`<b>${incident.name}</b><br>Status: ${incident.status}<br>Distance: ${incident.distance} km ${incident.direction}`);
+            }
+          }).addTo(alertMapMarkers);
+        } else {
+          L.marker(incident.coords, {
+            icon: incident.icon.startsWith('assets/') ? L.icon({
+              iconUrl: incident.icon,
+              iconSize: [36, 36],
+              iconAnchor: [18, 36],
+              popupAnchor: [0, -30],
+            }) : L.divIcon({className:'',html:`<span style="font-size:1.5em;">${incident.icon}</span>`,iconAnchor:[12,32]})
+          }).addTo(alertMapMarkers).bindPopup(`<b>${incident.name}</b><br>Status: ${incident.status}<br>Distance: ${incident.distance} km ${incident.direction}`);
+        }
+      });
+      alertMapMarkers.addTo(alertMap);
+      alertMap.fitBounds(alertMapMarkers.getBounds().isValid() ? alertMapMarkers.getBounds() : L.latLngBounds([lat, lng], [lat, lng]).pad(0.1)); // Adjust map view to fit markers
+    } else {
+      dashboardStatus.textContent = `No active incidents found within ${radiusKm} km of your location.`;
+      activeIncidentsList.innerHTML = '<p>All clear! No major hazards reported in your vicinity.</p>';
+    }
+
+  } catch (error) {
+    console.error('Error loading local hazard data:', error);
+    dashboardStatus.textContent = 'Error loading hazard data. Please try again later.';
+    activeIncidentsList.innerHTML = '';
+  }
+}
+
+// Set up background updater for local hazard data
+let hazardUpdateInterval;
+const updateIntervalMinutes = 5; // Update every 5 minutes
+
+function startHazardUpdater() {
+  if (hazardUpdateInterval) clearInterval(hazardUpdateInterval); // Clear any existing interval
+  hazardUpdateInterval = setInterval(() => {
+    if (currentAlertLocation) {
+      console.log(`Refreshing hazard data for ${currentAlertLocation.lat}, ${currentAlertLocation.lng}...`);
+      loadLocalHazardData(currentAlertLocation.lat, currentAlertLocation.lng);
+    }
+  }, updateIntervalMinutes * 60 * 1000);
+  console.log(`Hazard data will refresh every ${updateIntervalMinutes} minutes.`);
+}
+
+// Start the updater when the page loads (if a location is set, or after user sets one)
+// For now, we'll start it after the initial DOMContentLoaded, but it will only fetch
+// data once a location is set by the user.
+startHazardUpdater();
 
 function renderTimeline() {
   const timelineContainer = document.getElementById('timeline');

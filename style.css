@@ -557,6 +557,82 @@ footer a {
   color: #b71c1c;
   text-decoration: underline;
 }
+
+/* Personalised Alerts Section Styles */
+.personalised-alerts-section h2 {
+  color: #c0392b;
+  margin-bottom: 1em;
+}
+
+.personalised-alerts-section h3 {
+  color: #333;
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  font-size: 1.15em;
+}
+
+.personalised-alerts-section label {
+  display: inline-block;
+  margin-right: 1em;
+  margin-bottom: 0.5em;
+  font-size: 0.95em;
+}
+
+.personalised-alerts-section input[type="checkbox"],
+.personalised-alerts-section input[type="radio"] {
+  margin-right: 0.5em;
+}
+
+.local-hazard-dashboard #activeIncidentsList p {
+  color: #555;
+  font-style: italic;
+}
+
+.local-hazard-dashboard .incident-item {
+  background-color: #f9f9f9;
+  border-left: 5px solid;
+  padding: 0.8em;
+  margin-bottom: 0.7em;
+  border-radius: 5px;
+}
+
+.local-hazard-dashboard .incident-item strong {
+  font-size: 1.1em;
+  color: #333;
+}
+
+.local-hazard-dashboard .incident-item .status-emergency { border-color: #c0392b; background-color: rgba(192, 57, 43, 0.1); }
+.local-hazard-dashboard .incident-item .status-watch-and-act { border-color: #f39c12; background-color: rgba(243, 156, 18, 0.1); }
+.local-hazard-dashboard .incident-item .status-advice { border-color: #1976d2; background-color: rgba(25, 118, 210, 0.1); }
+.local-hazard-dashboard .incident-item .status-active { border-color: #c0392b; background-color: rgba(192, 57, 43, 0.1); }
+.local-hazard-dashboard .incident-item .status-contained { border-color: #28a745; background-color: rgba(40, 167, 69, 0.1); }
+.local-hazard-dashboard .incident-item .status-high { border-color: #c0392b; background-color: rgba(192, 57, 43, 0.1); } /* For predictive risk */
+
+.alert-examples .card {
+  margin-bottom: 1em;
+}
+
+.emergency-quick-actions .quick-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 0.8em 1.5em;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.emergency-quick-actions .quick-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.emergency-quick-actions .quick-action-btn img {
+  filter: brightness(0) invert(1); /* Make icons white for dark buttons */
+}
+
 @media (max-width: 700px) {
   main {
     padding: 1rem;
@@ -565,6 +641,10 @@ footer a {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+  .emergency-quick-actions .quick-action-btn {
+    width: 100%;
+    margin-bottom: 0.5em;
   }
 }
 
@@ -894,10 +974,19 @@ footer a {
 }
 
 /* Styles for Interactive Timeline */
+.interactive-timeline-section {
+  background: #f8f8f8; /* Add a distinct background to see if the section is visible */
+  padding: 1.5em;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: 5px solid red !important; /* DEBUG: Strong red border */
+  min-height: 250px !important; /* DEBUG: Ensure minimum height */
+}
+
 .timeline-container {
   position: relative;
   height: 120px; /* Increased height to accommodate markers and labels */
-  border: 1px solid #e0e0e0;
+  border: 5px solid blue !important; /* DEBUG: Strong blue border */
   border-radius: 8px;
   background: #fcfcfc;
   overflow-x: auto;
@@ -912,21 +1001,23 @@ footer a {
   min-width: 2000px; /* Base width for scrollability */
   display: flex;
   align-items: center;
+  border: 5px solid green !important; /* DEBUG: Strong green border */
 }
 
 .timeline-event {
   position: absolute;
-  top: 50%;
+  top: 50%; /* Center vertically */
   transform: translateY(-50%);
   cursor: pointer;
   text-align: center;
   transition: transform 0.2s, opacity 0.2s;
   padding: 0.5em;
   border-radius: 5px;
-  background: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.9); /* Slightly more opaque */
   border: 1px solid #ccc;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08); /* Stronger shadow */
   z-index: 10; /* Ensure events are above the line */
+  min-width: 60px; /* Ensure a minimum width for events */
 }
 
 .timeline-event:hover {
