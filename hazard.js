@@ -162,6 +162,12 @@ document.addEventListener('DOMContentLoaded', function() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
+  // Add scale control
+  L.control.scale().addTo(map);
+
+  // Add zoom control (default position is top-left, can be customized)
+  L.control.zoom({ position: 'topright' }).addTo(map);
+
   // Initialize cluster groups for different hazard types
   bushfireCluster = L.markerClusterGroup();
   floodCluster = L.markerClusterGroup();
@@ -650,7 +656,7 @@ async function loadHazardData() {
   ];
   dummyFloodData.forEach(data => {
     const marker = L.marker([data.lat, data.lng], {
-      icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">🌊</span>',iconAnchor:[12,32]})
+      icon: L.divIcon({className:'flood-icon',html:'<span style="font-size:1.5em; color: #1976d2;">🌊</span>',iconAnchor:[12,32]})
     }).bindPopup(`<b>${data.title}</b><br>${data.details}`);
     floodCluster.addLayer(marker);
   });
@@ -661,7 +667,7 @@ async function loadHazardData() {
   ];
   dummyStormData.forEach(data => {
     const marker = L.marker([data.lat, data.lng], {
-      icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">⛈️</span>',iconAnchor:[12,32]})
+      icon: L.divIcon({className:'storm-icon',html:'<span style="font-size:1.5em; color: #6a1b9a;">⛈️</span>',iconAnchor:[12,32]})
     }).bindPopup(`<b>${data.title}</b><br>${data.details}`);
     stormDamageCluster.addLayer(marker);
   });
@@ -672,7 +678,7 @@ async function loadHazardData() {
   ];
   dummyHeatwaveData.forEach(data => {
     const marker = L.marker([data.lat, data.lng], {
-      icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">☀️</span>',iconAnchor:[12,32]})
+      icon: L.divIcon({className:'heatwave-icon',html:'<span style="font-size:1.5em; color: #ff8f00;">☀️</span>',iconAnchor:[12,32]})
     }).bindPopup(`<b>${data.title}</b><br>${data.details}`);
     heatwaveCluster.addLayer(marker);
   });
