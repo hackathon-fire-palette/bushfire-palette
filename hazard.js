@@ -119,6 +119,15 @@ async function fetchPredictiveRiskZoneData() {
   }), 700));
 }
 
+// Function to show/hide loading spinners
+function showSpinner(spinnerId) {
+  document.getElementById(spinnerId).style.display = 'block';
+}
+
+function hideSpinner(spinnerId) {
+  document.getElementById(spinnerId).style.display = 'none';
+}
+
 // Severity icon mapping for list and map
 const incidentIcons = {
   'bushfire': 'assets/icon-bushfire.svg',
@@ -163,13 +172,18 @@ document.addEventListener('DOMContentLoaded', function() {
   map.addLayer(bushfireCluster);
 
   // Load initial data
-  loadHazardData().then(updateLegend); // Call updateLegend after data is loaded
+  showSpinner('mapLoadingSpinner');
+  loadHazardData().then(() => {
+    updateLegend(); // Call updateLegend after data is loaded
+    hideSpinner('mapLoadingSpinner');
+  });
 
   // Set up real-time updates for hazard data
   const mapUpdateIntervalMinutes = 5;
   setInterval(() => {
     console.log(`Refreshing map hazard data...`);
-    loadHazardData();
+    showSpinner('mapLoadingSpinner');
+    loadHazardData().then(() => hideSpinner('mapLoadingSpinner'));
   }, mapUpdateIntervalMinutes * 60 * 1000);
 
   // Event listeners for toggles
@@ -191,6 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       findMeBtn.disabled = true;
       findMeBtn.textContent = 'Locating...';
+      showSpinner('mapLoadingSpinner');
       navigator.geolocation.getCurrentPosition(function(pos) {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
@@ -200,10 +215,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }).addTo(map).bindPopup('You are here').openPopup();
         findMeBtn.disabled = false;
         findMeBtn.textContent = '📍 Find Me';
+        hideSpinner('mapLoadingSpinner');
       }, function() {
         alert('Unable to retrieve your location.');
         findMeBtn.disabled = false;
         findMeBtn.textContent = '📍 Find Me';
+        hideSpinner('mapLoadingSpinner');
       });
     };
   }
@@ -220,6 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
         alert("No details available for input: '" + place.name + "'");
         return;
       }
+      showSpinner('mapLoadingSpinner');
       if (place.geometry.viewport) {
         map.fitBounds(place.geometry.viewport);
       } else {
@@ -228,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
       L.marker([place.geometry.location.lat(), place.geometry.location.lng()], {
         icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">🔎</span>',iconAnchor:[12,32]})
       }).addTo(map).bindPopup(place.formatted_address).openPopup();
+      hideSpinner('mapLoadingSpinner');
     });
 
     searchInput.addEventListener('keydown', function(e) {
@@ -280,7 +299,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }).addTo(alertMap).bindPopup(place.formatted_address).openPopup();
 
       // Trigger hazard data load for the new location
-      loadLocalHazardData(lat, lng);
+      showSpinner('dashboardLoadingSpinner');
+      loadLocalHazardData(lat, lng).then(() => hideSpinner('dashboardLoadingSpinner'));
     });
 
     alertLocationInput.addEventListener('keydown', function(e) {
@@ -324,7 +344,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }).addTo(alertMap).bindPopup('Your current location').openPopup();
 
         // Trigger hazard data load for the new location
-        loadLocalHazardData(lat, lng);
+        showSpinner('dashboardLoadingSpinner');
+        loadLocalHazardData(lat, lng).then(() => hideSpinner('dashboardLoadingSpinner'));
 
         alertFindMeBtn.disabled = false;
         alertFindMeBtn.textContent = '📍 Use My Location';
@@ -333,6 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
         alertFindMeBtn.disabled = false;
         alertFindMeBtn.textContent = '📍 Use My Location';
         selectedAlertLocation.textContent = "Location: Failed to get current location.";
+        hideSpinner('dashboardLoadingSpinner');
       });
     };
   }
@@ -403,6 +425,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initial render of timeline
   loadTimelineData().then(renderTimeline);
+
+  // Set default location for main map if no GPS or manual search
+  if (!localStorage.getItem('mapInitialised')) {
+    // Check if geolocation is available and try to use it first
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        map.setView([pos.coords.latitude, pos.coords.longitude], 10);
+        L.marker([pos.coords.latitude, pos.coords.longitude], {
+          icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">📍</span>',iconAnchor:[12,32]})
+        }).addTo(map).bindPopup('Your current location').openPopup();
+        localStorage.setItem('mapInitialised', 'true');
+      }, function() {
+        // Geolocation failed or denied, default to Perth
+        map.setView([-31.9505, 115.8605], 10); // Perth coordinates
+        L.marker([-31.9505, 115.8605], {
+          icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">📍</span>',iconAnchor:[12,32]})
+        }).addTo(map).bindPopup('Default: Perth').openPopup();
+        localStorage.setItem('mapInitialised', 'true');
+      });
+    } else {
+      // Geolocation not supported, default to Perth
+      map.setView([-31.9505, 115.8605], 10); // Perth coordinates
+      L.marker([-31.9505, 115.8605], {
+        icon: L.divIcon({className:'',html:'<span style="font-size:1.5em;">📍</span>',iconAnchor:[12,32]})
+      }).addTo(map).bindPopup('Default: Perth').openPopup();
+      localStorage.setItem('mapInitialised', 'true');
+    }
+  }
 
   // Community Safety Checklist: Accordion and Progress
   const accordionHeaders = document.querySelectorAll('.accordion-header');
@@ -992,7 +1042,8 @@ function startHazardUpdater() {
   hazardUpdateInterval = setInterval(() => {
     if (currentAlertLocation) {
       console.log(`Refreshing hazard data for ${currentAlertLocation.lat}, ${currentAlertLocation.lng}...`);
-      loadLocalHazardData(currentAlertLocation.lat, currentAlertLocation.lng);
+      showSpinner('dashboardLoadingSpinner');
+      loadLocalHazardData(currentAlertLocation.lat, currentAlertLocation.lng).then(() => hideSpinner('dashboardLoadingSpinner'));
     }
   }, updateIntervalMinutes * 60 * 1000);
   console.log(`Hazard data will refresh every ${updateIntervalMinutes} minutes.`);
@@ -1175,47 +1226,6 @@ function toggleLayer(event) {
   }
 }
 // --- Last fire in the news (UI -> API -> render) ---
-const fireForm = document.getElementById('fireNewsForm');
-const fireInput = document.getElementById('fireNewsLocation');
-const fireBox   = document.getElementById('fireNewsResult');
-
-async function fetchLastFireNews(location) {
-  const url = `/api/last-fire-news?location=${encodeURIComponent(location)}&country=AU&lang=en`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('news fetch failed');
-  return r.json();
-}
-
-function renderFireNews(resp) {
-  fireBox.style.display = 'block';
-  const { ok, item, error, near } = resp || {};
-  if (!ok || !item) {
-    fireBox.innerHTML = `<strong>No recent bushfire news found for “${near || fireInput.value}”.</strong>` +
-                        (error ? `<div style="opacity:.7">${error}</div>` : '');
-    return;
-  }
-  const dt = new Date(item.publishedAt).toLocaleString();
-  fireBox.innerHTML = `
-    <div style="font-weight:600; margin-bottom:6px;">Last reported fire near <em>${item.near}</em></div>
-    <div style="margin:6px 0;"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></div>
-    <div style="opacity:.8">${item.source || 'News'} • ${dt}</div>
-    ${item.snippet ? `<div style="margin-top:8px">${item.snippet}</div>` : ''}
-  `;
-}
-
-fireForm?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const loc = fireInput.value.trim();
-  if (!loc) return;
-  fireBox.style.display = 'block';
-  fireBox.textContent = 'Searching…';
-  try {
-    const data = await fetchLastFireNews(loc);
-    renderFireNews(data);
-  } catch (err) {
-    renderFireNews({ ok:false, error:String(err) });
-  }
-});// --- Last fire in the news (UI -> API -> render) ---
 const fireForm = document.getElementById('fireNewsForm');
 const fireInput = document.getElementById('fireNewsLocation');
 const fireBox   = document.getElementById('fireNewsResult');

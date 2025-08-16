@@ -63,6 +63,7 @@
         <label style="margin-left:1em;"><input type="checkbox" id="togglePredictiveRisk"> Predictive Risk Areas</label>
       </div>
       <div id="hazardMap" style="height: 500px; width: 100%;"></div>
+      <div id="mapLoadingSpinner" class="loading-spinner" style="display: none;"></div>
       <div id="hazardLegend" class="card" style="margin-top: 1em; padding: 1em;">
         <h3>Map Legend</h3>
         <div id="legendContent"></div>
@@ -127,6 +128,7 @@
           <p>No active incidents found within 50 km of your location.</p>
         </div>
         <div id="dashboardMap" style="height: 300px; width: 100%; margin-top: 1em; border-radius: 8px; display: none;"></div>
+        <div id="dashboardLoadingSpinner" class="loading-spinner" style="display: none;"></div>
       </div>
 
       <div class="subscription-options" style="margin-top: 1.5em;">
