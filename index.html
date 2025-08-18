@@ -773,6 +773,19 @@
             <!-- Details will appear here -->
           </div>
         </section>
+        <!-- Medical Coordination Dashboard -->
+        <section class="medical-coordination-dashboard card">
+          <h2>🏥 Medical Coordination Dashboard</h2>
+          <div class="med-coord-tabs" style="display:flex;gap:0.5em;margin-bottom:1em;">
+            <button onclick="showMedCoordTab(0)" id="tab-overview">Overview</button>
+            <button onclick="showMedCoordTab(1)" id="tab-incidents">Incidents</button>
+            <button onclick="showMedCoordTab(2)" id="tab-resources">Resources</button>
+            <button onclick="showMedCoordTab(3)" id="tab-comm">Communication</button>
+          </div>
+          <div id="med-coord-content" class="med-content" style="min-height:200px;">
+            <!-- Content will be injected here -->
+          </div>
+        </section>
         <!-- Emergency Communication Flow Section -->
         <section class="emergency-flow-section card">
           <h2>Emergency Communication Flow</h2>
@@ -781,20 +794,6 @@
             <button onclick="prevFlowStep()">Previous</button>
             <button onclick="nextFlowStep()">Next</button>
             <button onclick="restartFlowStep()">Restart</button>
-          </div>
-        </section>
-        <!-- Medical Dispatch Coordination Panel -->
-        <section class="medical-dispatch-panel card" aria-label="Medical Dispatch Coordination">
-          <h2>🚑 Medical Dispatch Coordination</h2>
-          <div class="med-dispatch-tabs" style="display:flex;gap:0.5em;margin-bottom:1em;">
-            <button onclick="showMedDispatchTab(0)" id="tab-dispatch" aria-label="Dispatch Workflow">Dispatch</button>
-            <button onclick="showMedDispatchTab(1)" id="tab-comm" aria-label="Communication Log">Comm Log</button>
-            <button onclick="showMedDispatchTab(2)" id="tab-triage" aria-label="Triage Tracker">Triage</button>
-            <button onclick="showMedDispatchTab(3)" id="tab-report" aria-label="Post-Incident Report">Report</button>
-            <button onclick="showMedDispatchTab(4)" id="tab-sync" aria-label="Offline Sync">Offline Sync</button>
-          </div>
-          <div id="med-dispatch-content" class="med-content" style="min-height:180px;">
-            <!-- Content will be injected here -->
           </div>
         </section>
       </div>

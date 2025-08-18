@@ -558,6 +558,33 @@ footer a {
   text-decoration: underline;
 }
 
+/* Medical Coordination Dashboard Styles */
+.medical-coordination-dashboard h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  color: #2c3e50; /* Darker blue/grey for a professional look */
+  letter-spacing: 0.5px;
+}
+.med-coord-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.med-coord-tabs button {
+  background: #3498db; /* Blue for medical coordination */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.med-coord-tabs button:hover, .med-coord-tabs button.active {
+  background: #2980b9; /* Darker blue on hover/active */
+}
+
 /* Loading Spinner Styles */
 .loading-spinner {
   border: 4px solid rgba(0, 0, 0, 0.1);
@@ -840,6 +867,97 @@ footer a {
 .toast-notification.show {
   opacity: 1;
 }
+
+/* Accessibility Bar Enhancements */
+.accessibility-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8em;
+  padding: 0.5em 1em;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #e0e0e0;
+  justify-content: center;
+  align-items: center;
+}
+
+.accessibility-bar button,
+.accessibility-bar select {
+  padding: 0.4em 0.8em;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.accessibility-bar button:hover,
+.accessibility-bar select:hover {
+  background-color: #e9e9e9;
+  border-color: #bbb;
+}
+
+.accessibility-bar button.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.font-size-controls {
+  display: flex;
+  gap: 0.2em;
+}
+
+.font-size-controls button {
+  font-weight: bold;
+}
+
+/* Color Blind Mode */
+body.color-blind-mode {
+  /* Example: Deuteranomaly (red-green color blindness) friendly palette */
+  --primary-red: #e74c3c; /* Original red */
+  --color-bushfire: #e74c3c; /* Original red */
+  --color-flood: #3498db; /* Original blue */
+  --color-storm: #9b59b6; /* Original purple */
+  --color-heatwave: #f39c12; /* Original orange */
+
+  /* Adjust colors for better contrast for color blindness */
+  --color-bushfire-cb: #e74c3c; /* Red remains distinct */
+  --color-flood-cb: #3498db; /* Blue remains distinct */
+  --color-storm-cb: #2ecc71; /* Green for storm */
+  --color-heatwave-cb: #f1c40f; /* Yellow for heatwave */
+
+  /* Override specific elements */
+  .alert-severity-emergency { border-left-color: var(--color-bushfire-cb); }
+  .alert-severity-emergency .alert-title { color: var(--color-bushfire-cb); }
+  .alert-severity-watch { border-left-color: var(--color-heatwave-cb); }
+  .alert-severity-watch .alert-title { color: var(--color-heatwave-cb); }
+  .alert-severity-advice { border-left-color: var(--color-flood-cb); }
+  .alert-severity-advice .alert-title { color: var(--color-flood-cb); }
+
+  .local-hazard-dashboard .incident-item .status-emergency { border-color: var(--color-bushfire-cb); background-color: rgba(var(--color-bushfire-cb-rgb), 0.1); }
+  .local-hazard-dashboard .incident-item .status-watch-and-act { border-color: var(--color-heatwave-cb); background-color: rgba(var(--color-heatwave-cb-rgb), 0.1); }
+  .local-hazard-dashboard .incident-item .status-advice { border-color: var(--color-flood-cb); background-color: rgba(var(--color-flood-cb-rgb), 0.1); }
+  .local-hazard-dashboard .incident-item .status-active { border-color: var(--color-bushfire-cb); background-color: rgba(var(--color-bushfire-cb-rgb), 0.1); }
+  .local-hazard-dashboard .incident-item .status-contained { border-color: #28a745; background-color: rgba(40, 167, 69, 0.1); } /* Keep green for contained */
+  .local-hazard-dashboard .incident-item .status-high { border-color: var(--color-bushfire-cb); background-color: rgba(var(--color-bushfire-cb-rgb), 0.1); }
+
+  .timeline-severity-emergency { border-color: var(--color-bushfire-cb); background: rgba(var(--color-bushfire-cb-rgb), 0.1); }
+  .timeline-severity-critical { border-color: var(--color-bushfire-cb); background: rgba(var(--color-bushfire-cb-rgb), 0.1); }
+  .timeline-severity-medium { border-color: var(--color-heatwave-cb); background: rgba(var(--color-heatwave-cb-rgb), 0.1); }
+  .timeline-severity-low { border-color: var(--color-flood-cb); background: rgba(var(--color-flood-cb-rgb), 0.1); }
+  .timeline-severity-advice { border-color: var(--color-flood-cb); background: rgba(var(--color-flood-cb-rgb), 0.1); }
+
+  /* Update specific icons/elements that use hardcoded colors */
+  .flood-icon span { color: var(--color-flood-cb) !important; }
+  .storm-icon span { color: var(--color-storm-cb) !important; }
+  .heatwave-icon span { color: var(--color-heatwave-cb) !important; }
+}
+
+/* Font Size Adjustments */
+body.font-size-small { font-size: 0.9em; }
+body.font-size-large { font-size: 1.1em; }
+body.font-size-xlarge { font-size: 1.2em; }
 
 @media (max-width: 700px) {
   main {

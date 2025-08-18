@@ -437,6 +437,74 @@ document.addEventListener('DOMContentLoaded', function() {
     document.documentElement.lang = this.value;
   };
 
+  // New Accessibility Toggles
+  document.getElementById('colorBlindToggle').onclick = function() {
+    document.body.classList.toggle('color-blind-mode');
+    this.classList.toggle('active');
+    showToast('Color-blind mode toggled.');
+  };
+
+  let currentFontSize = 1; // 1 = normal, 0.9 = small, 1.1 = large, 1.2 = xlarge
+  const fontSizes = {
+    'small': 0.9,
+    'normal': 1.0,
+    'large': 1.1,
+    'xlarge': 1.2
+  };
+  const fontSizeClasses = ['font-size-small', 'font-size-large', 'font-size-xlarge'];
+
+  function updateFontSizeClass() {
+    document.body.classList.remove(...fontSizeClasses);
+    if (currentFontSize === fontSizes.small) {
+      document.body.classList.add('font-size-small');
+    } else if (currentFontSize === fontSizes.large) {
+      document.body.classList.add('font-size-large');
+    } else if (currentFontSize === fontSizes.xlarge) {
+      document.body.classList.add('font-size-xlarge');
+    }
+  }
+
+  document.getElementById('decreaseFontSize').onclick = function() {
+    if (currentFontSize === fontSizes.xlarge) currentFontSize = fontSizes.large;
+    else if (currentFontSize === fontSizes.large) currentFontSize = fontSizes.normal;
+    else if (currentFontSize === fontSizes.normal) currentFontSize = fontSizes.small;
+    updateFontSizeClass();
+    showToast('Font size decreased.');
+  };
+
+  document.getElementById('increaseFontSize').onclick = function() {
+    if (currentFontSize === fontSizes.small) currentFontSize = fontSizes.normal;
+    else if (currentFontSize === fontSizes.normal) currentFontSize = fontSizes.large;
+    else if (currentFontSize === fontSizes.large) currentFontSize = fontSizes.xlarge;
+    updateFontSizeClass();
+    showToast('Font size increased.');
+  };
+
+  document.getElementById('voiceAlertToggle').onclick = function() {
+    this.classList.toggle('active');
+    if (this.classList.contains('active')) {
+      showToast('Voice alerts enabled.');
+      speakText('Voice alerts enabled.');
+    } else {
+      showToast('Voice alerts disabled.');
+      speakText('Voice alerts disabled.');
+    }
+  };
+
+  function speakText(text) {
+    if ('speechSynthesis' in window && document.getElementById('voiceAlertToggle').classList.contains('active')) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  // Override showToast to also speak if voice alerts are enabled
+  const originalShowToast = showToast;
+  showToast = function(message, duration = 3000) {
+    originalShowToast(message, duration);
+    speakText(message);
+  };
+
   // Timeline event listeners
   document.getElementById('timelineNowBtn').addEventListener('click', () => setTimelineView('now'));
   document.getElementById('timelinePrev24Btn').addEventListener('click', () => setTimelineView('prev24'));
@@ -1165,6 +1233,21 @@ function startHazardUpdater() {
   // For now, we'll start it after the initial DOMContentLoaded, but it will only fetch
   // data once a location is set by the user.
   startHazardUpdater();
+
+  // Register Service Worker for PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          showToast('App is now available offline!');
+        })
+        .catch(err => {
+          console.log('ServiceWorker registration failed: ', err);
+          showToast('Offline mode not available.');
+        });
+    });
+  }
 
   // Function to show toast notifications
   function showToast(message, duration = 3000) {

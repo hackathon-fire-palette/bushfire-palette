@@ -271,3 +271,197 @@ document.addEventListener('DOMContentLoaded', function() {
     renderVehicleTrackingDashboard();
   }
 });
+
+// --- Medical Coordination Dashboard Logic ---
+let medCoordTab = 0;
+const medicalIncidents = [
+  { id: 1, type: 'Injury', location: 'Near Bushfire A', priority: 'High', status: 'En Route', assigned: 'Ambulance 12', patients: 2, notes: 'Patient with smoke inhalation.' },
+  { id: 2, type: 'Evacuation Support', location: 'Community Hall B', priority: 'Medium', status: 'On Scene', assigned: 'Ambulance 22', patients: 15, notes: 'Elderly and children requiring assistance.' },
+  { id: 3, type: 'Heat Stroke', location: 'Sector C', priority: 'Low', status: 'Completed', assigned: 'Ambulance 33', patients: 1, notes: 'Minor heat exhaustion.' },
+];
+
+function showMedCoordTab(idx) {
+  medCoordTab = idx;
+  document.querySelectorAll('.med-coord-tabs button').forEach((btn, i) => btn.classList.toggle('active', i === idx));
+  const content = document.getElementById('med-coord-content');
+
+  if (idx === 0) {
+    // Overview Tab
+    content.innerHTML = `
+      <h3>Overview</h3>
+      <p>Summary of current medical operations.</p>
+      <div style="display:flex;gap:1em;flex-wrap:wrap;">
+        <div class="card" style="flex:1;min-width:150px;">
+          <h4>Active Incidents</h4>
+          <p style="font-size:2em;font-weight:bold;color:#c0392b;">${medicalIncidents.filter(i => i.status !== 'Completed').length}</p>
+        </div>
+        <div class="card" style="flex:1;min-width:150px;">
+          <h4>Available Ambulances</h4>
+          <p style="font-size:2em;font-weight:bold;color:#28a745;">${ambulances.filter(a => a.status === 'Available').length}</p>
+        </div>
+        <div class="card" style="flex:1;min-width:150px;">
+          <h4>Patients Triaged</h4>
+          <p style="font-size:2em;font-weight:bold;color:#3498db;">${medicalIncidents.reduce((sum, i) => sum + i.patients, 0)}</p>
+        </div>
+      </div>
+      <h4 style="margin-top:1.5em;">Recent Activity Log</h4>
+      <div style="max-height:150px;overflow-y:auto;border:1px solid #eee;padding:0.5em;background:#fafafa;">
+        ${medicalIncidents.map(i => `
+          <div style="margin-bottom:0.5em;font-size:0.9em;">
+            <strong>Incident #${i.id}:</strong> ${i.type} at ${i.location} - Status: ${i.status}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else if (idx === 1) {
+    // Incidents Tab
+    content.innerHTML = `
+      <h3>Medical Incidents</h3>
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Location</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Assigned</th>
+            <th>Patients</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${medicalIncidents.map(i => `
+            <tr>
+              <td>${i.id}</td>
+              <td>${i.type}</td>
+              <td>${i.location}</td>
+              <td>${i.priority}</td>
+              <td>${i.status}</td>
+              <td>${i.assigned || '-'}</td>
+              <td>${i.patients}</td>
+              <td>
+                <button onclick="viewIncidentDetails(${i.id})" class="med-action-btn">View</button>
+                <button onclick="updateIncidentStatus(${i.id})" class="med-action-btn">Update</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <button onclick="addMedicalIncident()" class="med-action-btn primary-button" style="margin-top:1em;">+ Add New Incident</button>
+    `;
+  } else if (idx === 2) {
+    // Resources Tab
+    content.innerHTML = `
+      <h3>Medical Resources</h3>
+      <h4>Hospitals</h4>
+      <table class="roster-table">
+        <thead><tr><th>Name</th><th>Status</th><th>Capacity</th><th>ER Load</th></tr></thead>
+        <tbody>
+          ${hospitals.map(h => `
+            <tr>
+              <td>${h.name}</td>
+              <td style="${hospitalStatusColor(h.status)}">${h.status}</td>
+              <td>${h.capacity}%</td>
+              <td>${h.erLoad}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <h4 style="margin-top:1.5em;">Ambulances</h4>
+      <table class="roster-table">
+        <thead><tr><th>Name</th><th>Status</th><th>Location</th></tr></thead>
+        <tbody>
+          ${ambulances.map(a => `
+            <tr>
+              <td>${a.name}</td>
+              <td style="${ambulanceStatusColor(a.status)}">${a.status}</td>
+              <td>${a.location.join(', ')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  } else if (idx === 3) {
+    // Communication Tab
+    content.innerHTML = `
+      <h3>Communication Log</h3>
+      <div style="max-height:200px;overflow-y:auto;border:1px solid #eee;padding:0.5em;background:#fafafa;">
+        ${medIncidentMessages.map(m => `
+          <div style="margin-bottom:0.5em;font-size:0.9em;">
+            <strong>${m.sender}:</strong> ${m.text} <span style="color:#888;">(${timeAgo(m.ts)})</span>
+          </div>
+        `).join('')}
+      </div>
+      <input type="text" id="medCoordMsgInput" placeholder="Send message..." style="width:70%;margin-top:0.5em;" />
+      <button onclick="sendMedCoordMessage()" class="med-action-btn">Send</button>
+      <h4 style="margin-top:1.5em;">Quick Messages</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5em;">
+        <button class="med-action-btn" onclick="sendQuickMedCoordMessage('Requesting immediate medical assistance at incident site.')">Request Assistance</button>
+        <button class="med-action-btn" onclick="sendQuickMedCoordMessage('All clear, incident resolved.')">All Clear</button>
+        <button class="med-action-btn" onclick="sendQuickMedCoordMessage('Need status update from Ambulance 12.')">Status Update</button>
+      </div>
+    `;
+  }
+}
+
+function viewIncidentDetails(id) {
+  const incident = medicalIncidents.find(i => i.id === id);
+  if (!incident) return;
+  alert(`Incident Details:\nID: ${incident.id}\nType: ${incident.type}\nLocation: ${incident.location}\nPriority: ${incident.priority}\nStatus: ${incident.status}\nAssigned: ${incident.assigned}\nPatients: ${incident.patients}\nNotes: ${incident.notes}`);
+}
+
+function updateIncidentStatus(id) {
+  const incident = medicalIncidents.find(i => i.id === id);
+  if (!incident) return;
+  const newStatus = prompt(`Update status for Incident #${id} (Current: ${incident.status}):`);
+  if (newStatus) {
+    incident.status = newStatus;
+    showMedCoordTab(1); // Re-render incidents tab
+  }
+}
+
+function addMedicalIncident() {
+  const type = prompt('Enter incident type (e.g., Injury, Evacuation Support):');
+  const location = prompt('Enter incident location:');
+  const priority = prompt('Enter priority (High, Medium, Low):');
+  const patients = parseInt(prompt('Enter number of patients:'));
+  if (type && location && priority && !isNaN(patients)) {
+    const newId = medicalIncidents.length > 0 ? Math.max(...medicalIncidents.map(i => i.id)) + 1 : 1;
+    medicalIncidents.push({
+      id: newId,
+      type,
+      location,
+      priority,
+      status: 'Pending',
+      assigned: 'Unassigned',
+      patients,
+      notes: ''
+    });
+    showMedCoordTab(1); // Re-render incidents tab
+  } else {
+    alert('Invalid input for new incident.');
+  }
+}
+
+function sendMedCoordMessage() {
+  const inp = document.getElementById('medCoordMsgInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  medIncidentMessages.push({ sender: "Coordination", text: val, ts: Date.now() });
+  inp.value = '';
+  showMedCoordTab(3); // Re-render communication tab
+}
+
+function sendQuickMedCoordMessage(msg) {
+  medIncidentMessages.push({ sender: "Coordination", text: msg, ts: Date.now() });
+  showMedCoordTab(3); // Re-render communication tab
+}
+
+// Initial render of the medical coordination dashboard
+document.addEventListener('DOMContentLoaded', () => {
+  // Only show medical coordination dashboard if it exists
+  if (document.querySelector('.medical-coordination-dashboard')) {
+    showMedCoordTab(0);
+  }
+});

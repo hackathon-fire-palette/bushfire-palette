@@ -1,0 +1,21 @@
+{
+  "name": "Australian Bushfire Alert System",
+  "short_name": "Bushfire Alert",
+  "description": "Real-time bushfire hazard information and medical coordination system.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#c0392b",
+  "icons": [
+    {
+      "src": "assets/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
