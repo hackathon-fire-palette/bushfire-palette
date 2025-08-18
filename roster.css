@@ -91,3 +91,39 @@
   padding: 0.5rem;
   border-bottom: 1px solid #f0f0f0;
 }
+
+#fairness-meter {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+#fairness-meter h4 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  color: #c0392b;
+}
+
+.meter-bar {
+  width: 100%;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  height: 20px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.meter-fill {
+  height: 100%;
+  background-color: #28a745; /* Green for fair */
+  width: 0%; /* Will be set by JS */
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
+}
+
+#fairness-score {
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #333;
+}

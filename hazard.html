@@ -77,6 +77,74 @@
       </div>
     </section>
 
+    <section class="predictive-resource-section card" style="margin-top: 1.5em;">
+      <h2>Predictive Resource Allocation</h2>
+      <div class="controls" style="margin-bottom: 1em;">
+        <label for="currentWeather">Current Weather:</label>
+        <select id="currentWeather" style="margin-right: 1em;">
+          <option value="dry">Dry & Hot</option>
+          <option value="wet">Wet & Cool</option>
+          <option value="windy">Windy</option>
+        </select>
+        <label for="historicalDensity">Historical Fire Density:</label>
+        <select id="historicalDensity">
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <button id="simulateAllocation" style="margin-left: 1em;">Simulate Optimal Placement</button>
+      </div>
+      <div id="resourceAllocationMap" style="height: 400px; width: 100%; margin-bottom: 1em;"></div>
+      <div id="allocationResults">
+        <h4>Optimal Staging Points:</h4>
+        <ul id="stagingPointsList">
+          <li>No simulation run yet.</li>
+        </ul>
+        <h4>Impact vs. Resources Trade-offs:</h4>
+        <p id="tradeOffs">Select simulation parameters to see trade-offs.</p>
+      </div>
+    </section>
+
+    <section class="risk-analytics-section card" style="margin-top: 1.5em;">
+      <h2>Risk Analytics</h2>
+      <div class="controls" style="margin-bottom: 1em;">
+        <label for="windSpeed">Wind Speed (km/h):</label>
+        <input type="number" id="windSpeed" value="20" min="0" max="100" style="width: 80px; margin-right: 1em;">
+        <label for="humidity">Humidity (%):</label>
+        <input type="number" id="humidity" value="30" min="0" max="100" style="width: 80px; margin-right: 1em;">
+        <button id="simulateFireFlood">Simulate Fire/Flood Spread</button>
+      </div>
+      <div id="simulationMap" style="height: 400px; width: 100%; margin-bottom: 1em;"></div>
+      <div id="communityVulnerability">
+        <h4>Community Vulnerability Score:</h4>
+        <p>Enter a suburb to get its vulnerability score.</p>
+        <input type="text" id="vulnerabilitySuburbInput" placeholder="e.g., Perth Hills" style="padding:0.5em 1em;border-radius:6px;border:1px solid #ccc;font-size:1em;flex:1;">
+        <button id="getVulnerabilityScore" style="margin-left: 1em;">Get Score</button>
+        <p id="vulnerabilityScoreResult" style="font-weight: bold; margin-top: 0.5em;">Score: N/A</p>
+      </div>
+    </section>
+
+    <section class="bushfire-tech-section card" style="margin-top: 1.5em;">
+      <h2>Bushfire Technical Services</h2>
+      <div class="controls" style="margin-bottom: 1em;">
+        <label for="satelliteData">Satellite Data Source:</label>
+        <select id="satelliteData" style="margin-right: 1em;">
+          <option value="sentinel">Sentinel</option>
+          <option value="landsat">Landsat</option>
+        </select>
+        <button id="loadFuelLoadMap">Load Fuel Load Map</button>
+      </div>
+      <div id="fuelLoadMap" style="height: 400px; width: 100%; margin-bottom: 1em;"></div>
+      <div id="fuelLoadLegend" class="card" style="margin-top: 1em; padding: 1em;">
+        <h3>Fuel Load Legend</h3>
+        <div id="fuelLegendContent">
+          <p><span style="display:inline-block;width:20px;height:20px;background-color:#e74c3c;border-radius:3px;vertical-align:middle;"></span> High Grass Load</p>
+          <p><span style="display:inline-block;width:20px;height:20px;background-color:#f39c12;border-radius:3px;vertical-align:middle;"></span> Medium Grass Load</p>
+          <p><span style="display:inline-block;width:20px;height:20px;background-color:#2ecc71;border-radius:3px;vertical-align:middle;"></span> Low Grass Load</p>
+        </div>
+      </div>
+    </section>
+
     <section class="interactive-timeline-section card" style="margin-top: 1.5em;">
       <h2>Interactive Timeline</h2>
       <div class="timeline-controls" style="margin-bottom: 1em; display: flex; gap: 0.5em; flex-wrap: wrap;">
@@ -274,6 +342,7 @@
       </div>
     </section>
 
+
   </main>
   <div id="toastNotification" class="toast-notification" style="display: none;"></div>
   <footer>
@@ -291,28 +360,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-<environment_details>
-# VSCode Visible Files
-../../../AppData/Local/Programs/Microsoft VS Code/hazard.html
-../../../AppData/Local/Programs/Microsoft VS Code/hazard.html
-hazard.html
-
-# VSCode Open Tabs
-assets/background.jpeg
-.git/COMMIT_EDITMSG
-../../../AppData/Local/Programs/Microsoft VS Code/Untitled-2
-index.html
-script.js
-hazard.js
-style.css
-hazard.html
-
-# Current Time
-8/15/2025, 8:43:28 AM (Australia/Perth, UTC+8:00)
-
-# Context Window Usage
-78,007 / 1,048.576K tokens used (7%)
-
-# Current Mode
-ACT MODE
-</environment_details>

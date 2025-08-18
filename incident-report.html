@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Incident Report | Australian Bushfire Alert System</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#c0392b" />
+  <style>
+    .incident-report-section {
+      max-width: 800px;
+      margin: 2em auto;
+      padding: 2em;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .incident-report-section h2 {
+      color: #c0392b;
+      text-align: center;
+      margin-bottom: 1.5em;
+    }
+    .form-group {
+      margin-bottom: 1em;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      color: #333;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="datetime-local"],
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.8em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .form-group input[type="checkbox"] {
+      margin-right: 0.5em;
+    }
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1em;
+      margin-top: 2em;
+    }
+    .button-group button {
+      padding: 0.8em 1.5em;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .button-group button.primary {
+      background-color: #c0392b;
+      color: #fff;
+    }
+    .button-group button.primary:hover {
+      background-color: #e74c3c;
+    }
+    .button-group button.secondary {
+      background-color: #6c757d;
+      color: #fff;
+    }
+    .button-group button.secondary:hover {
+      background-color: #5a6268;
+    }
+    #syncStatus {
+      text-align: right;
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 1em;
+    }
+    .offline-indicator {
+      color: orange;
+      font-weight: bold;
+    }
+    .online-indicator {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-title">
+      <a href="/">
+        <img src="assets/logo.jpg" alt="Logo" width="60" height="60">
+      </a>
+      <h1>Australian Bushfire Alert System</h1>
+    </div>
+    <nav>
+      <a href="index.html">Dashboard</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-toggle" id="operationsMenu" aria-haspopup="true" aria-expanded="false">
+          Operations ▼
+        </a>
+        <div class="dropdown-menu" aria-labelledby="operationsMenu">
+          <a href="roster.html">Roster Management</a>
+          <a href="vehicle.html">Vehicle Tracking</a>
+          <a href="employee.html">Employee Management</a>
+          <a href="leave.html">Leave Application</a>
+          <a href="compliance.html">Compliance</a>
+          <a href="incident-report.html" class="active">Incident Report</a>
+        </div>
+      </div>
+      <a href="hazard.html">Hazard Information</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+  <main>
+    <section class="incident-report-section card">
+      <h2>Incident Report Form</h2>
+      <form id="incidentReportForm">
+        <div class="form-group">
+          <label for="incidentType">Incident Type:</label>
+          <select id="incidentType" name="incidentType" required>
+            <option value="">Select Type</option>
+            <option value="bushfire">Bushfire</option>
+            <option value="flood">Flood</option>
+            <option value="storm">Storm Damage</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="incidentLocation">Location:</label>
+          <input type="text" id="incidentLocation" name="incidentLocation" placeholder="e.g., 123 Main St, Perth" required>
+        </div>
+        <div class="form-group">
+          <label for="incidentDateTime">Date & Time:</label>
+          <input type="datetime-local" id="incidentDateTime" name="incidentDateTime" required>
+        </div>
+        <div class="form-group">
+          <label for="incidentDescription">Description:</label>
+          <textarea id="incidentDescription" name="incidentDescription" placeholder="Provide a detailed description of the incident..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="reportedBy">Reported By:</label>
+          <input type="text" id="reportedBy" name="reportedBy" placeholder="Your Name/ID" required>
+        </div>
+        <div class="form-group">
+          <label for="vehicleId">Associated Vehicle/Resource ID (Optional):</label>
+          <input type="text" id="vehicleId" name="vehicleId" placeholder="e.g., Truck-001, Crew-Alpha">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="offlineModeToggle"> Work Offline (Data will sync later)
+          </label>
+        </div>
+        <div class="button-group">
+          <button type="submit" class="primary">Submit Report</button>
+          <button type="button" id="clearForm" class="secondary">Clear Form</button>
+        </div>
+        <p id="syncStatus">Sync Status: Online</p>
+      </form>
+    </section>
+  </main>
+  <footer>
+    <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
+  </footer>
+  <script src="incident-report.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

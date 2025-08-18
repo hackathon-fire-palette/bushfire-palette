@@ -613,6 +613,7 @@
       <a href="employee.html">Employee Management</a>
       <a href="leave.html">Leave Application</a>
       <a href="compliance.html">Compliance</a>
+      <a href="incident-report.html">Incident Report</a>
     </div>
   </div>
   <a href="compliance.html">Compliance</a>
@@ -857,6 +858,38 @@
             <button onclick="restartFlowStep()">Restart</button>
           </div>
         </section>
+        <!-- Social Media & Community Feed Aggregator -->
+        <section class="social-feed-section card" style="margin-top: 1.5em;">
+          <h2>Social Media & Community Feed</h2>
+          <div class="feed-controls" style="margin-bottom: 1em;">
+            <input type="text" id="feedSearchInput" placeholder="Search posts by keyword or location..." style="width: 70%; padding: 0.5em; border-radius: 5px; border: 1px solid #ccc;">
+            <button id="filterFeedBtn" style="margin-left: 0.5em;">Filter</button>
+            <button id="refreshFeedBtn" style="margin-left: 0.5em;">Refresh</button>
+          </div>
+          <div id="socialFeed" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 0.5em;">
+            <!-- Social media posts will be loaded here -->
+            <p style="text-align: center; color: #888;">Loading social media posts...</p>
+          </div>
+        </section>
+
+        <!-- Recovery Intelligence Board -->
+        <section class="recovery-board-section card" style="margin-top: 1.5em;">
+          <h2>Recovery Intelligence Board</h2>
+          <div class="board-controls" style="margin-bottom: 1em;">
+            <select id="infoCategoryFilter" style="margin-right: 1em;">
+              <option value="all">All Categories</option>
+              <option value="damaged-roads">Damaged Roads</option>
+              <option value="community-needs">Community Needs</option>
+              <option value="shelter-info">Shelter Information</option>
+              <option value="aid-distribution">Aid Distribution</option>
+            </select>
+            <button id="applyBoardFilter">Apply Filter</button>
+          </div>
+          <div id="recoveryBoard" style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; padding: 0.5em;">
+            <!-- Filtered intelligence items will be loaded here -->
+            <p style="text-align: center; color: #888;">No intelligence items to display.</p>
+          </div>
+        </section>
       </div>
     </div>
   </main>
@@ -876,6 +909,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="script.js"></script>
+  <script src="recovery.js"></script>
   <script>
     // --- Accessibility & Language ---
     document.getElementById('darkModeToggle').onclick = function() {

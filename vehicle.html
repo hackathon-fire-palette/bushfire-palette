@@ -3,9 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vehicle Tracking | Australian Bushfire Alert System</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <title>Fleet & Asset Management | Australian Bushfire Alert System</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#c0392b" />
+  <style>
+    .fleet-dashboard-section {
+      max-width: 1000px;
+      margin: 2em auto;
+      padding: 2em;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .fleet-dashboard-section h2 {
+      color: #c0392b;
+      text-align: center;
+      margin-bottom: 1.5em;
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5em;
+    }
+    .vehicle-card {
+      background-color: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 1.2em;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .vehicle-card:hover {
+      transform: translateY(-3px);
+    }
+    .vehicle-card h3 {
+      margin-top: 0;
+      color: #1976d2;
+      font-size: 1.2em;
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+    }
+    .vehicle-card p {
+      margin: 0.5em 0;
+      font-size: 0.95em;
+    }
+    .vehicle-card .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .status-indicator.active { background-color: #28a745; }
+    .status-indicator.oos { background-color: #dc3545; }
+    .status-indicator.standby { background-color: #ffc107; }
+
+    .vehicle-card.underused { border: 2px solid #17a2b8; }
+    .vehicle-card.overused { border: 2px solid #dc3545; }
+    .vehicle-card.normal-usage { border: 2px solid #28a745; }
+
+    .usage-bar {
+      width: 100%;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      height: 15px;
+      overflow: hidden;
+      margin-top: 0.8em;
+    }
+    .usage-fill {
+      height: 100%;
+      background-color: #007bff;
+      width: 0%; /* Set by JS */
+      border-radius: 5px;
+      transition: width 0.5s ease-in-out;
+    }
+    .usage-label {
+      font-size: 0.8em;
+      text-align: center;
+      margin-top: 0.3em;
+      color: #555;
+    }
+    .filters-controls {
+      display: flex;
+      gap: 1em;
+      margin-bottom: 1.5em;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .filters-controls label {
+      font-weight: bold;
+    }
+    .filters-controls select, .filters-controls input {
+      padding: 0.5em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .filters-controls button {
+      background-color: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.5em 1em;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .filters-controls button:hover {
+      background-color: #e74c3c;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -16,35 +123,63 @@
       <h1>Australian Bushfire Alert System</h1>
     </div>
     <nav>
-  <a href="index.html">Dashboard</a>
-  <div class="dropdown">
-    <a href="#" class="dropdown-toggle" id="operationsMenu" aria-haspopup="true" aria-expanded="false">
-      Operations ▼
-    </a>
-    <div class="dropdown-menu" aria-labelledby="operationsMenu">
-      <a href="roster.html">Roster Management</a>
-      <a href="vehicle.html" class="active">Vehicle Tracking</a>
-      <a href="employee.html">Employee Management</a>
-      <a href="leave.html">Leave Application</a>
-      <a href="compliance.html">Compliance</a>
-    </div>
-  </div>
-  <a href="hazard.html">Hazard Information</a>
-  <a href="about.html">About</a>
+      <a href="index.html">Dashboard</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-toggle" id="operationsMenu" aria-haspopup="true" aria-expanded="false">
+          Operations ▼
+        </a>
+        <div class="dropdown-menu" aria-labelledby="operationsMenu">
+          <a href="roster.html">Roster Management</a>
+          <a href="vehicle.html" class="active">Vehicle Tracking</a>
+          <a href="employee.html">Employee Management</a>
+          <a href="leave.html">Leave Application</a>
+          <a href="compliance.html">Compliance</a>
+          <a href="incident-report.html">Incident Report</a>
+        </div>
+      </div>
+      <a href="hazard.html">Hazard Information</a>
+      <a href="about.html">About</a>
     </nav>
   </header>
   <main>
-    <div id="content">
-      <section class="vehicle-section card">
-        <h2>Vehicle & Crew Tracking</h2>
-        <div id="vehicleTrackingDashboard"></div>
-      </section>
-    </div>
+    <section class="fleet-dashboard-section card">
+      <h2>Fleet & Asset Health Dashboard</h2>
+      <div class="filters-controls">
+        <label for="vehicleTypeFilter">Type:</label>
+        <select id="vehicleTypeFilter">
+          <option value="all">All</option>
+          <option value="truck">Truck</option>
+          <option value="car">Car</option>
+          <option value="boat">Boat</option>
+        </select>
+
+        <label for="vehicleStatusFilter">Status:</label>
+        <select id="vehicleStatusFilter">
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="oos">Out of Service</option>
+          <option value="standby">Standby</option>
+        </select>
+
+        <label for="usageFilter">Usage:</label>
+        <select id="usageFilter">
+          <option value="all">All</option>
+          <option value="underused">Underused</option>
+          <option value="overused">Overused</option>
+          <option value="normal">Normal</option>
+        </select>
+        <button id="applyFilters">Apply Filters</button>
+      </div>
+      <div id="fleetDashboardGrid" class="dashboard-grid">
+        <!-- Vehicle cards will be injected here by JavaScript -->
+        <p style="text-align: center; grid-column: 1 / -1;">Loading fleet data...</p>
+      </div>
+    </section>
   </main>
   <footer>
     <p>Based on AFDRS and the <a href="https://www.australianwarningsystem.com.au/" target="_blank">Australian Warning System</a>. Not for operational use.</p>
   </footer>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="vehicle.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

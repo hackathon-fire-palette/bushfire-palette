@@ -119,6 +119,74 @@ async function fetchPredictiveRiskZoneData() {
   }), 700));
 }
 
+// Mock function to fetch fuel load data
+async function fetchFuelLoadData(source) {
+  console.log(`Fetching fuel load data from ${source}...`);
+  return new Promise(resolve => setTimeout(() => {
+    const dummyFuelData = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "Paddock1",
+            "fuel_load": "High", // High, Medium, Low
+            "source": source
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[
+              [115.8, -31.9],
+              [115.85, -31.9],
+              [115.85, -31.95],
+              [115.8, -31.95],
+              [115.8, -31.9]
+            ]]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "Paddock2",
+            "fuel_load": "Medium",
+            "source": source
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[
+              [115.9, -32.0],
+              [115.95, -32.0],
+              [115.95, -32.05],
+              [115.9, -32.05],
+              [115.9, -32.0]
+            ]]
+          }
+        },
+        {
+          "type": "Feature",
+          "properties": {
+            "id": "Paddock3",
+            "fuel_load": "Low",
+            "source": source
+          },
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [[
+              [116.0, -32.1],
+              [116.05, -32.1],
+              [116.05, -32.15],
+              [116.0, -32.15],
+              [116.0, -32.1]
+            ]]
+          }
+        }
+      ]
+    };
+    resolve(dummyFuelData);
+  }, 800));
+}
+
+
 // Function to show/hide loading spinners
 function showSpinner(spinnerId) {
   document.getElementById(spinnerId).style.display = 'block';
@@ -154,6 +222,9 @@ let timelineEvents = []; // Array to hold all timeline events
 let currentTimelineDate = new Date(); // Current date for timeline view
 
 let alertMap; // Separate map for the personalised alerts dashboard
+let resourceAllocationMap; // Map for Predictive Resource Allocation
+let simulationMap; // Map for Risk Analytics simulation
+let fuelLoadMap; // Map for Bushfire Technical Services fuel load
 
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize main hazard map
@@ -261,6 +332,32 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // Predictive Resource Allocation Map Initialization
+  resourceAllocationMap = L.map('resourceAllocationMap').setView([-25.2744, 133.7751], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(resourceAllocationMap);
+
+  document.getElementById('simulateAllocation').addEventListener('click', simulateOptimalPlacement);
+
+  // Risk Analytics Map Initialization
+  simulationMap = L.map('simulationMap').setView([-25.2744, 133.7751], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(simulationMap);
+
+  document.getElementById('simulateFireFlood').addEventListener('click', simulateFireFloodSpread);
+  document.getElementById('getVulnerabilityScore').addEventListener('click', getCommunityVulnerabilityScore);
+
+  // Bushfire Technical Services Map Initialization
+  fuelLoadMap = L.map('fuelLoadMap').setView([-25.2744, 133.7751], 4);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(fuelLoadMap);
+
+  document.getElementById('loadFuelLoadMap').addEventListener('click', loadFuelLoadMapLayer);
+
 
   // Personalised Alerts: Location Entry Smart
   const alertLocationInput = document.getElementById('alertLocationInput');
@@ -720,7 +817,7 @@ function loadChecklistProgress() {
   const savedProgress = localStorage.getItem('bushfireChecklistProgress');
   if (savedProgress) {
     const progress = JSON.parse(savedProgress);
-    const checklistItems = document.querySelectorAll('.checklist-items input[type="checkbox"]');
+    const checklistItems = document.querySelectorAll('.checklist-items input[type="checkbox']');
     checklistItems.forEach((checkbox, index) => {
       if (progress[index] !== undefined) {
         checkbox.checked = progress[index];
@@ -1430,6 +1527,187 @@ function toggleLayer(event) {
       break;
   }
 }
+
+// Predictive Resource Allocation Functions
+let allocationMarkers = L.featureGroup(); // Layer for staging points
+
+function simulateOptimalPlacement() {
+  allocationMarkers.clearLayers(); // Clear previous markers
+  resourceAllocationMap.removeLayer(allocationMarkers); // Remove layer from map before adding new markers
+
+  const currentWeather = document.getElementById('currentWeather').value;
+  const historicalDensity = document.getElementById('historicalDensity').value;
+  const stagingPointsList = document.getElementById('stagingPointsList');
+  const tradeOffs = document.getElementById('tradeOffs');
+
+  stagingPointsList.innerHTML = '';
+  let points = [];
+  let tradeOffText = '';
+
+  // Simple AI logic for optimal placement
+  if (currentWeather === 'dry' && historicalDensity === 'high') {
+    points = [
+      { name: 'Staging Point A (Perth Hills)', lat: -31.98, lng: 116.10, resources: '5 Trucks, 2 Crews' },
+      { name: 'Staging Point B (Bunbury)', lat: -33.33, lng: 115.64, resources: '3 Trucks, 1 Crew' }
+    ];
+    tradeOffText = 'High risk areas prioritized. May leave remote, low-density areas with fewer immediate resources.';
+  } else if (currentWeather === 'wet' && historicalDensity === 'low') {
+    points = [
+      { name: 'Staging Point C (Coastal Patrol)', lat: -31.8, lng: 115.7, resources: '1 Boat, 1 Crew' }
+    ];
+    tradeOffText = 'Minimal resource deployment due to low risk. Focus on coastal flood response.';
+  } else if (currentWeather === 'windy' && historicalDensity === 'medium') {
+    points = [
+      { name: 'Staging Point D (North of Perth)', lat: -31.5, lng: 115.9, resources: '4 Trucks, 2 Crews, Air Support' }
+    ];
+    tradeOffText = 'Increased resources for potential rapid spread due to wind. Higher operational cost.';
+  } else {
+    points = [
+      { name: 'Staging Point E (Central Depot)', lat: -31.95, lng: 115.86, resources: '2 Trucks, 1 Crew' }
+    ];
+    tradeOffText = 'Standard deployment. Balanced coverage, but might be slow for surge events.';
+  }
+
+  if (points.length > 0) {
+    points.forEach(point => {
+      const listItem = document.createElement('li');
+      listItem.textContent = `${point.name}: ${point.resources}`;
+      stagingPointsList.appendChild(listItem);
+
+      L.marker([point.lat, point.lng], {
+        icon: L.divIcon({className:'',html:'<span style="font-size:2em; color: #27ae60;">&#9733;</span>',iconAnchor:[12,32]}) // Star icon
+      }).addTo(allocationMarkers).bindPopup(`<b>${point.name}</b><br>${point.resources}`);
+    });
+    allocationMarkers.addTo(resourceAllocationMap);
+    resourceAllocationMap.fitBounds(allocationMarkers.getBounds().isValid() ? allocationMarkers.getBounds() : resourceAllocationMap.getBounds());
+  } else {
+    stagingPointsList.innerHTML = '<li>No optimal staging points determined for these conditions.</li>';
+  }
+  tradeOffs.textContent = tradeOffText;
+  showToast('Optimal resource placement simulated.');
+}
+
+// Risk Analytics Functions
+let simulationLayer = null; // To hold the simulated fire/flood spread layer
+
+function simulateFireFloodSpread() {
+  if (simulationLayer) {
+    simulationMap.removeLayer(simulationLayer);
+  }
+
+  const windSpeed = parseInt(document.getElementById('windSpeed').value);
+  const humidity = parseInt(document.getElementById('humidity').value);
+
+  // Simple simulation logic:
+  // High wind + low humidity = fast, wide fire spread
+  // Low wind + high humidity = slow, contained fire spread or flood risk
+  // High humidity = higher flood risk
+  
+  let centerLat = -31.9505; // Perth
+  let centerLng = 115.8605;
+  let spreadRadius = 0.05; // Initial spread in degrees
+  let fillColor = '#e74c3c'; // Default to fire red
+  let description = 'Simulated Bushfire Spread';
+
+  if (humidity > 60) { // High humidity, lean towards flood simulation
+    fillColor = '#1976d2'; // Blue for flood
+    description = 'Simulated Flood Extent';
+    spreadRadius = 0.03 + (humidity - 60) * 0.001; // Humidity increases flood extent
+  } else { // Lower humidity, lean towards fire simulation
+    spreadRadius = 0.05 + (windSpeed * 0.001) + ((100 - humidity) * 0.0005); // Wind and low humidity increase fire spread
+  }
+
+  // Create a simple polygon for simulation
+  const latLngs = [
+    [centerLat - spreadRadius, centerLng - spreadRadius],
+    [centerLat - spreadRadius, centerLng + spreadRadius],
+    [centerLat + spreadRadius, centerLng + spreadRadius],
+    [centerLat + spreadRadius, centerLng - spreadRadius],
+    [centerLat - spreadRadius, centerLng - spreadRadius] // Close the polygon
+  ];
+
+  simulationLayer = L.polygon(latLngs, {
+    color: fillColor,
+    weight: 2,
+    opacity: 0.7,
+    fillColor: fillColor,
+    fillOpacity: 0.3
+  }).addTo(simulationMap).bindPopup(`<b>${description}</b><br>Wind: ${windSpeed} km/h, Humidity: ${humidity}%`);
+
+  simulationMap.fitBounds(simulationLayer.getBounds());
+  showToast('Fire/Flood spread simulated.');
+}
+
+function getCommunityVulnerabilityScore() {
+  const suburbInput = document.getElementById('vulnerabilitySuburbInput').value.trim();
+  const scoreResult = document.getElementById('vulnerabilityScoreResult');
+  let score = 'N/A';
+  let color = '#333';
+
+  // Simple dummy logic for vulnerability score
+  if (suburbInput.toLowerCase().includes('perth hills')) {
+    score = '85 (High)';
+    color = '#e74c3c';
+  } else if (suburbInput.toLowerCase().includes('perth cbd')) {
+    score = '20 (Low)';
+    color = '#2ecc71';
+  } else if (suburbInput) {
+    score = `${Math.floor(Math.random() * 60) + 20} (Medium)`; // Random score for other suburbs
+    color = '#f39c12';
+  } else {
+    score = 'N/A';
+    color = '#333';
+  }
+
+  scoreResult.textContent = `Score: ${score}`;
+  scoreResult.style.color = color;
+  showToast(`Vulnerability score for ${suburbInput || 'selected area'} calculated.`);
+}
+
+// Bushfire Technical Services Functions
+let fuelLoadLayer = null;
+
+async function loadFuelLoadMapLayer() {
+  if (fuelLoadLayer) {
+    fuelLoadMap.removeLayer(fuelLoadLayer);
+    fuelLoadLayer = null;
+  }
+
+  const satelliteDataSource = document.getElementById('satelliteData').value;
+  const fuelData = await fetchFuelLoadData(satelliteDataSource);
+
+  fuelLoadLayer = L.geoJSON(fuelData, {
+    style: function(feature) {
+      const fuelLoad = feature.properties.fuel_load;
+      let fillColor;
+      switch (fuelLoad) {
+        case 'High': fillColor = '#e74c3c'; break; // Red
+        case 'Medium': fillColor = '#f39c12'; break; // Orange
+        case 'Low': fillColor = '#2ecc71'; break; // Green
+        default: fillColor = '#ccc';
+      }
+      return {
+        color: '#333',
+        weight: 1,
+        opacity: 0.7,
+        fillColor: fillColor,
+        fillOpacity: 0.5
+      };
+    },
+    onEachFeature: function (feature, layer) {
+      if (feature.properties && feature.properties.fuel_load) {
+        layer.bindPopup(`<b>Paddock: ${feature.properties.id || 'Unknown'}</b><br>
+          Fuel Load: ${feature.properties.fuel_load}<br>
+          Source: ${feature.properties.source}`);
+      }
+    }
+  }).addTo(fuelLoadMap);
+
+  fuelLoadMap.fitBounds(fuelLoadLayer.getBounds().isValid() ? fuelLoadLayer.getBounds() : fuelLoadMap.getBounds());
+  showToast(`Fuel load map loaded from ${satelliteDataSource}.`);
+}
+
+
 // --- Last fire in the news (UI -> API -> render) ---
 const fireForm = document.getElementById('fireNewsForm');
 const fireInput = document.getElementById('fireNewsLocation');
