@@ -512,6 +512,66 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 </head>
 <body>
+  <!-- Welcome Overlay -->
+  <div id="welcomeOverlay" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+  ">
+    <div style="
+      background: #c0392b;
+      padding: 40px;
+      border-radius: 15px;
+      max-width: 700px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.5s ease-out;
+    ">
+      <h2 style="font-size: 2.5em; margin-bottom: 20px;">Welcome to Bushfire Palette!</h2>
+      <p style="font-size: 1.2em; line-height: 1.6; margin-bottom: 30px;">
+        Your comprehensive tool for bushfire management and emergency response.
+        Explore modules like:
+      </p>
+      <ul style="list-style: none; padding: 0; margin-bottom: 30px; font-size: 1.1em;">
+        <li style="margin-bottom: 10px;"><strong>AI Weather Predictor:</strong> Get real-time weather insights and fire risk forecasts.</li>
+        <li style="margin-bottom: 10px;"><strong>Fire Spread Zones:</strong> Visualize potential fire paths and affected areas on the map.</li>
+        <li style="margin-bottom: 10px;"><strong>Medical Dispatch Coordination:</strong> Manage medical resources and emergency responses efficiently.</li>
+        <li><strong>Roster & Vehicle Management:</strong> Track personnel and vehicles for optimal deployment.</li>
+      </ul>
+      <button id="getStartedBtn" style="
+        background: #2ecc71;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 1.3em;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      ">Get Started</button>
+    </div>
+  </div>
+
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #getStartedBtn:hover {
+      background: #27ae60;
+    }
+  </style>
+
   <!-- Accessibility & language toggles -->
   <div class="accessibility-bar" aria-label="Accessibility and language options">
     <button id="darkModeToggle" aria-label="Toggle dark mode" tabindex="0">🌙 Dark Mode</button>
@@ -658,6 +718,7 @@
       <!-- Chat popup window (initially hidden) -->
       <div
         id="weatherChatPopup"
+        title="Try asking: ‘Perth fire risk next 3 days’"
         style="
           display: none;
           position: fixed;
@@ -911,7 +972,10 @@
         card.innerHTML = `
           <div class="alert-header">
             <img src="${getAlertIcon(alert)}" alt="${alert.level} icon" class="alert-icon" width="24" height="24">
-            <div class="alert-title">${alert.title || 'Bushfire Alert'}</div>
+            <div class="alert-title">
+              ${alert.title || 'Bushfire Alert'}
+              ${(alert.level === 'Emergency' || alert.level === 'Watch and Act') ? '<span class="live-indicator"></span>' : ''}
+            </div>
             <button class="toggle-btn" aria-expanded="false">▼</button>
           </div>
           <div class="alert-content">

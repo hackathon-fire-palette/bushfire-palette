@@ -1663,3 +1663,43 @@ body.font-size-xlarge { font-size: 1.2em; }
 #timelineDetails a:hover {
   text-decoration: underline;
 }
+
+/* Animated Alert Styles */
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(192, 57, 43, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); }
+}
+
+@keyframes glow-orange {
+  0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(243, 156, 18, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
+}
+
+.alert-card[data-level="Emergency"] {
+  animation: pulse-red 2s infinite;
+  position: relative;
+}
+
+.alert-card[data-level="Watch and Act"] {
+  animation: glow-orange 3s infinite;
+  position: relative;
+}
+
+/* Live Indicator Dot */
+.alert-card .live-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #2ecc71; /* Green dot */
+  border-radius: 50%;
+  margin-left: 8px;
+  animation: pulse-green 1.5s infinite;
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+}

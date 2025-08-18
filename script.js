@@ -260,9 +260,35 @@ function renderMap() {
 
 // Page routing
 document.addEventListener('DOMContentLoaded', function() {
+  // Welcome Overlay Logic
+  const welcomeOverlay = document.getElementById('welcomeOverlay');
+  const getStartedBtn = document.getElementById('getStartedBtn');
+  const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+
+  if (welcomeOverlay && getStartedBtn && !hasSeenWelcome) {
+    welcomeOverlay.style.display = 'flex'; // Show the overlay
+    getStartedBtn.addEventListener('click', () => {
+      welcomeOverlay.style.display = 'none'; // Hide the overlay
+      localStorage.setItem('hasSeenWelcome', 'true'); // Set flag
+    });
+  } else if (welcomeOverlay) {
+    welcomeOverlay.style.display = 'none'; // Ensure it's hidden if already seen
+  }
+
   if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
     renderAlertsList();
     setTimeout(renderMap, 0); // Ensure Leaflet is loaded
+
+    // Render a sample fire risk graph on load
+    renderFireRiskGraph([
+      { day: 'Mon', value: 20 },
+      { day: 'Tue', value: 35 },
+      { day: 'Wed', value: 50 },
+      { day: 'Thu', value: 45 },
+      { day: 'Fri', value: 60 },
+      { day: 'Sat', value: 75 },
+      { day: 'Sun', value: 80 }
+    ]);
   } else if (window.location.pathname.endsWith('alert.html')) {
     renderAlertDetails();
   } else if (window.location.pathname.endsWith('roster.html')) {
