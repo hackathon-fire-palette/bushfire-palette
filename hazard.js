@@ -1398,9 +1398,26 @@ const medicalIncidentData = [
   { id: 'med004', lat: -31.8, lng: 115.7, type: 'Minor Burn', status: 'Completed', team: 'Delta', time: Date.now() - 7200000 }, // 2 hours ago
 ];
 
+const medicalResources = {
+  responders: [
+    { id: 'resp001', name: 'Dr. Smith', lat: -31.95, lng: 115.85, status: 'Available', type: 'Doctor' },
+    { id: 'resp002', name: 'Paramedic Jones', lat: -32.0, lng: 115.9, status: 'In Use', type: 'Paramedic' },
+    { id: 'resp003', name: 'Nurse Kelly', lat: -31.9, lng: 115.95, status: 'Available', type: 'Nurse' },
+  ],
+  hospitals: [
+    { id: 'hosp001', name: 'Perth General Hospital', lat: -31.95, lng: 115.85, status: 'Available', capacity: 80 },
+    { id: 'hosp002', name: 'Fremantle Community Hospital', lat: -32.05, lng: 115.75, status: 'Limited Capacity', capacity: 30 },
+  ],
+  equipment: [
+    { id: 'eq001', name: 'Ambulance 1', lat: -31.96, lng: 115.87, status: 'In Use', type: 'Vehicle' },
+    { id: 'eq002', name: 'Defibrillator 1', lat: -31.95, lng: 115.85, status: 'Available', type: 'Medical Device' },
+  ]
+};
+
 async function loadMedicalIncidentData() {
   medicalMapMarkers.clearLayers(); // Clear existing markers
 
+  // Add incidents
   medicalIncidentData.forEach(incident => {
     let iconHtml;
     let color;
@@ -1418,41 +1435,99 @@ async function loadMedicalIncidentData() {
         html: `<span style="font-size:1.8em; color:${color};">${iconHtml}</span>`,
         iconAnchor: [12, 32]
       })
-    }).bindPopup(`<b>${incident.type}</b><br>Status: ${incident.status}<br>Team: ${incident.team}<br>Time: ${new Date(incident.time).toLocaleTimeString()}`);
+    }).bindPopup(`<b>Incident: ${incident.type}</b><br>Status: ${incident.status}<br>Team: ${incident.team}<br>Time: ${new Date(incident.time).toLocaleTimeString()}`);
+    medicalMapMarkers.addLayer(marker);
+  });
+
+  // Add responders
+  medicalResources.responders.forEach(responder => {
+    let iconHtml = '👨‍⚕️'; // Default icon
+    let statusBadge = `<span style="background-color: ${getMedicalStatusColor(responder.status)}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7em;">${responder.status}</span>`;
+    const marker = L.marker([responder.lat, responder.lng], {
+      icon: L.divIcon({
+        className: 'medical-resource-icon',
+        html: `<span style="font-size:1.5em;">${iconHtml}</span>`,
+        iconAnchor: [12, 32]
+      })
+    }).bindPopup(`<b>Responder: ${responder.name}</b><br>Type: ${responder.type}<br>Status: ${statusBadge}`);
+    medicalMapMarkers.addLayer(marker);
+  });
+
+  // Add hospitals
+  medicalResources.hospitals.forEach(hospital => {
+    let iconHtml = '🏥';
+    let statusBadge = `<span style="background-color: ${getMedicalStatusColor(hospital.status)}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7em;">${hospital.status}</span>`;
+    const marker = L.marker([hospital.lat, hospital.lng], {
+      icon: L.divIcon({
+        className: 'medical-resource-icon',
+        html: `<span style="font-size:1.5em;">${iconHtml}</span>`,
+        iconAnchor: [12, 32]
+      })
+    }).bindPopup(`<b>Hospital: ${hospital.name}</b><br>Status: ${statusBadge}<br>Capacity: ${hospital.capacity}%`);
+    medicalMapMarkers.addLayer(marker);
+  });
+
+  // Add equipment
+  medicalResources.equipment.forEach(item => {
+    let iconHtml = '🚑'; // Default for vehicles
+    if (item.type === 'Medical Device') iconHtml = '🩺';
+    let statusBadge = `<span style="background-color: ${getMedicalStatusColor(item.status)}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.7em;">${item.status}</span>`;
+    const marker = L.marker([item.lat, item.lng], {
+      icon: L.divIcon({
+        className: 'medical-resource-icon',
+        html: `<span style="font-size:1.5em;">${iconHtml}</span>`,
+        iconAnchor: [12, 32]
+      })
+    }).bindPopup(`<b>Equipment: ${item.name}</b><br>Type: ${item.type}<br>Status: ${statusBadge}`);
     medicalMapMarkers.addLayer(marker);
   });
 
   // Fit map to markers if any, otherwise center on Australia
-  if (medicalIncidentData.length > 0) {
+  if (medicalIncidentData.length > 0 || medicalResources.responders.length > 0 || medicalResources.hospitals.length > 0 || medicalResources.equipment.length > 0) {
     medicalMap.fitBounds(medicalMapMarkers.getBounds().isValid() ? medicalMapMarkers.getBounds() : medicalMap.getBounds());
   } else {
     medicalMap.setView([-25.2744, 133.7751], 4);
   }
 
   renderMedicalTimeline(); // Update medical timeline after loading data
+  updateRiskScore(); // Update risk score after loading data
+}
+
+function getMedicalStatusColor(status) {
+  switch (status.toLowerCase()) {
+    case 'available': return '#2ecc71'; // Green
+    case 'in use': return '#3498db'; // Blue
+    case 'out of service': return '#e74c3c'; // Red
+    case 'limited capacity': return '#f1c40f'; // Yellow
+    default: return '#6c757d'; // Grey
+  }
 }
 
 function handleMedicalAction(action) {
   switch (action) {
     case 'dispatch':
-      showToast('Dispatch Coordination initiated.');
-      console.log('Dispatch Coordination');
+      showToast('Dispatch Coordination initiated. Opening dispatch form...');
+      console.log('Dispatch Coordination - Opening form');
+      // Simulate opening a form: could be a modal or redirect
+      alert('Simulating Dispatch Form: Assign Responder, Vehicle, ETA.');
       break;
     case 'live-status':
-      showToast('Displaying Live Status of responders.');
+      showToast('Displaying Live Status of responders and resources.');
       console.log('Live Status');
       break;
     case 'request-medical':
-      showToast('Requesting Medical Support.');
-      console.log('Request Medical Support');
+      showToast('Requesting Medical Support. Optimizing resource suggestions...');
+      console.log('Request Medical Support - Optimized suggestions');
+      alert('Simulating optimized resource suggestion: Nearest available unit (e.g., Ambulance 1, 5km away).');
       break;
     case 'incident-analytics':
       showToast('Loading Incident Analytics dashboard.');
       console.log('Incident Analytics');
       break;
     case 'predictive-alerts':
-      showToast('Accessing Predictive Alerts.');
-      console.log('Predictive Alerts');
+      showToast('Accessing Predictive Alerts. Visualizing predicted medical demand spikes...');
+      console.log('Predictive Alerts - Visualizing demand spikes');
+      alert('Simulating AI-driven predictive alert: High medical demand expected in Perth Hills in next 2 hours.');
       break;
     case 'health-risk-mapping':
       showToast('Displaying Health Risk Mapping.');
@@ -1470,18 +1545,90 @@ function handleMedicalAction(action) {
       showToast('Managing Equipment inventory.');
       console.log('Equipment');
       break;
-    case 'live-chat':
-      showToast('Opening Live Chat / Radio Integration.');
-      console.log('Live Chat / Radio Integration');
+    case 'chat-dispatch':
+      showToast('Opening Live Chat with Dispatch.');
+      console.log('Live Chat with Dispatch');
+      alert('Simulating Live Chat with Dispatch: "What is the current status of Incident #123?"');
+      break;
+    case 'call-coordinator':
+      showToast('Calling Coordinator.');
+      console.log('Calling Coordinator');
+      alert('Simulating Call to Coordinator: "Connecting to Coordinator John Doe..."');
       break;
     case 'escalate':
-      showToast('Quick Escalation triggered! Requesting Air Ambulance.');
-      console.log('Quick Escalation');
+      showToast('Quick Escalation triggered! Requesting Air Evacuation.');
+      console.log('Quick Escalation - Air Evacuation');
+      alert('Simulating Air Evacuation Request: "Air Ambulance requested for critical patient at Incident #001."');
+      break;
+    case 'open-dispatch-form':
+      showToast('Opening Dispatch Form: Assign responder, vehicle, and estimated arrival time.');
+      alert('Simulating Dispatch Form: Fields for Responder, Vehicle, ETA.');
+      break;
+    case 'view-comm-log':
+      showToast('Viewing Communication Log.');
+      alert('Simulating Communication Log: Time-stamped entries of chat and radio communications.');
+      break;
+    case 'triage-critical':
+      showToast('Triage level set to Critical.');
+      console.log('Triage: Critical');
+      break;
+    case 'triage-moderate':
+      showToast('Triage level set to Moderate.');
+      console.log('Triage: Moderate');
+      break;
+    case 'triage-minor':
+      showToast('Triage level set to Minor.');
+      console.log('Triage: Minor');
+      break;
+    case 'generate-report':
+      showToast('Generating Incident Report PDF/Log.');
+      alert('Simulating Report Generation: Downloadable PDF/Log suitable for briefings or debriefs.');
+      break;
+    case 'toggle-offline':
+      const offlineSyncStatus = document.getElementById('offlineSyncStatus');
+      const isOffline = this.textContent.includes('Disable');
+      if (isOffline) {
+        this.textContent = 'Enable Offline Mode';
+        showToast('Offline Mode Disabled. Data will sync automatically.');
+        offlineSyncStatus.textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
+        console.log('Offline mode disabled.');
+      } else {
+        this.textContent = 'Disable Offline Mode';
+        showToast('Offline Mode Enabled. Data will be cached and synced later.');
+        offlineSyncStatus.textContent = `Last sync: ${new Date().toLocaleTimeString()} (Offline)`;
+        console.log('Offline mode enabled.');
+      }
       break;
     default:
       console.log(`Action: ${action}`);
   }
 }
+
+function updateRiskScore() {
+  const riskScoreValue = document.getElementById('riskScoreValue');
+  if (riskScoreValue) {
+    // Simulate a dynamic risk score based on mock data or random values
+    const score = Math.floor(Math.random() * 100) + 1; // 1-100
+    riskScoreValue.textContent = score;
+    if (score > 70) {
+      riskScoreValue.style.color = '#e74c3c'; // High risk: Red
+    } else if (score > 40) {
+      riskScoreValue.style.color = '#f39c12'; // Moderate risk: Orange
+    } else {
+      riskScoreValue.style.color = '#2ecc71'; // Low risk: Green
+    }
+    showToast(`Medical Risk Score updated to ${score}.`);
+  }
+}
+
+// Simulate periodic updates for risk score and offline sync status
+setInterval(updateRiskScore, 10000); // Update every 10 seconds
+setInterval(() => {
+  const offlineSyncStatus = document.getElementById('offlineSyncStatus');
+  if (offlineSyncStatus && !offlineSyncStatus.textContent.includes('(Offline)')) {
+    offlineSyncStatus.textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
+  }
+}, 5000); // Update last sync time every 5 seconds (if online)
 
 function renderMedicalTimeline() {
   const medicalTimelineView = document.getElementById('medicalTimelineView');

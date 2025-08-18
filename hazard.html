@@ -270,35 +270,48 @@
     <section class="medical-coordination-section card" style="margin-top: 1.5em;">
       <h2>Medical Coordination & Response</h2>
 
-      <!-- 1. Visual Hierarchy & Layout -->
-      <div class="medical-features-grid">
-        <div class="feature-card">
-          <h3><img src="assets/emergency-icon.svg" alt="Dispatch" width="24" height="24"> Dispatch Coordination</h3>
-          <p>Manage and assign medical teams to incidents.</p>
-          <div class="button-group">
-            <button class="med-action-btn" data-action="dispatch">Dispatch</button>
-            <button class="med-action-btn" data-action="live-status">Live Status</button>
-            <button class="med-action-btn" data-action="request-medical">Request Medical Support</button>
+      <!-- 1. Refined Layout + Visual Hierarchy -->
+      <div class="medical-features-group">
+        <h3>Operations</h3>
+        <div class="medical-features-grid">
+          <div class="feature-card">
+            <h3><img src="assets/emergency-icon.svg" alt="Dispatch" width="24" height="24"> Dispatch Coordination</h3>
+            <p>Manage and assign medical teams to incidents.</p>
+            <div class="button-group">
+              <button class="med-action-btn" data-action="dispatch">Dispatch</button>
+              <button class="med-action-btn" data-action="live-status">Live Status</button>
+              <button class="med-action-btn" data-action="request-medical">Request Medical Support</button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="feature-card">
-          <h3><img src="assets/icon-bushfire.svg" alt="Analytics" width="24" height="24"> Analytics & Insights</h3>
-          <p>Gain insights from incident data and predictive models.</p>
-          <div class="button-group">
-            <button class="med-action-btn" data-action="incident-analytics">Incident Analytics</button>
-            <button class="med-action-btn" data-action="predictive-alerts">Predictive Alerts</button>
-            <button class="med-action-btn" data-action="health-risk-mapping">Health Risk Mapping</button>
+      <div class="medical-features-group" style="margin-top: 2em;">
+        <h3>Data & Insights</h3>
+        <div class="medical-features-grid">
+          <div class="feature-card">
+            <h3><img src="assets/icon-bushfire.svg" alt="Analytics" width="24" height="24"> Analytics & Insights</h3>
+            <p>Gain insights from incident data and predictive models.</p>
+            <div class="button-group">
+              <button class="med-action-btn" data-action="incident-analytics">Incident Analytics</button>
+              <button class="med-action-btn" data-action="predictive-alerts">Predictive Alerts</button>
+              <button class="med-action-btn" data-action="health-risk-mapping">Health Risk Mapping</button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="feature-card">
-          <h3><img src="assets/icon-advice.svg" alt="Resources" width="24" height="24"> Resource Management</h3>
-          <p>View and manage available medical personnel and equipment.</p>
-          <div class="button-group">
-            <button class="med-action-btn" data-action="responder-profiles">Responder Profiles</button>
-            <button class="med-action-btn" data-action="health-services">Health Services</button>
-            <button class="med-action-btn" data-action="equipment">Equipment</button>
+      <div class="medical-features-group" style="margin-top: 2em;">
+        <h3>Resources</h3>
+        <div class="medical-features-grid">
+          <div class="feature-card">
+            <h3><img src="assets/icon-advice.svg" alt="Resources" width="24" height="24"> Resource Management</h3>
+            <p>View and manage available medical personnel and equipment.</p>
+            <div class="button-group">
+              <button class="med-action-btn" data-action="responder-profiles">Responder Profiles</button>
+              <button class="med-action-btn" data-action="health-services">Health Services</button>
+              <button class="med-action-btn" data-action="equipment">Equipment Tracking</button>
+            </div>
           </div>
         </div>
       </div>
@@ -315,6 +328,11 @@
         </div>
         <div id="medicalTimelineView" style="height: 150px; width: 100%; border: 1px solid #e0e0e0; border-radius: 8px; overflow-x: auto; white-space: nowrap; padding: 1em 0; position: relative;">
           <!-- Timeline events will be dynamically added here -->
+        </div>
+        <div class="risk-score-widget card" style="margin-top: 1.5em; padding: 1em; text-align: center;">
+          <h4>Current Medical Risk Score</h4>
+          <p id="riskScoreValue" style="font-size: 2.5em; font-weight: bold; color: #e74c3c;">Loading...</p>
+          <p style="font-size: 0.9em; color: #777;">Updated with predictive alerts.</p>
         </div>
       </div>
 
@@ -335,8 +353,9 @@
       <div class="communication-flow" style="margin-top: 2em;">
         <h3>Emergency Communication</h3>
         <div class="communication-buttons" style="display: flex; flex-wrap: wrap; gap: 1em;">
-          <button class="med-action-btn" data-action="live-chat">Live Chat / Radio Integration</button>
-          <button class="med-action-btn primary-button" data-action="escalate">Quick Escalation (e.g., Request Air Ambulance)</button>
+          <button class="med-action-btn" data-action="chat-dispatch">Chat with Dispatch</button>
+          <button class="med-action-btn" data-action="call-coordinator">Call Coordinator</button>
+          <button class="med-action-btn primary-button" data-action="escalate">Escalate (Request Air Evacuation)</button>
         </div>
         <div class="role-based-dashboard-info" style="margin-top: 1em; padding: 1em; border: 1px dashed #ccc; border-radius: 8px;">
           <p><strong>Role-based Dashboard:</strong> Content and actions dynamically adjust based on user role (Medical Team, Coordinator, Hospital).</p>
@@ -348,24 +367,34 @@
         <h3>Advanced Dispatch Tools</h3>
         <div class="dispatch-features" style="display: flex; flex-wrap: wrap; gap: 1em;">
           <div class="feature-card small-card">
-            <h4>Triage Support</h4>
-            <p>AI-driven prioritization of cases.</p>
-            <select id="triageLevel" style="width: 100%; padding: 0.5em; border-radius: 4px; border: 1px solid #ccc;">
-              <option value="critical">Critical</option>
-              <option value="moderate">Moderate</option>
-              <option value="minor">Minor</option>
-            </select>
-            <button class="med-action-btn" data-action="apply-triage" style="margin-top: 0.5em;">Apply Triage</button>
+            <h4>Dispatch Form</h4>
+            <p>Assign responder, vehicle, ETA.</p>
+            <button class="med-action-btn" data-action="open-dispatch-form" style="margin-top: 0.5em;">Open Form</button>
           </div>
           <div class="feature-card small-card">
-            <h4>Offline Mode</h4>
-            <p>Auto-sync when network returns.</p>
-            <button class="med-action-btn" data-action="toggle-offline">Toggle Offline Mode</button>
+            <h4>Communication Log</h4>
+            <p>Chronological chat/radio log.</p>
+            <button class="med-action-btn" data-action="view-comm-log" style="margin-top: 0.5em;">View Log</button>
+          </div>
+          <div class="feature-card small-card">
+            <h4>Triage Support</h4>
+            <p>AI-driven prioritization of cases.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5em; width: 100%;">
+              <button class="med-action-btn" data-action="triage-critical">Critical</button>
+              <button class="med-action-btn" data-action="triage-moderate">Moderate</button>
+              <button class="med-action-btn" data-action="triage-minor">Minor</button>
+            </div>
           </div>
           <div class="feature-card small-card">
             <h4>Incident Report</h4>
-            <p>Generate downloadable PDF reports.</p>
+            <p>Generate downloadable PDF/log.</p>
             <button class="med-action-btn" data-action="generate-report">Generate PDF</button>
+          </div>
+          <div class="feature-card small-card">
+            <h4>Offline Sync</h4>
+            <p>Auto-sync when network returns.</p>
+            <button class="med-action-btn" data-action="toggle-offline">Toggle Offline Mode</button>
+            <p id="offlineSyncStatus" style="font-size: 0.75em; color: #888; margin-top: 0.5em;">Last sync: Never</p>
           </div>
         </div>
       </div>
