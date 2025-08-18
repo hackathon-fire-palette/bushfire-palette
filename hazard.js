@@ -368,17 +368,35 @@ document.addEventListener('DOMContentLoaded', function() {
   // Subscription form submission
   const alertSubscriptionForm = document.getElementById('alertSubscriptionForm');
   if (alertSubscriptionForm) {
+    // Initialize toggle buttons
+    document.querySelectorAll('#alertRiskLevelToggles .toggle-button').forEach(button => {
+      button.addEventListener('click', function() {
+        document.querySelectorAll('#alertRiskLevelToggles .toggle-button').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('#specificHazardTypeToggles .toggle-button').forEach(button => {
+      button.addEventListener('click', function() {
+        this.classList.toggle('active');
+      });
+    });
+
     alertSubscriptionForm.addEventListener('submit', function(e) {
       e.preventDefault();
       const formData = new FormData(alertSubscriptionForm);
       const preferences = {
         alertMethods: formData.getAll('alertMethod'),
-        alertRiskLevel: formData.get('alertRiskLevel'),
-        specificHazardTypes: formData.getAll('specificHazardType')
+        alertRiskLevel: document.querySelector('#alertRiskLevelToggles .toggle-button.active')?.dataset.value || 'all',
+        specificHazardTypes: Array.from(document.querySelectorAll('#specificHazardTypeToggles .toggle-button.active')).map(btn => btn.dataset.value)
       };
       const locationText = selectedAlertLocation.textContent;
-      alert(`Subscription preferences for ${locationText}:\n${JSON.stringify(preferences, null, 2)}\n(This is a demo. Actual subscription requires backend integration.)`);
+      
+      // Show toast notification
+      showToast('You\'re now subscribed!');
+
       // In a real application, you would send this data to a backend API
+      console.log(`Subscription preferences for ${locationText}:\n${JSON.stringify(preferences, null, 2)}`);
     });
   }
 
@@ -519,7 +537,95 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initial load of checklist progress
   loadChecklistProgress();
   updateChecklistProgress(); // Update progress bar on load
-});
+
+  // Medical Coordination Section Logic
+  let medicalMap;
+  let medicalMapMarkers = L.featureGroup(); // Layer for incidents on medicalIncidentMap
+
+  // Initialize Medical Incident Map
+  const medicalIncidentMapDiv = document.getElementById('medicalIncidentMap');
+  if (medicalIncidentMapDiv) {
+    medicalMap = L.map('medicalIncidentMap').setView([-25.2744, 133.7751], 4); // Center on Australia
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(medicalMap);
+    medicalMapMarkers.addTo(medicalMap);
+    loadMedicalIncidentData(); // Load initial medical incident data
+  }
+
+  // Handle Medical Action Buttons
+  document.querySelectorAll('.med-action-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const action = this.dataset.action;
+      handleMedicalAction(action);
+    });
+  });
+
+  // Incident Progress Tracker
+  const incidentProgressTracker = document.getElementById('incidentProgressTracker');
+  if (incidentProgressTracker) {
+    let currentStepIndex = 0;
+    const steps = Array.from(incidentProgressTracker.querySelectorAll('.step'));
+
+    function updateProgressTracker() {
+      steps.forEach((step, index) => {
+        if (index < currentStepIndex) {
+          step.classList.add('completed');
+          step.classList.remove('active');
+        } else if (index === currentStepIndex) {
+          step.classList.add('active');
+          step.classList.remove('completed');
+        } else {
+          step.classList.remove('active', 'completed');
+        }
+      });
+    }
+
+    document.querySelector('.med-action-btn[data-action="next-status"]').addEventListener('click', () => {
+      if (currentStepIndex < steps.length - 1) {
+        currentStepIndex++;
+        updateProgressTracker();
+        showToast(`Incident status advanced to: ${steps[currentStepIndex].textContent}`);
+      } else {
+        showToast('Incident is already completed!');
+      }
+    });
+    updateProgressTracker(); // Initial update
+  }
+
+  // Triage Support
+  const triageLevelSelect = document.getElementById('triageLevel');
+  if (triageLevelSelect) {
+    document.querySelector('.med-action-btn[data-action="apply-triage"]').addEventListener('click', () => {
+      const selectedTriage = triageLevelSelect.value;
+      showToast(`Triage level applied: ${selectedTriage.charAt(0).toUpperCase() + selectedTriage.slice(1)}`);
+      console.log(`Applying triage: ${selectedTriage}`);
+    });
+  }
+
+  // Offline Mode Toggle
+  document.querySelector('.med-action-btn[data-action="toggle-offline"]').addEventListener('click', function() {
+    const isOffline = this.textContent.includes('Disable');
+    if (isOffline) {
+      this.textContent = 'Enable Offline Mode';
+      showToast('Offline Mode Disabled. Data will sync automatically.');
+      console.log('Offline mode disabled.');
+    } else {
+      this.textContent = 'Disable Offline Mode';
+      showToast('Offline Mode Enabled. Data will be cached and synced later.');
+      console.log('Offline mode enabled.');
+    }
+  });
+
+  // Generate Incident Report PDF
+  document.querySelector('.med-action-btn[data-action="generate-report"]').addEventListener('click', () => {
+    showToast('Generating Incident Report PDF... (Requires PDF generation library)');
+    console.log('Generating PDF report.');
+    // In a real application, you would use a library like jsPDF or send a request to a backend
+    // Example: window.open('path/to/generated_report.pdf', '_blank');
+  });
+
+}); // End DOMContentLoaded
 
 function updateChecklistProgress() {
   const checklistItems = document.querySelectorAll('.checklist-items input[type="checkbox"]');
@@ -1055,10 +1161,20 @@ function startHazardUpdater() {
   console.log(`Hazard data will refresh every ${updateIntervalMinutes} minutes.`);
 }
 
-// Start the updater when the page loads (if a location is set, or after user sets one)
-// For now, we'll start it after the initial DOMContentLoaded, but it will only fetch
-// data once a location is set by the user.
-startHazardUpdater();
+  // Start the updater when the page loads (if a location is set, or after user sets one)
+  // For now, we'll start it after the initial DOMContentLoaded, but it will only fetch
+  // data once a location is set by the user.
+  startHazardUpdater();
+
+  // Function to show toast notifications
+  function showToast(message, duration = 3000) {
+    const toast = document.getElementById('toastNotification');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, duration);
+  }
 
 function renderTimeline() {
   const timelineContainer = document.getElementById('timeline');
@@ -1273,3 +1389,173 @@ fireForm?.addEventListener('submit', async (e) => {
     renderFireNews({ ok:false, error:String(err) });
   }
 });
+
+// Medical Coordination Specific Functions
+const medicalIncidentData = [
+  { id: 'med001', lat: -31.9505, lng: 115.8605, type: 'Bushfire Injury', status: 'On Scene', team: 'Alpha', time: Date.now() - 3600000 }, // 1 hour ago
+  { id: 'med002', lat: -32.0, lng: 116.0, type: 'Smoke Inhalation', status: 'En Route', team: 'Bravo', time: Date.now() - 1800000 }, // 30 mins ago
+  { id: 'med003', lat: -32.1, lng: 115.9, type: 'Heat Exhaustion', status: 'Pending', team: 'Charlie', time: Date.now() - 600000 }, // 10 mins ago
+  { id: 'med004', lat: -31.8, lng: 115.7, type: 'Minor Burn', status: 'Completed', team: 'Delta', time: Date.now() - 7200000 }, // 2 hours ago
+];
+
+async function loadMedicalIncidentData() {
+  medicalMapMarkers.clearLayers(); // Clear existing markers
+
+  medicalIncidentData.forEach(incident => {
+    let iconHtml;
+    let color;
+    switch (incident.status) {
+      case 'Pending': iconHtml = '🟡'; color = '#f1c40f'; break;
+      case 'En Route': iconHtml = '🔵'; color = '#3498db'; break;
+      case 'On Scene': iconHtml = '🟠'; color = '#e67e22'; break;
+      case 'Completed': iconHtml = '🟢'; color = '#2ecc71'; break;
+      default: iconHtml = '⚪'; color = '#ccc';
+    }
+
+    const marker = L.marker([incident.lat, incident.lng], {
+      icon: L.divIcon({
+        className: 'medical-incident-icon',
+        html: `<span style="font-size:1.8em; color:${color};">${iconHtml}</span>`,
+        iconAnchor: [12, 32]
+      })
+    }).bindPopup(`<b>${incident.type}</b><br>Status: ${incident.status}<br>Team: ${incident.team}<br>Time: ${new Date(incident.time).toLocaleTimeString()}`);
+    medicalMapMarkers.addLayer(marker);
+  });
+
+  // Fit map to markers if any, otherwise center on Australia
+  if (medicalIncidentData.length > 0) {
+    medicalMap.fitBounds(medicalMapMarkers.getBounds().isValid() ? medicalMapMarkers.getBounds() : medicalMap.getBounds());
+  } else {
+    medicalMap.setView([-25.2744, 133.7751], 4);
+  }
+
+  renderMedicalTimeline(); // Update medical timeline after loading data
+}
+
+function handleMedicalAction(action) {
+  switch (action) {
+    case 'dispatch':
+      showToast('Dispatch Coordination initiated.');
+      console.log('Dispatch Coordination');
+      break;
+    case 'live-status':
+      showToast('Displaying Live Status of responders.');
+      console.log('Live Status');
+      break;
+    case 'request-medical':
+      showToast('Requesting Medical Support.');
+      console.log('Request Medical Support');
+      break;
+    case 'incident-analytics':
+      showToast('Loading Incident Analytics dashboard.');
+      console.log('Incident Analytics');
+      break;
+    case 'predictive-alerts':
+      showToast('Accessing Predictive Alerts.');
+      console.log('Predictive Alerts');
+      break;
+    case 'health-risk-mapping':
+      showToast('Displaying Health Risk Mapping.');
+      console.log('Health Risk Mapping');
+      break;
+    case 'responder-profiles':
+      showToast('Viewing Responder Profiles.');
+      console.log('Responder Profiles');
+      break;
+    case 'health-services':
+      showToast('Accessing Health Services directory.');
+      console.log('Health Services');
+      break;
+    case 'equipment':
+      showToast('Managing Equipment inventory.');
+      console.log('Equipment');
+      break;
+    case 'live-chat':
+      showToast('Opening Live Chat / Radio Integration.');
+      console.log('Live Chat / Radio Integration');
+      break;
+    case 'escalate':
+      showToast('Quick Escalation triggered! Requesting Air Ambulance.');
+      console.log('Quick Escalation');
+      break;
+    default:
+      console.log(`Action: ${action}`);
+  }
+}
+
+function renderMedicalTimeline() {
+  const medicalTimelineView = document.getElementById('medicalTimelineView');
+  if (!medicalTimelineView) return;
+
+  medicalTimelineView.innerHTML = ''; // Clear existing events
+
+  // Sort incidents by time
+  medicalIncidentData.sort((a, b) => a.time - b.time);
+
+  if (medicalIncidentData.length === 0) {
+    medicalTimelineView.innerHTML = '<p style="text-align:center; width:100%;">No medical incidents to display.</p>';
+    return;
+  }
+
+  const minTime = medicalIncidentData[0].time;
+  const maxTime = medicalIncidentData[medicalIncidentData.length - 1].time;
+  const timeSpan = maxTime - minTime;
+
+  const baseWidth = 1500; // Minimum width for scrollability
+  let scaleFactor = timeSpan > 0 ? baseWidth / timeSpan : 0;
+
+  // Create a line for the timeline
+  const timelineLine = document.createElement('div');
+  timelineLine.style.position = 'absolute';
+  timelineLine.style.left = '0';
+  timelineLine.style.right = '0';
+  timelineLine.style.top = '50%';
+  timelineLine.style.height = '2px';
+  timelineLine.style.backgroundColor = '#ccc';
+  timelineLine.style.transform = 'translateY(-50%)';
+  medicalTimelineView.appendChild(timelineLine);
+
+  medicalIncidentData.forEach((incident, index) => {
+    const eventElement = document.createElement('div');
+    eventElement.className = 'timeline-event';
+    
+    let leftPosition;
+    if (timeSpan > 0) {
+      leftPosition = (incident.time - minTime) * scaleFactor;
+    } else {
+      leftPosition = (baseWidth / (medicalIncidentData.length + 1)) * (index + 1);
+    }
+    
+    eventElement.style.left = `${leftPosition}px`;
+    eventElement.style.position = 'absolute';
+    eventElement.style.top = '50%';
+    eventElement.style.transform = 'translateY(-50%)';
+    eventElement.style.cursor = 'pointer';
+    eventElement.style.textAlign = 'center';
+    eventElement.style.padding = '0.5em';
+    eventElement.style.borderRadius = '5px';
+    eventElement.style.background = 'rgba(255,255,255,0.9)';
+    eventElement.style.border = '1px solid #ccc';
+    eventElement.style.boxShadow = '0 1px 4px rgba(0,0,0,0.08)';
+    eventElement.style.zIndex = '10';
+    eventElement.style.minWidth = '80px';
+
+    let iconHtml;
+    switch (incident.status) {
+      case 'Pending': iconHtml = '🟡'; break;
+      case 'En Route': iconHtml = '🔵'; break;
+      case 'On Scene': iconHtml = '🟠'; break;
+      case 'Completed': iconHtml = '🟢'; break;
+      default: iconHtml = '⚪';
+    }
+
+    eventElement.innerHTML = `
+      <div class="timeline-marker" style="font-size:1.2em;">${iconHtml}</div>
+      <div class="timeline-label" style="font-size:0.8em; color:#555; white-space:normal; max-width:80px; overflow:hidden; text-overflow:ellipsis;">${incident.type}</div>
+      <div style="font-size:0.7em; color:#888;">${new Date(incident.time).toLocaleTimeString()}</div>
+    `;
+    eventElement.title = `${incident.type} - ${incident.status} (${new Date(incident.time).toLocaleString()})`;
+
+    medicalTimelineView.appendChild(eventElement);
+  });
+}

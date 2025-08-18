@@ -112,7 +112,7 @@
           />
           <button
             id="alertFindMeBtn"
-            style="padding:0.5em 1em;border-radius:6px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:1em;"
+            class="cta-button"
             aria-label="Find my current location for alerts"
             title="Find my current location"
           >📍 Use My Location</button>
@@ -120,19 +120,8 @@
         <p id="selectedAlertLocation" style="font-weight: bold; margin-top: 0.5em;">Location: Not set</p>
       </div>
 
-      <div class="local-hazard-dashboard" style="margin-top: 1.5em;">
-        <h3>2. Local Hazard Dashboard</h3>
-        <p id="dashboardStatus">Loading hazards for your location...</p>
-        <div id="activeIncidentsList" style="margin-top: 1em;">
-          <!-- Active incidents will be displayed here -->
-          <p>No active incidents found within 50 km of your location.</p>
-        </div>
-        <div id="dashboardMap" style="height: 300px; width: 100%; margin-top: 1em; border-radius: 8px; display: none;"></div>
-        <div id="dashboardLoadingSpinner" class="loading-spinner" style="display: none;"></div>
-      </div>
-
       <div class="subscription-options" style="margin-top: 1.5em;">
-        <h3>3. Subscription Options</h3>
+        <h3>2. Alert Preferences</h3>
         <form id="alertSubscriptionForm">
           <div style="margin-bottom: 1em;">
             <h4>Receive alerts via:</h4>
@@ -142,21 +131,37 @@
           </div>
 
           <div style="margin-bottom: 1em;">
-            <h4>Alert Preferences:</h4>
-            <label><input type="radio" name="alertRiskLevel" value="all" checked> All hazards</label><br>
-            <label><input type="radio" name="alertRiskLevel" value="high-risk"> High-risk only (Emergency & Watch/Act)</label><br>
-            <label><input type="radio" name="alertRiskLevel" value="specific"> Specific hazard types:</label>
-            <div style="margin-left: 1.5em;">
-              <label><input type="checkbox" name="specificHazardType" value="fire"> Fire</label><br>
-              <label><input type="checkbox" name="specificHazardType" value="flood"> Flood</label><br>
-              <label><input type="checkbox" name="specificHazardType" value="storm"> Storm</label><br>
-              <label><input type="checkbox" name="specificHazardType" value="heatwave"> Heatwave</label>
+            <h4>Alert Risk Level:</h4>
+            <div class="toggle-group" id="alertRiskLevelToggles">
+              <button type="button" class="toggle-button active" data-value="all">All hazards</button>
+              <button type="button" class="toggle-button" data-value="high-risk">High-risk only</button>
             </div>
           </div>
 
-          <button type="submit" style="padding:0.7em 1.5em;border-radius:6px;background:#28a745;color:#fff;border:none;cursor:pointer;font-size:1em;">Subscribe to Alerts</button>
-          <button type="button" id="testAlertBtn" style="padding:0.7em 1.5em;border-radius:6px;background:#007bff;color:#fff;border:none;cursor:pointer;font-size:1em;margin-left:1em;">Send Test Alert</button>
+          <div style="margin-bottom: 1em;">
+            <h4>Specific Hazard Types:</h4>
+            <div class="toggle-group" id="specificHazardTypeToggles">
+              <button type="button" class="toggle-button active" data-value="fire">🔥 Fire</button>
+              <button type="button" class="toggle-button" data-value="flood">🌊 Flood</button>
+              <button type="button" class="toggle-button" data-value="storm">⛈️ Storm</button>
+              <button type="button" class="toggle-button" data-value="heatwave">☀️ Heatwave</button>
+            </div>
+          </div>
+
+          <button type="submit" class="cta-button primary-button">Subscribe to Alerts</button>
+          <button type="button" id="testAlertBtn" class="cta-button secondary-button">Send Test Alert</button>
         </form>
+      </div>
+
+      <div class="local-hazard-dashboard" style="margin-top: 1.5em;">
+        <h3>3. Local Hazard Dashboard</h3>
+        <p id="dashboardStatus">Loading hazards for your location...</p>
+        <div id="activeIncidentsList" style="margin-top: 1em;">
+          <!-- Active incidents will be displayed here -->
+          <p>No active incidents found within 50 km of your location.</p>
+        </div>
+        <div id="dashboardMap" style="height: 300px; width: 100%; margin-top: 1em; border-radius: 8px; display: none;"></div>
+        <div id="dashboardLoadingSpinner" class="loading-spinner" style="display: none;"></div>
       </div>
 
       <div class="alert-examples" style="margin-top: 1.5em;">
@@ -261,7 +266,112 @@
         <button id="loadChecklistProgress" style="padding:0.7em 1.5em;border-radius:6px;background:#6c757d;color:#fff;border:none;cursor:pointer;font-size:1em;">Load Progress</button>
       </div>
     </section>
+
+    <section class="medical-coordination-section card" style="margin-top: 1.5em;">
+      <h2>Medical Coordination & Response</h2>
+
+      <!-- 1. Visual Hierarchy & Layout -->
+      <div class="medical-features-grid">
+        <div class="feature-card">
+          <h3><img src="assets/emergency-icon.svg" alt="Dispatch" width="24" height="24"> Dispatch Coordination</h3>
+          <p>Manage and assign medical teams to incidents.</p>
+          <div class="button-group">
+            <button class="med-action-btn" data-action="dispatch">Dispatch</button>
+            <button class="med-action-btn" data-action="live-status">Live Status</button>
+            <button class="med-action-btn" data-action="request-medical">Request Medical Support</button>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3><img src="assets/icon-bushfire.svg" alt="Analytics" width="24" height="24"> Analytics & Insights</h3>
+          <p>Gain insights from incident data and predictive models.</p>
+          <div class="button-group">
+            <button class="med-action-btn" data-action="incident-analytics">Incident Analytics</button>
+            <button class="med-action-btn" data-action="predictive-alerts">Predictive Alerts</button>
+            <button class="med-action-btn" data-action="health-risk-mapping">Health Risk Mapping</button>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3><img src="assets/icon-advice.svg" alt="Resources" width="24" height="24"> Resource Management</h3>
+          <p>View and manage available medical personnel and equipment.</p>
+          <div class="button-group">
+            <button class="med-action-btn" data-action="responder-profiles">Responder Profiles</button>
+            <button class="med-action-btn" data-action="health-services">Health Services</button>
+            <button class="med-action-btn" data-action="equipment">Equipment</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Interactive Dashboard Elements -->
+      <div class="dashboard-elements" style="margin-top: 2em;">
+        <h3>Real-time Medical Operations Dashboard</h3>
+        <div id="medicalIncidentMap" style="height: 400px; width: 100%; margin-bottom: 1em; border-radius: 8px; border: 1px solid #e0e0e0;"></div>
+        <div class="status-legend" style="display: flex; flex-wrap: wrap; gap: 1em; margin-bottom: 1em;">
+          <span style="background-color: #f1c40f; padding: 0.3em 0.8em; border-radius: 4px; color: #333;">Pending</span>
+          <span style="background-color: #3498db; padding: 0.3em 0.8em; border-radius: 4px; color: #fff;">En Route</span>
+          <span style="background-color: #e67e22; padding: 0.3em 0.8em; border-radius: 4px; color: #fff;">On Scene</span>
+          <span style="background-color: #2ecc71; padding: 0.3em 0.8em; border-radius: 4px; color: #fff;">Completed</span>
+        </div>
+        <div id="medicalTimelineView" style="height: 150px; width: 100%; border: 1px solid #e0e0e0; border-radius: 8px; overflow-x: auto; white-space: nowrap; padding: 1em 0; position: relative;">
+          <!-- Timeline events will be dynamically added here -->
+        </div>
+      </div>
+
+      <!-- 3. User Flow Enhancements -->
+      <div class="user-flow-enhancements" style="margin-top: 2em;">
+        <h3>Incident Status Tracker</h3>
+        <div id="incidentProgressTracker" class="progress-tracker">
+          <div class="step active" data-step="requested">Requested</div>
+          <div class="step" data-step="assigned">Assigned</div>
+          <div class="step" data-step="en-route">En Route</div>
+          <div class="step" data-step="on-scene">On Scene</div>
+          <div class="step" data-step="completed">Completed</div>
+        </div>
+        <button class="med-action-btn" data-action="next-status" style="margin-top: 1em;">Advance Status</button>
+      </div>
+
+      <!-- 4. Emergency Communication Flow -->
+      <div class="communication-flow" style="margin-top: 2em;">
+        <h3>Emergency Communication</h3>
+        <div class="communication-buttons" style="display: flex; flex-wrap: wrap; gap: 1em;">
+          <button class="med-action-btn" data-action="live-chat">Live Chat / Radio Integration</button>
+          <button class="med-action-btn primary-button" data-action="escalate">Quick Escalation (e.g., Request Air Ambulance)</button>
+        </div>
+        <div class="role-based-dashboard-info" style="margin-top: 1em; padding: 1em; border: 1px dashed #ccc; border-radius: 8px;">
+          <p><strong>Role-based Dashboard:</strong> Content and actions dynamically adjust based on user role (Medical Team, Coordinator, Hospital).</p>
+        </div>
+      </div>
+
+      <!-- 5. Medical Dispatch Coordination -->
+      <div class="dispatch-coordination" style="margin-top: 2em;">
+        <h3>Advanced Dispatch Tools</h3>
+        <div class="dispatch-features" style="display: flex; flex-wrap: wrap; gap: 1em;">
+          <div class="feature-card small-card">
+            <h4>Triage Support</h4>
+            <p>AI-driven prioritization of cases.</p>
+            <select id="triageLevel" style="width: 100%; padding: 0.5em; border-radius: 4px; border: 1px solid #ccc;">
+              <option value="critical">Critical</option>
+              <option value="moderate">Moderate</option>
+              <option value="minor">Minor</option>
+            </select>
+            <button class="med-action-btn" data-action="apply-triage" style="margin-top: 0.5em;">Apply Triage</button>
+          </div>
+          <div class="feature-card small-card">
+            <h4>Offline Mode</h4>
+            <p>Auto-sync when network returns.</p>
+            <button class="med-action-btn" data-action="toggle-offline">Toggle Offline Mode</button>
+          </div>
+          <div class="feature-card small-card">
+            <h4>Incident Report</h4>
+            <p>Generate downloadable PDF reports.</p>
+            <button class="med-action-btn" data-action="generate-report">Generate PDF</button>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+  <div id="toastNotification" class="toast-notification" style="display: none;"></div>
   <footer>
     <div style="font-weight:bold;color:#c0392b;">
       ⚠️ Not for Operational Use. For demonstration only.<br>

@@ -750,6 +750,97 @@ footer a {
   filter: brightness(0) invert(1); /* Make icons white for dark buttons */
 }
 
+/* CTA Buttons */
+.cta-button {
+  padding: 0.7em 1.5em;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s, transform 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  justify-content: center;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.primary-button {
+  background:#28a745;
+  color:#fff;
+}
+
+.primary-button:hover {
+  background:#218838;
+}
+
+.secondary-button {
+  background:#007bff;
+  color:#fff;
+}
+
+.secondary-button:hover {
+  background:#0056b3;
+}
+
+/* Toggle Buttons for Preferences */
+.toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-top: 0.5em;
+}
+
+.toggle-button {
+  background: #f0f0f0;
+  color: #555;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 0.5em 1em;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.toggle-button.active {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.toggle-button:hover:not(.active) {
+  background: #e0e0e0;
+}
+
+/* Toast Notification */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  font-size: 1em;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.toast-notification.show {
+  opacity: 1;
+}
+
 @media (max-width: 700px) {
   main {
     padding: 1rem;
@@ -911,6 +1002,197 @@ footer a {
 .quick-question-btn:hover {
   background: #bbdefb;
   transform: translateY(-1px);
+}
+
+/* Medical Coordination Section Styles */
+.medical-coordination-section h2 {
+  color: #2c3e50; /* Darker blue/grey for a professional look */
+  margin-bottom: 1.5em;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.medical-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5em;
+  margin-bottom: 2em;
+}
+
+.medical-features-grid .feature-card {
+  background: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 1.5em;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.medical-features-grid .feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.medical-features-grid .feature-card h3 {
+  color: #34495e;
+  font-size: 1.2em;
+  margin-top: 0;
+  margin-bottom: 0.8em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.medical-features-grid .feature-card h3 img {
+  filter: invert(15%) sepia(10%) saturate(1000%) hue-rotate(180deg) brightness(90%) contrast(90%); /* Darken icons */
+}
+
+.medical-features-grid .feature-card p {
+  font-size: 0.95em;
+  color: #666;
+  flex-grow: 1;
+  margin-bottom: 1.5em;
+}
+
+.medical-features-grid .feature-card .button-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5em;
+  margin-top: auto; /* Push buttons to the bottom */
+}
+
+.med-action-btn {
+  padding: 0.6em 1.2em;
+  border-radius: 5px;
+  border: none;
+  background-color: #3498db; /* Blue for actions */
+  color: white;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.med-action-btn:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+
+.med-action-btn.primary-button {
+  background-color: #e74c3c; /* Red for escalation */
+}
+
+.med-action-btn.primary-button:hover {
+  background-color: #c0392b;
+}
+
+/* Progress Tracker */
+.progress-tracker {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5em;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  padding: 1em;
+  position: relative;
+}
+
+.progress-tracker::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 1em;
+  right: 1em;
+  height: 4px;
+  background-color: #ccc;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.progress-tracker .step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  color: #888;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.progress-tracker .step::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: #ccc;
+  border-radius: 50%;
+  margin: 0 auto 0.5em auto;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #ccc;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.progress-tracker .step.active {
+  color: #333;
+}
+
+.progress-tracker .step.active::before {
+  background-color: #3498db;
+  box-shadow: 0 0 0 3px #3498db;
+}
+
+.progress-tracker .step.completed {
+  color: #2ecc71;
+}
+
+.progress-tracker .step.completed::before {
+  background-color: #2ecc71;
+  box-shadow: 0 0 0 3px #2ecc71;
+  content: '✔'; /* Checkmark for completed steps */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+}
+
+/* Small Feature Cards for Dispatch Tools */
+.dispatch-features .small-card {
+  flex: 1 1 calc(33% - 1em); /* Three cards per row, adjusting for gap */
+  min-width: 200px;
+  padding: 1em;
+  background: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.dispatch-features .small-card h4 {
+  color: #34495e;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  font-size: 1.1em;
+}
+
+.dispatch-features .small-card p {
+  font-size: 0.85em;
+  color: #777;
+  margin-bottom: 1em;
+}
+
+@media (max-width: 768px) {
+  .medical-features-grid {
+    grid-template-columns: 1fr;
+  }
+  .dispatch-features .small-card {
+    flex: 1 1 100%;
+  }
 }
 
 @keyframes fadeIn {
