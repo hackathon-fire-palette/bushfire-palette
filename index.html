@@ -1138,13 +1138,16 @@ function addMessage(content, isUser = false) {
               cursor
             );
             index++;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
             setTimeout(typeCharacter, 20);
           } else {
             cursor.remove();
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
           }
         }
         
         typeCharacter();
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
       
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
