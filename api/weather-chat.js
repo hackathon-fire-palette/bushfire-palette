@@ -1,5 +1,7 @@
+const { Configuration, OpenAIApi } = require("openai");
+
 export default async function handler(req, res) {
-  // Handle CORS if needed
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -14,50 +16,35 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    const response = await fetch('https://api.vercel.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Use your Vercel AI Gateway API key here
-        'Authorization': `Bearer ${process.env.VERCEL_AI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini', // or your preferred Vercel AI model
-        messages: [
-          {
-            role: 'system',
-            content: `You are an AI weather prediction specialist for the Australian Bushfire Alert System. 
-            Focus on Perth and Western Australia weather conditions, fire risk assessments, and operational recommendations for firefighting teams.
-            Always include temperature, wind conditions, fire risk levels, and operational recommendations.
-            Keep responses concise but informative.`,
-          },
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
+    const configuration = new Configuration({
+      apiKey: process.env.CHATGPT_API_KEY,
+      basePath: "https://free.v36.cm/v1"
     });
+    
+    const openai = new OpenAIApi(configuration);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Vercel AI error:', errorData);
-      return res.status(500).json({ error: 'AI service temporarily unavailable' });
-    }
-
-    const data = await response.json();
-
-    // Vercel AI Gateway response structure:
-    // data.choices[0].message.content
+    const chatCompletion = await openai.createChatCompletion({
+      model: "gpt-4o-mini",
+      messages: [{
+        role: "system",
+        content: `You are an AI weather prediction specialist for the Australian Bushfire Alert System. 
+        Focus on Perth and Western Australia weather conditions, fire risk assessments, and operational recommendations.
+        Always include temperature, wind conditions, fire risk levels, and operational recommendations.`
+      }, {
+        role: "user",
+        content: message
+      }],
+      max_tokens: 500,
+      temperature: 0.7
+    });
 
     return res.status(200).json({
-      response: data.choices[0].message.content,
-      timestamp: new Date().toISOString(),
+      response: chatCompletion.data.choices[0].message.content,
+      timestamp: new Date().toISOString()
     });
+
   } catch (error) {
-    console.error('Server error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('API error:', error);
+    return res.status(500).json({ error: 'AI service unavailable' });
   }
 }
