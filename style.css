@@ -1019,6 +1019,18 @@ body.font-size-xlarge { font-size: 1.2em; }
   max-height: 300px;
 }
 
+.typing-cursor {
+  display: inline-block;
+  animation: cursor-blink 1s steps(2) infinite;
+  color: #1976d2;
+  font-weight: bold;
+}
+
+@keyframes cursor-blink {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .message {
   margin: 0.5rem 1rem;
   padding: 0.8rem 1rem;

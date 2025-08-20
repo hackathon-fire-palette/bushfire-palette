@@ -1107,22 +1107,46 @@
     // --- AI Weather Chat: Voice input, confidence, graph placeholder ---
     let isLoading = false;
     let recognition;
-    function addMessage(content, isUser = false) {
+function addMessage(content, isUser = false) {
       const messagesContainer = document.getElementById('chatMessages');
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
-      
+
       if (isUser) {
         messageDiv.textContent = content;
+        messagesContainer.appendChild(messageDiv);
       } else {
-        // Convert markdown-like formatting to HTML
+        // Create cursor element
+        const cursor = document.createElement('span');
+        cursor.className = 'typing-cursor';
+        cursor.textContent = '|';
+        
+        // Add initial cursor
+        messageDiv.appendChild(cursor);
+        messagesContainer.appendChild(messageDiv);
+        
+        // Typewriter effect
+        let index = 0;
         const formattedContent = content
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\n/g, '<br>');
-        messageDiv.innerHTML = formattedContent;
+        
+        function typeCharacter() {
+          if (index < formattedContent.length) {
+            messageDiv.insertBefore(
+              document.createTextNode(formattedContent[index]),
+              cursor
+            );
+            index++;
+            setTimeout(typeCharacter, 20);
+          } else {
+            cursor.remove();
+          }
+        }
+        
+        typeCharacter();
       }
       
-      messagesContainer.appendChild(messageDiv);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
