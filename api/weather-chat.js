@@ -1,4 +1,4 @@
-const { Configuration, OpenAIApi } = require("openai");
+import OpenAI from "openai";
 
 export default async function handler(req, res) {
   // Handle CORS preflight
@@ -16,30 +16,28 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    const configuration = new Configuration({
+    const openai = new OpenAI({
       apiKey: process.env.CHATGPT_API_KEY,
-      basePath: "https://free.v36.cm/v1"
+      baseURL: "https://free.v36.cm/v1", // custom base
     });
-    
-    const openai = new OpenAIApi(configuration);
 
-    const chatCompletion = await openai.createChatCompletion({
+    const chatCompletion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{
-        role: "system",
-        content: `You are an AI weather prediction specialist for the Australian Bushfire Alert System. 
-        Focus on Perth and Western Australia weather conditions, fire risk assessments, and operational recommendations.
-        Always include temperature, wind conditions, fire risk levels, and operational recommendations.`
-      }, {
-        role: "user",
-        content: message
-      }],
+      messages: [
+        {
+          role: "system",
+          content: `You are an AI weather prediction specialist for the Australian Bushfire Alert System. 
+          Focus on Perth and Western Australia weather conditions, fire risk assessments, and operational recommendations.
+          Always include temperature, wind conditions, fire risk levels, and operational recommendations.`
+        },
+        { role: "user", content: message }
+      ],
       max_tokens: 500,
       temperature: 0.7
     });
 
     return res.status(200).json({
-      response: chatCompletion.data.choices[0].message.content,
+      response: chatCompletion.choices[0].message.content,
       timestamp: new Date().toISOString()
     });
 
