@@ -514,7 +514,6 @@
 <body>
   <!-- Welcome Overlay -->
   <div id="welcomeOverlay" style="
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -523,7 +522,7 @@
     background: rgba(0, 0, 0, 0.8);
     color: white;
     z-index: 10000;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -721,7 +720,7 @@
         id="weatherChatPopup"
         title="Try asking: ‘Perth fire risk next 3 days’"
         style="
-          display: none;
+          display: flex;
           position: fixed;
           left: 50%;
           top: 50%;
