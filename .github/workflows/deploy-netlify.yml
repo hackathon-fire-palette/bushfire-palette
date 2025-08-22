@@ -41,7 +41,6 @@ jobs:
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
         NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        CHATGPT_API_KEY: ${{ secrets.CHATGPT_API_KEY }}
     
     # Alternative method using the Netlify GitHub Action
     # - name: Deploy to Netlify (Alternative)
@@ -58,5 +57,4 @@ jobs:
     #   env:
     #     NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
     #     NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-    #     CHATGPT_API_KEY: ${{ secrets.CHATGPT_API_KEY }}
     #   timeout-minutes: 10
