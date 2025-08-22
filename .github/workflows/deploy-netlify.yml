@@ -1,0 +1,60 @@
+name: Deploy to Netlify
+
+on:
+  push:  # Trigger on ALL push events to any branch
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    # Optional: Run tests if you have any
+    # - name: Run tests
+    #   run: npm test
+      
+    # Install Netlify CLI
+    - name: Install Netlify CLI
+      run: npm install -g netlify-cli
+      
+    # Deploy to Netlify
+    - name: Deploy to Netlify
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "Deploying to production..."
+          netlify deploy --dir=. --functions=netlify/functions --prod
+        else
+          echo "Deploying preview for branch: ${{ github.ref_name }}"
+          netlify deploy --dir=. --functions=netlify/functions
+        fi
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    
+    # Alternative method using the Netlify GitHub Action
+    # - name: Deploy to Netlify (Alternative)
+    #   uses: nwtgck/actions-netlify@v3.0
+    #   with:
+    #     publish-dir: '.'
+    #     production-branch: main
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     deploy-message: 'Deploy from GitHub Actions'
+    #     enable-pull-request-comment: true
+    #     enable-commit-comment: true
+    #     overwrites-pull-request-comment: true
+    #     functions-dir: 'netlify/functions'
+    #   env:
+    #     NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+    #     NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    #   timeout-minutes: 10
