@@ -1,12 +1,7 @@
 name: Deploy to Netlify
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  push:  # Trigger on ALL push events to any branch
 
 jobs:
   build_and_deploy:
@@ -36,10 +31,12 @@ jobs:
     # Deploy to Netlify
     - name: Deploy to Netlify
       run: |
-        if [ "${{ github.event_name }}" == "pull_request" ]; then
-          netlify deploy --dir=. --functions=netlify/functions
-        else
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "Deploying to production..."
           netlify deploy --dir=. --functions=netlify/functions --prod
+        else
+          echo "Deploying preview for branch: ${{ github.ref_name }}"
+          netlify deploy --dir=. --functions=netlify/functions
         fi
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
