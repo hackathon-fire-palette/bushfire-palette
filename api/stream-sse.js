@@ -1,144 +1,100 @@
-// Example 1: Simple pagination
-async function loadDataByPages() {
-  let page = 1;
-  let hasMore = true;
-  let allData = [];
+// pages/api/stream-sse.js
+import fs from 'fs';
+import path from 'path';
+
+export default function handler(req, res) {
+  const { chunkSize = 1000, startIndex = 0 } = req.query;
   
-  while (hasMore) {
-    try {
-      const response = await fetch(`/api/data?page=${page}&limit=100`);
-      const result = await response.json();
+  // Set SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'data.json');
+    const allData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    
+    let index = parseInt(startIndex);
+    const size = parseInt(chunkSize);
+    
+    const sendChunk = () => {
+      if (index >= allData.length) {
+        res.write('event: complete\n');
+        res.write('data: {"message": "Stream complete"}\n\n');
+        res.end();
+        return;
+      }
       
-      allData.push(...result.data);
-      hasMore = result.pagination.hasNext;
-      page++;
+      const chunk = allData.slice(index, index + size);
+      const chunkData = {
+        data: chunk,
+        index: Math.floor(index / size),
+        total: allData.length,
+        isLast: index + size >= allData.length
+      };
       
-      console.log(`Loaded page ${page - 1}, total items: ${allData.length}`);
+      res.write('event: chunk\n');
+      res.write(`data: ${JSON.stringify(chunkData)}\n\n`);
       
-      // Optional: Process data as you load it
-      processChunk(result.data);
-      
-    } catch (error) {
-      console.error('Error loading page:', page, error);
-      break;
-    }
+      index += size;
+      setTimeout(sendChunk, 100); // Adjust delay as needed
+    };
+    
+    sendChunk();
+  } catch (error) {
+    res.write('event: error\n');
+    res.write(`data: ${JSON.stringify({ error: 'Failed to read data' })}\n\n`);
+    res.end();
   }
-  
-  return allData;
 }
 
-// Example 2: Server-Sent Events streaming
-function streamDataWithSSE() {
-  const eventSource = new EventSource('/api/stream-sse?chunkSize=500');
-  let receivedData = [];
+// Client-side SSE reader
+function createDataStream(onChunk, onComplete, onError) {
+  const eventSource = new EventSource('/api/stream-sse?chunkSize=1000');
   
   eventSource.addEventListener('chunk', (event) => {
     const chunkData = JSON.parse(event.data);
-    
-    console.log(`Chunk ${chunkData.index + 1} received:`, chunkData.data.length, 'items');
-    receivedData.push(...chunkData.data);
-    
-    // Update your UI here
-    updateUI(chunkData.data);
-    updateProgress(receivedData.length, chunkData.total);
+    onChunk(chunkData);
   });
   
   eventSource.addEventListener('complete', () => {
-    console.log('Streaming complete! Total items:', receivedData.length);
     eventSource.close();
-    onStreamComplete(receivedData);
+    onComplete();
   });
   
   eventSource.addEventListener('error', (error) => {
-    console.error('Streaming error:', error);
     eventSource.close();
+    onError(error);
   });
   
-  return eventSource;
+  return eventSource; // Return for manual closing if needed
 }
 
-// Example 3: Fetch with async iteration
-async function streamDataWithFetch() {
-  const response = await fetch('/api/stream-data?chunkSize=1000');
-  
-  if (!response.body) {
-    throw new Error('ReadableStream not supported');
-  }
-  
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
+// Usage example
+function startDataStream() {
   let allData = [];
   
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
+  const eventSource = createDataStream(
+    // On chunk received
+    (chunkData) => {
+      console.log(`Received chunk ${chunkData.index + 1}`);
+      allData.push(...chunkData.data);
       
-      if (done) break;
-      
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-      
-      for (const line of lines) {
-        if (line.trim()) {
-          const chunk = JSON.parse(line);
-          
-          console.log(`Processing chunk ${chunk.index + 1}`);
-          allData.push(...chunk.data);
-          
-          // Process chunk immediately
-          await processChunk(chunk.data);
-          
-          if (chunk.isLast) {
-            console.log('All chunks processed!');
-            return allData;
-          }
-        }
-      }
+      // Update progress
+      updateProgress(allData.length, chunkData.total);
+    },
+    // On complete
+    () => {
+      console.log('Stream complete!', allData.length, 'items loaded');
+      processCompleteData(allData);
+    },
+    // On error
+    (error) => {
+      console.error('Stream error:', error);
     }
-  } finally {
-    reader.releaseLock();
-  }
+  );
   
-  return allData;
+  // Optional: Stop streaming manually
+  // eventSource.close();
 }
-
-// Helper functions
-function updateUI(chunkData) {
-  // Update your DOM with new data
-  const container = document.getElementById('data-container');
-  chunkData.forEach(item => {
-    const element = document.createElement('div');
-    element.textContent = JSON.stringify(item);
-    container.appendChild(element);
-  });
-}
-
-function updateProgress(current, total) {
-  const percentage = Math.round((current / total) * 100);
-  console.log(`Progress: ${current}/${total} (${percentage}%)`);
-  
-  // Update progress bar
-  const progressBar = document.getElementById('progress-bar');
-  if (progressBar) {
-    progressBar.style.width = `${percentage}%`;
-  }
-}
-
-function processChunk(data) {
-  // Process each chunk of data as needed
-  data.forEach(item => {
-    // Your processing logic here
-  });
-}
-
-function onStreamComplete(allData) {
-  console.log('Stream finished, final processing...');
-  // Final processing when all data is loaded
-}
-
-// Usage examples:
-// loadDataByPages().then(data => console.log('All data loaded:', data.length));
-// const eventSource = streamDataWithSSE();
-// streamDataWithFetch().then(data => console.log('Stream complete:', data.length));
