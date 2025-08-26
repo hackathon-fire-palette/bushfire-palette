@@ -1,26 +1,6 @@
 // In a real application, this would be a database or a more persistent store.
 // For demonstration purposes, we'll use a simple in-memory array.
-import fs from 'fs/promises';
-import path from 'path';
-
-const NOTIFICATIONS_FILE = path.resolve(process.cwd(), 'data', 'notifications.json');
-
-async function readNotifications() {
-    try {
-        const data = await fs.readFile(NOTIFICATIONS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            // File does not exist, return empty array
-            return [];
-        }
-        throw error;
-    }
-}
-
-async function writeNotifications(notifications) {
-    await fs.writeFile(NOTIFICATIONS_FILE, JSON.stringify(notifications, null, 2), 'utf8');
-}
+import { kv } from '@vercel/kv';
 
 export default async function handler(req, res) {
     if (req.method === 'POST') {
@@ -38,9 +18,12 @@ export default async function handler(req, res) {
                 timestamp: new Date().toISOString(),
             };
 
-            const notifications = await readNotifications();
+            // Retrieve existing notifications, or an empty array if none exist
+            const notifications = await kv.get('notifications') || [];
             notifications.push(newNotification);
-            await writeNotifications(notifications);
+
+            // Store the updated list of notifications
+            await kv.set('notifications', notifications);
 
             console.log('Notification sent:', newNotification);
 
