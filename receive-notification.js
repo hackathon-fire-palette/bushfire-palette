@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const notificationsList = document.getElementById('notificationsList');
     const statusMessage = document.getElementById('statusMessage');
+    const clearNotificationsButton = document.getElementById('clearNotificationsButton');
 
     async function fetchNotifications() {
         statusMessage.textContent = 'Loading notifications...';
@@ -34,9 +35,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function clearNotifications() {
+        if (!confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
+            return;
+        }
+
+        statusMessage.textContent = 'Clearing notifications...';
+        try {
+            const response = await fetch('/api/clear-notifications', {
+                method: 'POST',
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                statusMessage.textContent = data.message;
+                notificationsList.innerHTML = ''; // Clear displayed notifications
+                fetchNotifications(); // Re-fetch to confirm empty state
+            } else {
+                statusMessage.textContent = data.error || 'Failed to clear notifications.';
+            }
+        } catch (error) {
+            console.error('Error clearing notifications:', error);
+            statusMessage.textContent = 'An error occurred while clearing notifications.';
+        }
+    }
+
     // Fetch notifications initially
     fetchNotifications();
 
     // Poll for new notifications every 5 seconds
     setInterval(fetchNotifications, 5000);
+
+    // Add event listener for the clear button
+    clearNotificationsButton.addEventListener('click', clearNotifications);
 });
