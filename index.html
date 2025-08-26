@@ -514,7 +514,6 @@
 <body>
   <!-- Welcome Overlay -->
   <div id="welcomeOverlay" style="
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -523,7 +522,7 @@
     background: rgba(0, 0, 0, 0.8);
     color: white;
     z-index: 10000;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -660,6 +659,12 @@
     </div>
     -->
     <div class="dashboard-flex">
+      <!-- Incident Trend Line Chart -->
+      <section class="card" style="flex:1;min-width:350px;max-width:600px;margin-bottom:2em;">
+        <h3>📈 Incident Trends by Type</h3>
+        <canvas id="incidentTrendChart" height="220" aria-label="Incident trend line chart"></canvas>
+        <div id="incidentTrendChartLegend"></div>
+      </section>
       <section class="alerts-list-section" aria-label="Active Alerts">
         <div class="alerts-header">
           <h2>Active Alerts</h2>
@@ -718,28 +723,31 @@
         Open Weather Chat
       </button>
       <!-- Chat popup window (initially hidden) -->
-      <div
+        <div
         id="weatherChatPopup"
         title="Try asking: ‘Perth fire risk next 3 days’"
         style="
-          display: none;
+          display: flex;
           position: fixed;
-          right: 24px;
-          bottom: 80px;
-          width: 350px;
-          max-width: 95vw;
-          height: 500px;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          width: 500px;
+          max-width: 90vw;
+          height: 600px;
+          max-height: 80vh;
           background: #fff;
-          border-radius: 12px;
-          box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+          border-radius: 16px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
           z-index: 1000;
           flex-direction: column;
-          overflow: visible;
+          overflow: hidden;
+          border: 1px solid rgba(0,0,0,0.1);
         "
       >
         <!-- Chatbox bar/header with close button -->
-        <div style="width:100%;background:#0078d7;color:#fff;padding:10px 16px 10px 0;display:flex;align-items:center;justify-content:space-between;position:relative;box-sizing:border-box;">
-          <span style="font-weight:bold;padding-left:16px;">AI Weather Predictor</span>
+        <div style="width:100%;background:linear-gradient(135deg, #0078d7, #006cbe);color:#fff;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;position:relative;box-sizing:border-box;border-radius:16px 16px 0 0;">
+          <span style="font-weight:600;font-size:1.3rem;padding-left:8px;letter-spacing:0.5px;">Weather Assistant</span>
           <button
             id="closeWeatherChatBtn"
             style="
@@ -763,27 +771,29 @@
         </div>
         <!-- Chat content -->
         <div style="padding: 0 0 0 0; height: calc(100% - 48px); overflow: hidden;">
-          <section class="weather-chat-section" aria-label="AI Weather Predictor" style="height: 100%; box-shadow: none; border: none;">
+          <section class="weather-chat-section" aria-label="AI Weather Predictor" style="height: 100%; box-shadow: none; border: none; display: flex; flex-direction: column;">
             <h2 style="display:none;">🤖 AI Weather Predictor</h2>
-            <div class="quick-questions">
-              <h4>Quick Questions:</h4>
-              <button class="quick-question-btn" onclick="askWeatherQuestion('What will the weather be like in Perth next week?')">Perth Next Week</button>
-              <button class="quick-question-btn" onclick="askWeatherQuestion('What are the fire risk conditions for next week?')">Fire Risk Analysis</button>
-              <button class="quick-question-btn" onclick="askWeatherQuestion('Should we pre-position resources based on predicted conditions?')">Resource Planning</button>
+            <div class="quick-questions" style="margin-bottom:1.5rem;padding:1rem;background:#f8f9fa;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+              <h4 style="margin:0 0 1rem 0;color:#1a73e8;font-size:1.1rem;">Quick Questions:</h4>
+              <div style="display:grid;gap:0.5rem;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));">
+                <button class="quick-question-btn" onclick="askWeatherQuestion('What will the weather be like in Perth next week?')" style="background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc;padding:0.6rem;border-radius:8px;transition:all 0.2s;cursor:pointer;">Perth Next Week</button>
+                <button class="quick-question-btn" onclick="askWeatherQuestion('What are the fire risk conditions for next week?')" style="background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc;padding:0.6rem;border-radius:8px;transition:all 0.2s;cursor:pointer;">Fire Risk Analysis</button>
+                <button class="quick-question-btn" onclick="askWeatherQuestion('Should we pre-position resources based on predicted conditions?')" style="background:#e8f0fe;color:#1a73e8;border:1px solid #d2e3fc;padding:0.6rem;border-radius:8px;transition:all 0.2s;cursor:pointer;">Resource Planning</button>
+              </div>
             </div>
             <div class="fire-risk-graph" id="fireRiskGraph" aria-label="Fire risk trend graph">
               [Fire risk trend graph will appear here]
             </div>
-            <div class="chat-container">
-              <div id="chatMessages" class="chat-messages" aria-live="polite">
+            <div class="chat-container" style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
+              <div id="chatMessages" class="chat-messages" aria-live="polite" style="flex: 1; overflow-y: auto; margin-bottom: 1rem;">
                 <div class="message ai">
                   Hello! I'm your AI Weather Predictor. Ask me about weather conditions, fire risk assessments, or operational planning for Perth and surrounding areas. How can I help you today?
                 </div>
               </div>
-              <div class="chat-input-container">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500" aria-label="Weather chat input" />
-                <button id="voiceBtn" class="voice-btn" aria-label="Voice input" tabindex="0">🎤</button>
-                <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">Send</button>
+              <div class="chat-input-container" style="flex-shrink: 0;display:flex;gap:0.5rem;padding:1rem;background:#fff;border-top:1px solid #eee;">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Ask about weather predictions..." maxlength="500" aria-label="Weather chat input" style="flex:1;padding:0.8rem;border:1px solid #ddd;border-radius:8px;font-size:1rem;" />
+                <button id="voiceBtn" class="voice-btn" aria-label="Voice input" tabindex="0" style="background:#1a73e8;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">🎤</button>
+                <button id="chatSendBtn" class="chat-send-btn" onclick="sendMessage()" aria-label="Send message" style="background:#1a73e8;color:white;border:none;padding:0 1.5rem;border-radius:8px;font-size:1rem;cursor:pointer;">Send</button>
               </div>
             </div>
           </section>
@@ -912,6 +922,14 @@
   <script src="script.js"></script>
   <script src="recovery.js"></script>
   <script>
+    // Chat popup controls
+    document.getElementById('openWeatherChatBtn').addEventListener('click', function() {
+      document.getElementById('weatherChatPopup').style.display = 'flex';
+    });
+    
+    document.getElementById('closeWeatherChatBtn').addEventListener('click', function() {
+      document.getElementById('weatherChatPopup').style.display = 'none';
+    });
     // --- Accessibility & Language ---
     document.getElementById('darkModeToggle').onclick = function() {
       document.body.classList.toggle('dark-mode');
@@ -1100,22 +1118,49 @@
     // --- AI Weather Chat: Voice input, confidence, graph placeholder ---
     let isLoading = false;
     let recognition;
-    function addMessage(content, isUser = false) {
+function addMessage(content, isUser = false) {
       const messagesContainer = document.getElementById('chatMessages');
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
-      
+
       if (isUser) {
         messageDiv.textContent = content;
+        messagesContainer.appendChild(messageDiv);
       } else {
-        // Convert markdown-like formatting to HTML
+        // Create cursor element
+        const cursor = document.createElement('span');
+        cursor.className = 'typing-cursor';
+        cursor.textContent = '|';
+        
+        // Add initial cursor
+        messageDiv.appendChild(cursor);
+        messagesContainer.appendChild(messageDiv);
+        
+        // Typewriter effect
+        let index = 0;
         const formattedContent = content
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\n/g, '<br>');
-        messageDiv.innerHTML = formattedContent;
+        
+        function typeCharacter() {
+          if (index < formattedContent.length) {
+            messageDiv.insertBefore(
+              document.createTextNode(formattedContent[index]),
+              cursor
+            );
+            index++;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            setTimeout(typeCharacter, 20);
+          } else {
+            cursor.remove();
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+        }
+        
+        typeCharacter();
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
       
-      messagesContainer.appendChild(messageDiv);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
