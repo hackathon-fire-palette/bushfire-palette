@@ -16,56 +16,72 @@
             max-width: 600px;
             margin: 0 auto;
             background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 30px; /* Increased padding */
+            border-radius: 10px; /* More rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Stronger shadow */
         }
         h1 {
             color: #0056b3;
             text-align: center;
             margin-bottom: 20px;
+            font-size: 2.2em; /* Larger heading */
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee; /* Separator line */
         }
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
+            color: #555; /* Slightly darker label color */
         }
         input[type="text"],
         textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px; /* Increased padding */
             margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid #ccc; /* Lighter border */
+            border-radius: 5px; /* More rounded input fields */
             box-sizing: border-box;
+            font-size: 1em;
         }
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px; /* Taller textarea */
         }
         button {
             background-color: #007bff;
             color: white;
-            padding: 12px 20px;
+            padding: 14px 20px; /* Increased padding */
             border: none;
-            border-radius: 4px;
+            border-radius: 5px; /* More rounded button */
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1.1em; /* Larger font size */
             width: 100%;
+            transition: background-color 0.3s ease; /* Smooth transition */
         }
         button:hover {
             background-color: #0056b3;
         }
         #responseMessage {
             margin-top: 20px;
+            padding: 10px;
             text-align: center;
             font-weight: bold;
+            border-radius: 4px;
+            display: none; /* Hidden by default, shown by JS */
         }
-        .success {
-            color: green;
+        #responseMessage.visible {
+            display: block;
         }
-        .error {
-            color: red;
+        #responseMessage.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        #responseMessage.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>

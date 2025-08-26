@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const message = document.getElementById('message').value;
 
         responseMessage.textContent = 'Sending notification...';
-        responseMessage.className = '';
+        responseMessage.className = 'visible'; // Make it visible
+        responseMessage.classList.remove('success', 'error'); // Clear previous states
 
         try {
             const response = await fetch('/api/send-notification', {
@@ -24,16 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 responseMessage.textContent = data.message;
-                responseMessage.className = 'success';
+                responseMessage.classList.add('success');
                 notificationForm.reset();
             } else {
                 responseMessage.textContent = data.error || 'Failed to send notification.';
-                responseMessage.className = 'error';
+                responseMessage.classList.add('error');
             }
         } catch (error) {
             console.error('Error sending notification:', error);
             responseMessage.textContent = 'An error occurred while sending notification.';
-            responseMessage.className = 'error';
+            responseMessage.classList.add('error');
         }
     });
 });
