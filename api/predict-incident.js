@@ -1,5 +1,4 @@
 // api/predict-incident.js
-import { NextRequest, NextResponse } from 'next/server';
 
 // Simple prediction models (in production, you'd load trained ML models)
 class IncidentPredictor {
