@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receive Notifications</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #notificationsList {
+            list-style: none;
+            padding: 0;
+        }
+        .notification-item {
+            background-color: #e9f7ff;
+            border: 1px solid #b3e0ff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .notification-item h2 {
+            margin-top: 0;
+            color: #007bff;
+            font-size: 1.2em;
+        }
+        .notification-item p {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+        .notification-item .timestamp {
+            font-size: 0.8em;
+            color: #666;
+            text-align: right;
+        }
+        #statusMessage {
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Received Notifications</h1>
+        <div id="statusMessage">Loading notifications...</div>
+        <ul id="notificationsList">
+            <!-- Notifications will be loaded here by JavaScript -->
+        </ul>
+    </div>
+
+    <script src="receive-notification.js"></script>
+</body>
+</html>
