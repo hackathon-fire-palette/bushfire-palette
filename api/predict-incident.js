@@ -298,6 +298,6 @@ export const exampleRequest = {
 
 // Deployment configuration for Vercel
 export const config = {
-  runtime: 'nodejs18.x',
-  regions: ['syd1', 'mel1'] // Australia regions
+  runtime: 'nodejs',
+  regions: ['syd1'] // Australia regions
 };
