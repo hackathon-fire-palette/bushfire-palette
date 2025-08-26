@@ -1,13 +1,17 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL);
+const NOTIFICATIONS_KEY = 'notifications';
 
 export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
-            // Retrieve existing notifications, or an empty array if none exist
-            const notifications = await kv.get('notifications') || [];
+            // Retrieve all notifications from the Redis list
+            const rawNotifications = await redis.lrange(NOTIFICATIONS_KEY, 0, -1);
+            const notifications = rawNotifications.map(JSON.parse);
             
-            // Sort notifications by timestamp in descending order (most recent first)
-            notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            // Notifications are already stored in reverse chronological order due to lpush
+            // No need to sort again if lpush is used consistently.
             
             return res.status(200).json({ notifications });
         } catch (error) {

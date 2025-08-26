@@ -1,6 +1,9 @@
 // In a real application, this would be a database or a more persistent store.
 // For demonstration purposes, we'll use a simple in-memory array.
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL);
+const NOTIFICATIONS_KEY = 'notifications';
 
 export default async function handler(req, res) {
     if (req.method === 'POST') {
@@ -18,12 +21,8 @@ export default async function handler(req, res) {
                 timestamp: new Date().toISOString(),
             };
 
-            // Retrieve existing notifications, or an empty array if none exist
-            const notifications = await kv.get('notifications') || [];
-            notifications.push(newNotification);
-
-            // Store the updated list of notifications
-            await kv.set('notifications', notifications);
+            // Add the new notification to the beginning of the Redis list
+            await redis.lpush(NOTIFICATIONS_KEY, JSON.stringify(newNotification));
 
             console.log('Notification sent:', newNotification);
 
