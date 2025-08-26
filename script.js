@@ -1,3 +1,114 @@
+// --- Incident Trend Chart Logic ---
+// Loads Chart.js and renders a line chart of incidents by date/type
+function loadIncidentTrendChart() {
+  // Load Chart.js if not loaded
+  var chartInit = function() {
+    fetchIncidentTrendData().then(({labels, datasets}) => {
+      renderIncidentTrendChart(labels, datasets);
+    });
+  };
+  if (!window.ChartLoaded) {
+    document.addEventListener('ChartJSLoaded', chartInit, { once: true });
+    var s = document.createElement('script');
+    s.src = 'chartjs-loader.js';
+    document.head.appendChild(s);
+  } else {
+    chartInit();
+  }
+}
+
+async function fetchIncidentTrendData() {
+  // Stream SSE and aggregate by date/typeOfIncident
+  const url = '/api/stream-sse?page=2&limit=50';
+  const response = await fetch(url);
+  const reader = response.body.getReader();
+  let decoder = new TextDecoder();
+  let incidents = [];
+  let buffer = '';
+  while (true) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, {stream:true});
+    let parts = buffer.split('\n');
+    buffer = parts.pop();
+    for (let line of parts) {
+      if (line.startsWith('data:')) {
+        try {
+          let obj = JSON.parse(line.slice(5));
+          if (Array.isArray(obj)) incidents.push(...obj);
+          else if (obj && typeof obj === 'object') incidents.push(obj);
+        } catch(e) {}
+      }
+    }
+  }
+  // Group by date/typeOfIncident
+  let byDateType = {};
+  let allTypes = new Set();
+  let allDates = new Set();
+  incidents.forEach(i => {
+    let d = (i.date || i.timestamp || i.createdAt || '').slice(0,10);
+    let t = i.typeOfIncident || i.type || 'Unknown';
+    if (!d) return;
+    allTypes.add(t);
+    allDates.add(d);
+    byDateType[d] = byDateType[d] || {};
+    byDateType[d][t] = (byDateType[d][t]||0)+1;
+  });
+  let sortedDates = Array.from(allDates).sort();
+  let sortedTypes = Array.from(allTypes).sort();
+  let datasets = sortedTypes.map((type, idx) => ({
+    label: type,
+    data: sortedDates.map(d => byDateType[d]?.[type]||0),
+    borderColor: chartColor(idx),
+    backgroundColor: chartColor(idx,0.2),
+    fill: false,
+    tension: 0.2
+  }));
+  return { labels: sortedDates, datasets };
+}
+
+function chartColor(idx, alpha) {
+  // 8 distinct colors, fallback to random
+  const colors = [
+    '#c0392b','#1976d2','#27ae60','#f39c12','#8e44ad','#e67e22','#16a085','#34495e'
+  ];
+  let c = colors[idx%colors.length];
+  if (alpha !== undefined) {
+    // Convert hex to rgba
+    let r = parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  return c;
+}
+
+let incidentTrendChartInstance = null;
+function renderIncidentTrendChart(labels, datasets) {
+  var ctx = document.getElementById('incidentTrendChart').getContext('2d');
+  if (incidentTrendChartInstance) incidentTrendChartInstance.destroy();
+  incidentTrendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, position: 'bottom' },
+        title: { display: false }
+      },
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { title: { display: true, text: 'Date' } },
+        y: { title: { display: true, text: 'Number of Incidents' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// Auto-load chart on DOMContentLoaded if element exists
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.getElementById('incidentTrendChart')) {
+    loadIncidentTrendChart();
+  }
+});
 // --- Vehicle & Crew Tracking System ---
 // Dummy data for vehicles and crew assignments
 var vehicles = [
