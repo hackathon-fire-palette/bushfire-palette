@@ -1,10 +1,13 @@
 // --- Incident Trend Chart Logic ---
 // Loads Chart.js and renders a line chart of incidents by date/type
+
 function loadIncidentTrendChart() {
   // Load Chart.js if not loaded
   var chartInit = function() {
-    fetchIncidentTrendData().then(({labels, datasets}) => {
+    fetchIncidentTrendDataPage1().then(({labels, datasets, analysis}) => {
       renderIncidentTrendChart(labels, datasets);
+      // Optionally log or display analysis
+      console.log('Incident Data Analysis:', analysis);
     });
   };
   if (!window.ChartLoaded) {
@@ -17,31 +20,39 @@ function loadIncidentTrendChart() {
   }
 }
 
-async function fetchIncidentTrendData() {
-  // Stream SSE and aggregate by date/typeOfIncident
-  const url = '/api/stream-sse?page=2&limit=50';
+async function fetchIncidentTrendDataPage1() {
+  // Fetch only the first page of data (no streaming)
+  const url = '/api/stream-sse?page=1&limit=20';
   const response = await fetch(url);
-  const reader = response.body.getReader();
-  let decoder = new TextDecoder();
   let incidents = [];
-  let buffer = '';
-  while (true) {
-    const {done, value} = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, {stream:true});
-    let parts = buffer.split('\n');
-    buffer = parts.pop();
-    for (let line of parts) {
-      if (line.startsWith('data:')) {
-        try {
-          let obj = JSON.parse(line.slice(5));
-          if (Array.isArray(obj)) incidents.push(...obj);
-          else if (obj && typeof obj === 'object') incidents.push(obj);
-        } catch(e) {}
+  if (response.headers.get('content-type')?.includes('text/event-stream')) {
+    // Parse SSE
+    const reader = response.body.getReader();
+    let decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, {stream:true});
+      let parts = buffer.split('\n');
+      buffer = parts.pop();
+      for (let line of parts) {
+        if (line.startsWith('data:')) {
+          try {
+            let obj = JSON.parse(line.slice(5));
+            if (Array.isArray(obj)) incidents.push(...obj);
+            else if (obj && typeof obj === 'object') incidents.push(obj);
+          } catch(e) {}
+        }
       }
     }
+  } else {
+    // Try JSON
+    try {
+      incidents = await response.json();
+    } catch(e) { incidents = []; }
   }
-  // Group by date/typeOfIncident
+  // Analyze and group by date/typeOfIncident
   let byDateType = {};
   let allTypes = new Set();
   let allDates = new Set();
@@ -64,7 +75,19 @@ async function fetchIncidentTrendData() {
     fill: false,
     tension: 0.2
   }));
-  return { labels: sortedDates, datasets };
+  // Analysis: total incidents, per type, per date
+  let totalIncidents = incidents.length;
+  let incidentsPerType = {};
+  let incidentsPerDate = {};
+  incidents.forEach(i => {
+    let d = (i.date || i.timestamp || i.createdAt || '').slice(0,10);
+    let t = i.typeOfIncident || i.type || 'Unknown';
+    if (!d) return;
+    incidentsPerType[t] = (incidentsPerType[t]||0)+1;
+    incidentsPerDate[d] = (incidentsPerDate[d]||0)+1;
+  });
+  let analysis = { totalIncidents, incidentsPerType, incidentsPerDate };
+  return { labels: sortedDates, datasets, analysis };
 }
 
 function chartColor(idx, alpha) {
