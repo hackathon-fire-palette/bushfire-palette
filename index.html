@@ -1,112 +1,305 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Kimberley WA — Live Fire Simulation</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kimberley WA — Live Multi‑Fire Simulation</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <style>
-    body { margin:0; padding:0; display:flex; height:100vh; }
-    #controls { width:300px; background:#fff; padding:10px; overflow:auto; font-family:Arial, sans-serif; }
-    #map { flex:1; }
-    table { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
-    th, td { border:1px solid #ccc; padding:4px; text-align:center; }
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    #app { display: grid; grid-template-columns: 360px 1fr; height: 100%; }
+    #sidebar { padding: 12px 14px; overflow: auto; border-right: 1px solid #e5e7eb; background: #fafafa; }
+    #map { height: 100%; }
+    h1 { margin: 0 0 6px; font-size: 18px; }
+    h2 { margin: 14px 0 6px; font-size: 16px; }
+    .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .row { display: grid; grid-template-columns: 1fr 80px; gap: 8px; align-items: center; }
+    .controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    button { padding: 8px 10px; border-radius: 10px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; }
+    button.primary { background: #0166ff; color: #fff; border-color: #0166ff; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    .legend { font-size: 12px; }
+    .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+    .pill { font-size: 12px; background: #f3f4f6; padding: 2px 8px; border-radius: 999px; display:inline-block; }
+    .muted { color:#6b7280; }
   </style>
 </head>
 <body>
-<div id="controls">
-  <h3>Kimberley WA — Live Fire Simulation</h3>
+  <div id="app">
+    <aside id="sidebar">
+      <h1>Kimberley WA — Live Multi‑Fire Simulation</h1>
+      <div class="card" id="global-card">
+        <div class="row"><div>Step (sim minutes)</div><div><span id="stepLabel" class="pill">0</span></div></div>
+        <div class="row"><div>Tick speed (ms)</div><div><input id="tickMs" type="number" min="200" step="100" value="1200" style="width:100%"></div></div>
+        <div class="row"><div>Step size (mins)</div><div><input id="stepMins" type="number" min="5" step="5" value="30" style="width:100%"></div></div>
+        <div class="controls" style="margin-top:8px">
+          <button id="playBtn" class="primary">Play</button>
+          <button id="pauseBtn">Pause</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+        <div style="margin-top:8px" class="muted">Tip: 30 mins per tick is recommended. Increase tick speed for smoother animation.</div>
+      </div>
 
-  <label>Humidity (%) <input type="range" id="humidity" min="0" max="100" value="20"></label><br>
-  <label>Temperature (°C) <input type="range" id="temperature" min="10" max="50" value="38"></label><br>
-  <label>Wind Speed (km/h) <input type="range" id="windSpeed" min="0" max="100" value="25"></label><br>
-  <label>Wind Dir (° from North) <input type="range" id="windDir" min="0" max="360" value="90"></label><br>
-  <label>Fuel Load (%) <input type="range" id="fuel" min="0" max="100" value="70"></label><br>
-  <label>Aggression (0–100) <input type="range" id="aggression" min="0" max="100" value="40"></label><br>
+      <div class="card">
+        <h2>Environment</h2>
+        <div class="row"><label>Humidity (%)</label><input id="hum" type="range" min="5" max="90" value="25"></div>
+        <div class="row"><label>Temperature (°C)</label><input id="temp" type="range" min="20" max="50" value="38"></div>
+        <div class="row"><label>Fuel Load (%)</label><input id="fuel" type="range" min="0" max="100" value="60"></div>
+        <div class="row"><label>Aggression (0–100)</label><input id="agg" type="range" min="0" max="100" value="65"></div>
+        <div class="muted" style="margin-top:6px">These act as global multipliers applied to all fires.</div>
+      </div>
 
-  <h4>Time Horizons (hours)</h4>
-  <label><input type="checkbox" class="horizon" value="1" checked> 1h</label><br>
-  <label><input type="checkbox" class="horizon" value="2" checked> 2h</label><br>
-  <label><input type="checkbox" class="horizon" value="3" checked> 3h</label><br>
-  <label><input type="checkbox" class="horizon" value="5" checked> 5h</label><br>
-  <label><input type="checkbox" class="horizon" value="8" checked> 8h</label><br>
+      <div class="card">
+        <h2>Fires</h2>
+        <div id="firesPanel"></div>
+      </div>
 
-  <button id="play">Play</button>
-  <button id="pause">Pause</button>
-  <button id="step">Step</button>
-  <button id="reset">Reset</button>
+      <div class="card">
+        <h2>Impact — Population & Infrastructure (inside latest fire polygons)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Fire</th>
+              <th>Pop</th>
+              <th>Houses</th>
+              <th>Infra</th>
+            </tr>
+          </thead>
+          <tbody id="impactBody"></tbody>
+        </table>
+      </div>
 
-  <h4>Simulation Results</h4>
-  <table id="results">
-    <tr><th>Color</th><th>ETA</th><th>Acres</th><th>Population</th><th>Housing</th></tr>
-  </table>
-</div>
-<div id="map"></div>
+      <div class="card legend">
+        <div><span class="dot" style="background:#ef4444"></span>Broome Fire</div>
+        <div><span class="dot" style="background:#f59e0b"></span>Derby Fire</div>
+        <div><span class="dot" style="background:#10b981"></span>Kununurra Fire</div>
+        <div style="margin-top:6px" class="muted">Town markers include rough population & estimated dwellings for demo purposes.
+        Replace with your official datasets (ABS grid, G-NAF, critical assets, etc.).</div>
+      </div>
+    </aside>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-  const map = L.map('map').setView([-17.9614, 122.2300], 11); // Broome, Kimberley WA
-  L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    subdomains:['mt0','mt1','mt2','mt3']
-  }).addTo(map);
+    <div id="map"></div>
+  </div>
 
-  let ignition = L.marker([-17.9614, 122.2300], {draggable:true}).addTo(map);
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+  <script>
+    // --- Map ---
+    const map = L.map('map', { zoomControl: true }).setView([-17.8, 122.2], 6);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    }).addTo(map);
 
-  const colors = ['#ffff66','#ffcc33','#ff6600','#cc0000','#660000'];
-  const horizons = [1,2,3,5,8];
-  let layerGroup = L.layerGroup().addTo(map);
+    // --- Demo data: towns / infrastructure ---
+    const towns = [
+      { name: 'Broome', lat: -17.9614, lng: 122.2359, population: 14500, houses: 6000 },
+      { name: 'Derby', lat: -17.3012, lng: 123.6300, population: 3500, houses: 1500 },
+      { name: 'Kununurra', lat: -15.7740, lng: 128.7384, population: 6000, houses: 2500 },
+      { name: 'Fitzroy Crossing', lat: -18.1965, lng: 125.5669, population: 1200, houses: 500 },
+      { name: 'Halls Creek', lat: -18.2247, lng: 127.6698, population: 1400, houses: 600 }
+    ];
 
-  let playing = false, stepIndex=0, timer;
+    const infrastructure = [
+      { type: 'Power Substation', lat: -17.955, lng: 122.24 },
+      { type: 'Airport', lat: -17.948, lng: 122.235 },
+      { type: 'Telecom Hub', lat: -17.303, lng: 123.633 },
+      { type: 'Water Treatment', lat: -15.775, lng: 128.742 }
+    ];
 
-  function acresFromRadius(r) {
-    return Math.round(Math.PI * (r/1000)**2 * 0.247); // dummy acres
-  }
+    // Markers for towns & infrastructure
+    const townMarkers = towns.map(t => L.marker([t.lat, t.lng]).bindPopup(`<b>${t.name}</b><br>Pop ${t.population.toLocaleString()}<br>Houses ${t.houses.toLocaleString()}`).addTo(map));
+    const infraMarkers = infrastructure.map(i => L.circleMarker([i.lat, i.lng], { radius: 6, color: '#3b82f6' }).bindPopup(`<b>${i.type}</b>`).addTo(map));
 
-  function updateTable(hour, color, radius) {
-    const row = `<tr>
-      <td style="background:${color}"></td>
-      <td>${hour}h</td>
-      <td>${acresFromRadius(radius)}</td>
-      <td>${Math.round(radius*2)}</td>
-      <td>${Math.round(radius)}</td>
-    </tr>`;
-    document.getElementById('results').insertAdjacentHTML('beforeend', row);
-  }
+    // --- Fire model helpers ---
+    const KM_IN_DEG_LAT = 110.574; // ~km per deg latitude
+    function metersToDegLat(m) { return (m / 1000) / KM_IN_DEG_LAT; }
+    function metersToDegLng(m, latDeg) { return (m / 1000) / (111.320 * Math.cos(latDeg * Math.PI/180)); }
 
-  function drawPolygon(hour, color) {
-    const center = ignition.getLatLng();
-    const radius = hour * 5000; // 5 km per hour, exaggerated for visibility
-    const points = [];
-    for (let a=0; a<360; a+=10) {
-      const angle = (a-90) * Math.PI/180;
-      const dx = radius * Math.cos(angle);
-      const dy = radius * Math.sin(angle);
-      const lat = center.lat + (dy/111320);
-      const lng = center.lng + (dx/(111320*Math.cos(center.lat*Math.PI/180)));
-      points.push([lat,lng]);
+    function ellipsePolygon(lat, lng, majorM, minorM, angleDeg, steps = 90) {
+      const pts = [];
+      const c = Math.cos(angleDeg * Math.PI/180);
+      const s = Math.sin(angleDeg * Math.PI/180);
+      for (let i = 0; i < steps; i++) {
+        const theta = (i / steps) * Math.PI * 2;
+        let x = majorM * Math.cos(theta);
+        let y = minorM * Math.sin(theta);
+        // rotate
+        const xr = x * c - y * s;
+        const yr = x * s + y * c;
+        // convert to lat/lng
+        const lat2 = lat + metersToDegLat(yr);
+        const lng2 = lng + metersToDegLng(xr, lat);
+        pts.push([lat2, lng2]);
+      }
+      return pts;
     }
-    const poly = L.polygon(points, {color:'black', weight:1, fillColor:color, fillOpacity:0.6});
-    poly.addTo(layerGroup);
-    console.log(`Drawn ${hour}h polygon, radius=${radius}m, center=`, center);
-    updateTable(hour, color, radius);
-  }
 
-  function step() {
-    if (stepIndex >= horizons.length) return;
-    drawPolygon(horizons[stepIndex], colors[stepIndex]);
-    stepIndex++;
-  }
+    // Simple rate‑of‑spread function (demo only). Replace with your model.
+    function calcAxesMeters(hours, windKmh, fuelPct, aggrPct, humidityPct, tempC) {
+      const base = Math.max(0.2, (tempC - humidityPct * 0.1) * 0.02); // warm + dry => faster
+      const wind = 0.8 + (windKmh / 40); // 40 km/h doubles ROS approx.
+      const fuel = 0.5 + (fuelPct / 200);
+      const aggr = 0.5 + (aggrPct / 150);
+      const ros = base * wind * fuel * aggr; // km/h equivalent (demo)
+      const majorKm = hours * ros * (1.6 + windKmh / 60); // stretch downwind
+      const minorKm = hours * ros * 0.7; // crosswind slower
+      return { majorM: majorKm * 1000, minorM: minorKm * 1000 };
+    }
 
-  document.getElementById('play').onclick = () => {
-    playing=true;
-    timer=setInterval(step,1500);
-  };
-  document.getElementById('pause').onclick = () => { playing=false; clearInterval(timer); };
-  document.getElementById('step').onclick = step;
-  document.getElementById('reset').onclick = () => {
-    layerGroup.clearLayers();
-    document.getElementById('results').innerHTML='<tr><th>Color</th><th>ETA</th><th>Acres</th><th>Population</th><th>Housing</th></tr>';
-    stepIndex=0; clearInterval(timer); playing=false;
-  };
-</script>
+    // --- Fire definitions (different regions of Kimberley) ---
+    const fires = [
+      {
+        id: 'broome', name: 'Broome Fire', color: '#ef4444', center: [-17.95, 122.24],
+        params: { windKmh: 25, windDir: 100 }, layer: null, step: 0
+      },
+      {
+        id: 'derby', name: 'Derby Fire', color: '#f59e0b', center: [-17.30, 123.63],
+        params: { windKmh: 35, windDir: 60 }, layer: null, step: 0
+      },
+      {
+        id: 'kununurra', name: 'Kununurra Fire', color: '#10b981', center: [-15.78, 128.74],
+        params: { windKmh: 18, windDir: 120 }, layer: null, step: 0
+      }
+    ];
+
+    // Per‑fire UI in sidebar
+    const firesPanel = document.getElementById('firesPanel');
+    fires.forEach((f, idx) => {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.style.margin = '8px 0';
+      el.innerHTML = `
+        <div class="row"><div><span class="dot" style="background:${f.color}"></span><b>${f.name}</b></div><div></div></div>
+        <div class="row"><label>Wind (km/h)</label><input type="range" min="0" max="80" value="${f.params.windKmh}" data-fire="${idx}" data-k="windKmh"></div>
+        <div class="row"><label>Wind Dir (° from N)</label><input type="range" min="0" max="359" value="${f.params.windDir}" data-fire="${idx}" data-k="windDir"></div>
+      `;
+      firesPanel.appendChild(el);
+    });
+
+    firesPanel.addEventListener('input', (e) => {
+      if (e.target && e.target.dataset && e.target.dataset.fire !== undefined) {
+        const fire = fires[Number(e.target.dataset.fire)];
+        fire.params[e.target.dataset.k] = Number(e.target.value);
+      }
+    });
+
+    // Global environment sliders
+    const hum = document.getElementById('hum');
+    const temp = document.getElementById('temp');
+    const fuel = document.getElementById('fuel');
+    const agg  = document.getElementById('agg');
+
+    // Simulation timing
+    let timer = null;
+    const stepLabel = document.getElementById('stepLabel');
+
+    function tick() {
+      const stepMins = Number(document.getElementById('stepMins').value);
+      fires.forEach(fire => {
+        fire.step += stepMins; // minutes per tick
+        const hours = fire.step / 60;
+        const { majorM, minorM } = calcAxesMeters(
+          hours, fire.params.windKmh, Number(fuel.value), Number(agg.value), Number(hum.value), Number(temp.value)
+        );
+        const poly = ellipsePolygon(fire.center[0], fire.center[1], majorM, minorM, fire.params.windDir);
+
+        // Draw / update polygon
+        if (fire.layer) map.removeLayer(fire.layer);
+        fire.layer = L.polygon(poly, {
+          color: fire.color, weight: 2, fillColor: fire.color, fillOpacity: 0.25
+        }).addTo(map);
+
+        fire.geojson = turf.polygon([[...poly.map(p=>[p[1], p[0]]), [poly[0][1], poly[0][0]]]]); // lng,lat order
+      });
+
+      // Update impacts
+      recalcImpacts();
+      // UI label
+      stepLabel.textContent = fires[0].step + ' min';
+    }
+
+    function play() {
+      if (timer) return;
+      const tickMs = Number(document.getElementById('tickMs').value);
+      timer = setInterval(tick, tickMs);
+    }
+
+    function pause() { if (timer) { clearInterval(timer); timer = null; } }
+
+    function reset() {
+      pause();
+      fires.forEach(f => { f.step = 0; if (f.layer) { map.removeLayer(f.layer); f.layer = null; } });
+      stepLabel.textContent = '0';
+      impactBody.innerHTML = '';
+      // reset marker styles
+      townMarkers.forEach(m => m.setIcon(new L.Icon.Default()));
+      infraMarkers.forEach(m => m.setStyle({ color: '#3b82f6' }));
+    }
+
+    document.getElementById('playBtn').onclick = play;
+    document.getElementById('pauseBtn').onclick = pause;
+    document.getElementById('resetBtn').onclick = reset;
+
+    // --- Impacts ---
+    const impactBody = document.getElementById('impactBody');
+
+    function recalcImpacts() {
+      impactBody.innerHTML = '';
+      const totals = {};
+
+      fires.forEach((fire, idx) => {
+        if (!fire.geojson) return;
+        let pop = 0, houses = 0, infra = 0;
+
+        towns.forEach((t, i) => {
+          const pt = turf.point([t.lng, t.lat]);
+          if (turf.booleanPointInPolygon(pt, fire.geojson)) {
+            pop += t.population; houses += t.houses;
+            // highlight marker (simple style change)
+            townMarkers[i].setIcon(new L.Icon({
+              iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+              iconSize: [25,41], iconAnchor: [12,41], popupAnchor: [1,-34],
+              shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', shadowSize: [41,41]
+            }));
+          }
+        });
+
+        infrastructure.forEach((i, j) => {
+          const pt = turf.point([i.lng, i.lat]);
+          if (turf.booleanPointInPolygon(pt, fire.geojson)) {
+            infra += 1;
+            infraMarkers[j].setStyle({ color: fire.color });
+          }
+        });
+
+        totals[fire.id] = { pop, houses, infra };
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="dot" style="background:${fire.color}"></span>${fire.name}</td>
+          <td>${pop.toLocaleString()}</td>
+          <td>${houses.toLocaleString()}</td>
+          <td>${infra}</td>
+        `;
+        impactBody.appendChild(tr);
+      });
+    }
+
+    // Fit map to all content
+    const group = L.featureGroup([
+      ...townMarkers,
+      ...infraMarkers,
+      ...fires.map(f => L.marker(f.center))
+    ]);
+    map.fitBounds(group.getBounds().pad(0.2));
+  </script>
 </body>
 </html>
