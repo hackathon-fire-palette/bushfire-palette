@@ -23,6 +23,12 @@
       max-width: 450px;
       min-width: 300px;
       margin-bottom: 2rem;
+
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border: 1px solid #e0e0e0;
+      padding: 1.5rem;
     }
     .map-medical-stack {
       display: flex;
@@ -212,11 +218,11 @@
       background: #181818;
       color: #f2f2f2;
     }
-    .card, .alerts-list, .med-content, .emergency-step-card {
+    .card, .alerts-list-section, .alert-card,.med-content, .emergency-step-card {
       background: var(--card-bg, #fff);
       color: var(--card-color, #333);
     }
-    body.dark-mode .card, body.dark-mode .alerts-list, body.dark-mode .med-content, body.dark-mode .emergency-step-card {
+    body.dark-mode .card,body.dark-mode .alerts-list-section, body.dark-mode .alerts-list, body.dark-mode .med-content, body.dark-mode .emergency-step-card {
       --card-bg: #232323;
       --card-color: #f2f2f2;
       border-color: #444;
@@ -241,7 +247,7 @@
     .alert-card[data-level="Emergency"] { border-color: #c0392b; background: #fff3f0; }
     .alert-card[data-level="Watch and Act"] { border-color: #f39c12; background: #fffbe6; }
     .alert-card[data-level="Advice"] { border-color: #1976d2; background: #e6f0ff; }
-    .alert-card .alert-title { font-weight: bold; font-size: 1.1em; }
+    .alert-card .alert-title { font-weight: bold; font-size: 1.1em; color: red; }
     .alert-card .alert-status { font-size: 0.95em; }
     .alert-card .alert-updated { font-size: 0.9em; color: #888; }
     .alert-card .alert-icon {
