@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { ignitionPoint, fuelMap, wind, humidity } = req.body;
+    const { ignitionPoint, fuelMap, wind, humidity, terrainSlope } = req.body;
 
     if (!ignitionPoint || !fuelMap || !wind || !humidity) {
       return res.status(400).json({ error: 'Missing required parameters: ignitionPoint, fuelMap, wind, humidity' });
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     // In a real implementation, this would call a function that runs the CA model
     // and returns predicted fire polygons.
     const jobId = `fire-sim-${Date.now()}`;
-    const predictions = runFireSpreadModel({ ignitionPoint, fuelMap, wind, humidity });
+    const predictions = runFireSpreadModel({ ignitionPoint, fuelMap, wind, humidity, terrainSlope });
 
     const fireSpreadResult = {
       jobId: jobId,

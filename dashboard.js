@@ -44,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ignitionPoint: { lat: originLat, lng: originLon },
                     fuelMap: terrain, // Using terrain as fuelMap for now
                     wind: { speed: windSpeed, direction: windDirection },
-                    humidity: humidity
+                    humidity: humidity,
+                    terrainSlope: 5 // Example slope in degrees
                 }),
             });
             const spreadData = await response.json();
