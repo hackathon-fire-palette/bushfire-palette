@@ -81,6 +81,32 @@
                     </div>
                 </div>
             </section>
+
+            <section id="fire-spread-simulation-section" class="panel">
+                <h2>Fire Spread Simulation</h2>
+                <div id="simulation-controls">
+                    <label for="originLat">Origin Latitude:</label>
+                    <input type="number" id="originLat" value="-31.9505"><br>
+                    <label for="originLon">Origin Longitude:</label>
+                    <input type="number" id="originLon" value="115.8605"><br>
+                    <label for="windSpeed">Wind Speed (km/h):</label>
+                    <input type="number" id="windSpeed" value="20"><br>
+                    <label for="windDirection">Wind Direction (degrees):</label>
+                    <input type="number" id="windDirection" value="270"><br>
+                    <label for="humidity">Humidity (%):</label>
+                    <input type="number" id="humidity" value="30"><br>
+                    <label for="terrain">Terrain:</label>
+                    <select id="terrain">
+                        <option value="flat">Flat</option>
+                        <option value="hilly">Hilly</option>
+                        <option value="mountainous">Mountainous</option>
+                    </select><br>
+                    <button id="run-simulation-button">Run New Simulation</button>
+                </div>
+                <div id="simulation-results">
+                    <p>No simulations run yet.</p>
+                </div>
+            </section>
         </aside>
     </main>
 

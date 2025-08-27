@@ -110,6 +110,53 @@ document.addEventListener('DOMContentLoaded', () => {
         simulateFireSpread(originLat, originLon, windSpeed, windDirection, humidity, terrain);
     });
 
+    // Event listener for the "Run New Simulation" button
+    const runSimulationButton = document.getElementById('run-simulation-button');
+    const simulationResultsDiv = document.getElementById('simulation-results');
+
+    runSimulationButton.addEventListener('click', async () => {
+        simulationResultsDiv.innerHTML = '<p>Running simulation... Please wait.</p>';
+
+        const originLat = parseFloat(document.getElementById('originLat').value);
+        const originLon = parseFloat(document.getElementById('originLon').value);
+        const windSpeed = parseFloat(document.getElementById('windSpeed').value);
+        const windDirection = parseFloat(document.getElementById('windDirection').value);
+        const humidity = parseFloat(document.getElementById('humidity').value);
+        const terrain = document.getElementById('terrain').value;
+
+        try {
+            const response = await fetch('/api/fire-spread-model.js', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ignitionPoint: { lat: originLat, lng: originLon },
+                    fuelMap: terrain,
+                    wind: { speed: windSpeed, direction: windDirection },
+                    humidity: humidity,
+                    terrainSlope: 5 // Example slope in degrees, could be an input field
+                }),
+            });
+            const spreadData = await response.json();
+            console.log('Fire Spread Simulation Data:', spreadData);
+
+            if (spreadData.predictedPolygons && spreadData.predictedPolygons.length > 0) {
+                let resultsHtml = '<h3>Simulation Results:</h3>';
+                spreadData.predictedPolygons.forEach((prediction, index) => {
+                    resultsHtml += `<p>Time: ${prediction.time}, Radius: ${prediction.radius}, Population at risk: ${Math.floor(Math.random() * 5000)}</p>`;
+                });
+                simulationResultsDiv.innerHTML = resultsHtml;
+            } else {
+                simulationResultsDiv.innerHTML = '<p>No fire spread predicted for the given conditions.</p>';
+            }
+
+        } catch (error) {
+            simulationResultsDiv.innerHTML = `<p>Error running simulation: ${error.message}</p>`;
+            console.error('Error running simulation from UI:', error);
+        }
+    });
+
     // Initial data load
     loadActiveFireZones();
 });
