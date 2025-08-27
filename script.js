@@ -429,15 +429,16 @@ async function fetchAndRenderFireSpread() {
     const data = await response.json();
     console.log('Fire spread prediction data:', data);
     currentFireSpreadData = data.predictedPolygons; // Store the raw predictions
+    const simulationTimestamp = data.timestamp; // Get the simulation timestamp
 
     // If the fire spread layer is currently active, re-render it
     if (fireSpreadLayer && window.map.hasLayer(fireSpreadLayer)) {
-      toggleFireSpreadLayer(); // Remove old layer
-      toggleFireSpreadLayer(); // Add new layer
+      toggleFireSpreadLayer(simulationTimestamp); // Remove old layer
+      toggleFireSpreadLayer(simulationTimestamp); // Add new layer
     }
     if (riskLayer && window.map.hasLayer(riskLayer)) {
-      toggleRiskLayer(); // Remove old layer
-      toggleRiskLayer(); // Add new layer
+      toggleRiskLayer(simulationTimestamp); // Remove old layer
+      toggleRiskLayer(simulationTimestamp); // Add new layer
     }
 
   } catch (error) {
@@ -445,7 +446,7 @@ async function fetchAndRenderFireSpread() {
   }
 }
 
-function toggleFireSpreadLayer() {
+function toggleFireSpreadLayer(simulationTimestamp = null) {
   if (!window.map) {
     console.warn('Map not initialized yet.');
     return;
@@ -481,14 +482,22 @@ function toggleFireSpreadLayer() {
       },
       onEachFeature: function (feature, layer) {
         if (feature.properties) {
+          const props = feature.properties;
+          const timeOfSimulation = simulationTimestamp ? new Date(simulationTimestamp).toLocaleString() : 'N/A';
+          const predictedContainmentTime = 'N/A (model limitation)'; // Placeholder
+          const fuelMoistureLevels = 'N/A (model limitation)'; // Placeholder
+          const weatherConditions = `Wind: ${props.windSpeed} km/h (${props.windDirection}°), Humidity: ${props.humidity}%`;
+
           layer.bindPopup(`
             <h3>Fire Spread Prediction</h3>
-            <strong>Time to Impact:</strong> ${feature.properties.time_to_impact}<br>
-            <strong>Estimated Radius:</strong> ${feature.properties.estimatedRadius}<br>
-            <strong>Rate of Spread:</strong> ${feature.properties.rateOfSpread}<br>
-            <strong>Wind:</strong> ${feature.properties.windSpeed} km/h (${feature.properties.windDirection}°)<br>
-            <strong>Humidity:</strong> ${feature.properties.humidity}%<br>
-            <strong>Terrain:</strong> ${feature.properties.terrain}
+            <strong>Time of Simulation:</strong> ${timeOfSimulation}<br>
+            <strong>Time to Impact:</strong> ${props.time_to_impact}<br>
+            <strong>Predicted Containment Time:</strong> ${predictedContainmentTime}<br>
+            <strong>Estimated Radius:</strong> ${props.estimatedRadius}<br>
+            <strong>Rate of Spread:</strong> ${props.rateOfSpread}<br>
+            <strong>Fuel Moisture Levels:</strong> ${fuelMoistureLevels}<br>
+            <strong>Weather Conditions at Ignition:</strong> ${weatherConditions}<br>
+            <strong>Terrain:</strong> ${props.terrain}
           `);
         }
       }
@@ -499,7 +508,7 @@ function toggleFireSpreadLayer() {
   }
 }
 
-function toggleRiskLayer() {
+function toggleRiskLayer(simulationTimestamp = null) {
   if (!window.map) {
     console.warn('Map not initialized yet.');
     return;
@@ -536,11 +545,17 @@ function toggleRiskLayer() {
       },
       onEachFeature: function (feature, layer) {
         if (feature.properties) {
+          const props = feature.properties;
+          const timeOfSimulation = simulationTimestamp ? new Date(simulationTimestamp).toLocaleString() : 'N/A';
+          const weatherConditions = `Wind: ${props.windSpeed} km/h (${props.windDirection}°), Humidity: ${props.humidity}%`;
+
           layer.bindPopup(`
             <h3>Predicted Risk Area</h3>
-            <strong>Time to Impact:</strong> ${feature.properties.time_to_impact}<br>
-            <strong>Estimated Radius:</strong> ${feature.properties.estimatedRadius}<br>
-            <strong>Risk Level:</strong> High (based on spread prediction)
+            <strong>Time of Simulation:</strong> ${timeOfSimulation}<br>
+            <strong>Time to Impact:</strong> ${props.time_to_impact}<br>
+            <strong>Estimated Radius:</strong> ${props.estimatedRadius}<br>
+            <strong>Risk Level:</strong> High (based on spread prediction)<br>
+            <strong>Weather Conditions at Ignition:</strong> ${weatherConditions}
           `);
         }
       }
