@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize the map
-    const map = L.map('map').setView([-31.9505, 115.8605], 10); // Centered around Perth, WA
+    const map = L.map('map').setView([-17.9614, 122.2359], 7); // Centered around Kimberley, WA
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
