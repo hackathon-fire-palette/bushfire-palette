@@ -1,572 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Australian Bushfire Alert System</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
-  <meta name="theme-color" content="#c0392b" />
-  <!-- PWA manifest -->
-  <link rel="manifest" href="manifest.json" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kimberley WA — Live Multi‑Fire Simulation</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <style>
-    /* --- Existing styles --- */
-    .dashboard-flex {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-    .alerts-list-section {
-      flex: 1 1 30%;
-      max-width: 450px;
-      min-width: 300px;
-      margin-bottom: 2rem;
-
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      border: 1px solid #e0e0e0;
-      padding: 1.5rem;
-    }
-    .map-medical-stack {
-      display: flex;
-      flex-direction: column;
-      flex: 2 1 65%;
-      min-width: 300px;
-      gap: 1rem;
-    }
-    .map-section, .medical-emergency-section {
-      margin-bottom: 0;
-    }
-    .card {
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      border: 1px solid #e0e0e0;
-      padding: 1.5rem;
-    }
-    .medical-emergency-section h2 {
-      margin-top: 0;
-      font-size: 1.3rem;
-      color: #c0392b;
-      letter-spacing: 0.5px;
-    }
-    .med-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    .med-tabs button {
-      background: #c0392b;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 0.5em 1em;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .med-tabs button:hover, .med-tabs button.active {
-      background: #e74c3c;
-    }
-    .med-content {
-      border: 1px solid #e0e0e0;
-      background: #f9f9f9;
-      border-radius: 7px;
-      padding: 1em;
-      min-height: 120px;
-      font-size: 1em;
-      color: #333;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-    }
-    header, footer {
-      padding: 1rem 2rem;
-    }
-    .logo-title {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    nav {
-      margin-top: 1rem;
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    nav a {
-      text-decoration: none;
-      color: #333;
-      padding: 0.5em 1em;
-      border-radius: 5px;
-      transition: background 0.2s;
-    }
-    nav a.active, nav a:hover {
-      background: #c0392b;
-      color: #fff;
-    }
-    /* Emergency Communication Flow styles */
-    .emergency-flow-section {
-      margin-top: 1rem;
-    }
-    .emergency-flow-steps {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      align-items: flex-end;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-    .emergency-step-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: #f5f5f5;
-      border-radius: 8px;
-      padding: 1rem 0.7rem;
-      min-width: 110px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-      border: 2px solid transparent;
-      transition: border 0.2s, background 0.2s;
-      opacity: 0.6;
-    }
-    .emergency-step-card.active {
-      border: 2px solid #c0392b;
-      background: #fff3f0;
-      opacity: 1;
-    }
-    .emergency-step-icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-    .emergency-step-title {
-      font-weight: bold;
-      margin-bottom: 0.3rem;
-      font-size: 1.05rem;
-      text-align: center;
-    }
-    .emergency-step-desc {
-      font-size: 0.95rem;
-      text-align: center;
-      color: #555;
-    }
-    .emergency-flow-nav {
-      display: flex;
-      gap: 0.7rem;
-      justify-content: center;
-      margin-top: 0.5rem;
-    }
-    .emergency-flow-nav button {
-      background: #c0392b;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 0.4em 1em;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .emergency-flow-nav button:hover {
-      background: #e74c3c;
-    }
-    /* Responsive styles */
-    @media (max-width: 900px) {
-      .dashboard-flex {
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-      .alerts-list-section,
-      .map-medical-stack {
-        max-width: 100%;
-        min-width: 0;
-      }
-    }
-    @media (max-width: 600px) {
-      header, footer {
-        padding: 1rem;
-      }
-      .logo-title h1 {
-        font-size: 1.1rem;
-      }
-      .card {
-        padding: 1rem;
-      }
-      .med-tabs button {
-        font-size: 0.95em;
-        padding: 0.4em 0.7em;
-      }
-      .med-content {
-        font-size: 0.95em;
-        padding: 0.7em;
-      }
-      nav {
-        gap: 0.5rem;
-      }
-      .emergency-flow-steps {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .emergency-step-card {
-        min-width: 0;
-        width: 100%;
-      }
-    }
-    /* --- New styles --- */
-    body.dark-mode {
-      background: #181818;
-      color: #f2f2f2;
-    }
-    .card, .alerts-list-section, .alert-card,.med-content, .emergency-step-card {
-      background: var(--card-bg, #fff);
-      color: var(--card-color, #333);
-    }
-    body.dark-mode .card,body.dark-mode .alerts-list-section, body.dark-mode .alerts-list, body.dark-mode .med-content, body.dark-mode .emergency-step-card {
-      --card-bg: #232323;
-      --card-color: #f2f2f2;
-      border-color: #444;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-    }
-    .high-contrast {
-      background: #000 !important;
-      color: #fff !important;
-    }
-    .alerts-list .alert-card {
-      border-radius: 8px;
-      margin-bottom: 1em;
-      padding: 1em;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-      border-left: 8px solid #ccc;
-      background: #fff;
-      transition: background 0.2s, border-color 0.2s;
-      display: flex;
-      flex-direction: column;
-      gap: 0.3em;
-    }
-    .alert-card[data-level="Emergency"] { border-color: #c0392b; background: #fff3f0; }
-    .alert-card[data-level="Watch and Act"] { border-color: #f39c12; background: #fffbe6; }
-    .alert-card[data-level="Advice"] { border-color: #1976d2; background: #e6f0ff; }
-    .alert-card .alert-title { font-weight: bold; font-size: 1.1em; color: red; }
-    .alert-card .alert-status { font-size: 0.95em; }
-    .alert-card .alert-updated { font-size: 0.9em; color: #888; }
-    .alert-card .alert-icon {
-      margin-right: 0.5em;
-      vertical-align: middle;
-    }
-    .alerts-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1em;
-    }
-    .alerts-header .last-updated {
-      font-size: 0.95em;
-      color: #888;
-    }
-    .alerts-header .refresh-btn {
-      background: #c0392b;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 0.3em 0.8em;
-      cursor: pointer;
-      font-size: 1em;
-      margin-left: 0.5em;
-    }
-    .alerts-list-section.collapsed .alerts-list {
-      display: none;
-    }
-    .alert-card .alert-content {
-      display: none;
-    }
-    .alert-card[data-expanded="true"] .alert-content {
-      display: block;
-    }
-    .alert-card .alert-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-    }
-    .alert-card .toggle-btn {
-      background: none;
-      border: none;
-      font-size: 1.2em;
-      cursor: pointer;
-      color: #555;
-      padding: 0;
-    }
-    .alerts-list-section .collapse-btn {
-      background: #1976d2;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 0.3em 0.8em;
-      cursor: pointer;
-      font-size: 1em;
-      margin-left: 0.5em;
-    }
-    /* Accessibility toggles */
-    .accessibility-bar {
-      display: flex;
-      gap: 1em;
-      align-items: center;
-      margin-bottom: 1em;
-      justify-content: flex-end;
-    }
-    .accessibility-bar button, .accessibility-bar select {
-      background: #eee;
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 0.3em 0.8em;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .accessibility-bar button.active, .accessibility-bar button:focus {
-      background: #c0392b;
-      color: #fff;
-      outline: 2px solid #c0392b;
-    }
-    /* Voice input button */
-    .voice-btn {
-      background: #1976d2;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 2.2em;
-      height: 2.2em;
-      font-size: 1.3em;
-      cursor: pointer;
-      margin-left: 0.5em;
-      vertical-align: middle;
-      transition: background 0.2s;
-    }
-    .voice-btn.listening {
-      background: #f39c12;
-      animation: pulse 1s infinite;
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 #f39c12; }
-      70% { box-shadow: 0 0 0 10px #f39c1200; }
-      100% { box-shadow: 0 0 0 0 #f39c12; }
-    }
-    /* Fire risk graph placeholder */
-    .fire-risk-graph {
-      width: 100%;
-      height: 140px;
-      background: linear-gradient(90deg,#e6f0ff,#fffbe6,#fff3f0);
-      border-radius: 8px;
-      margin: 1em 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #888;
-      font-size: 1.1em;
-      border: 1px solid #e0e0e0;
-    }
-    .dashboard-summary-cards {
-      background: linear-gradient(90deg, #ff6a00 0%, #ffd194 100%);
-      padding: 1em 0.5em;
-      border-radius: 12px;
-      margin-bottom: 1.5em;
-    }
-    .dashboard-summary-cards .card {
-      background: rgba(255,255,255,0.85);
-      color: #333;
-      box-shadow: 0 2px 8px rgba(255,106,0,0.08);
-      border: 1px solid #ffd194;
-    }
-    .dashboard-trend-graphs {
-      background: linear-gradient(90deg, #ffd194 0%, #ff6a00 100%);
-      padding: 1em 0.5em;
-      border-radius: 12px;
-      margin-bottom: 1.5em;
-    }
-    .dashboard-trend-graphs .card {
-      background: rgba(255,255,255,0.92);
-      color: #333;
-      box-shadow: 0 2px 8px rgba(255,106,0,0.06);
-      border: 1px solid #ffd194;
-    }
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-    .dropdown-toggle {
-      text-decoration: none;
-      color: #333;
-      padding: 0.5em 1em;
-      border-radius: 5px;
-      transition: background 0.2s;
-      cursor: pointer;
-      display: inline-block;
-    }
-    .dropdown-toggle:hover,
-    .dropdown-toggle:focus {
-      background: #c0392b;
-      color: #fff;
-    }
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      left: 0;
-      top: 110%;
-      min-width: 200px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.13);
-      z-index: 100;
-      flex-direction: column;
-      padding: 0.5em 0;
-    }
-    .dropdown-menu a {
-      display: block;
-      padding: 0.6em 1.2em;
-      color: #333;
-      text-decoration: none;
-      border-radius: 0;
-      background: none;
-      transition: background 0.2s;
-    }
-    .dropdown-menu a:hover,
-    .dropdown-menu a:focus {
-      background: #f2f2f2;
-      color: #c0392b;
-    }
-    .dropdown:hover .dropdown-menu,
-    .dropdown:focus-within .dropdown-menu {
-      display: flex;
-    }
-    /* New styles for alert cards */
-    .alerts-list .alert-card {
-      border-radius: 8px;
-      margin-bottom: 1em;
-      padding: 1em;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-      border-left: 8px solid #ccc;
-      background: #fff;
-      transition: background 0.2s, border-color 0.2s;
-      display: flex;
-      flex-direction: column;
-      gap: 0.3em;
-    }
-    .alert-card[data-level="Emergency"] { border-color: #c0392b; background: #fff3f0; }
-    .alert-card[data-level="Watch and Act"] { border-color: #f39c12; background: #fffbe6; }
-    .alert-card[data-level="Advice"] { border-color: #1976d2; background: #e6f0ff; }
-    .alert-card .alert-title { font-weight: bold; font-size: 1.1em; }
-    .alert-card .alert-status { font-size: 0.95em; }
-    .alert-card .alert-updated { font-size: 0.9em; color: #888; }
-    .alerts-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1em;
-    }
-    .alerts-header .last-updated {
-      font-size: 0.95em;
-      color: #888;
-    }
-    .alerts-header .refresh-btn {
-      background: #c0392b;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 0.3em 0.8em;
-      cursor: pointer;
-      font-size: 1em;
-      margin-left: 0.5em;
-    }
-    .alerts-list-section.collapsed .alerts-list {
-      display: none;
-    }
-    .alert-card .alert-content {
-      display: none;
-    }
-    .alert-card[data-expanded="true"] .alert-content {
-      display: block;
-    }
-    .alert-card .alert-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-    }
-    .alert-card .toggle-btn {
-      background: none;
-      border: none;
-      font-size: 1.2em;
-      cursor: pointer;
-      color: #555;
-      padding: 0;
-    }
-    .alerts-list-section .collapse-btn {
-      background: #1976d2;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      padding: 0.3em 0.8em;
-      cursor: pointer;
-      font-size: 1em;
-      margin-left: 0.5em;
-    }
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    #app { display: grid; grid-template-columns: 360px 1fr; height: 100%; }
+    #sidebar { padding: 12px 14px; overflow: auto; border-right: 1px solid #e5e7eb; background: #fafafa; }
+    #map { height: 100%; }
+    h1 { margin: 0 0 6px; font-size: 18px; }
+    h2 { margin: 14px 0 6px; font-size: 16px; }
+    .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .row { display: grid; grid-template-columns: 1fr 80px; gap: 8px; align-items: center; }
+    .controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    button { padding: 8px 10px; border-radius: 10px; border: 1px solid #d1d5db; background: #fff; cursor: pointer; }
+    button.primary { background: #0166ff; color: #fff; border-color: #0166ff; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    .legend { font-size: 12px; }
+    .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+    .pill { font-size: 12px; background: #f3f4f6; padding: 2px 8px; border-radius: 999px; display:inline-block; }
+    .muted { color:#6b7280; }
   </style>
-  <!-- Add Leaflet.markercluster CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 </head>
 <body>
-  <!-- Welcome Overlay -->
-  <div id="welcomeOverlay" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    z-index: 10000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 20px;
-    box-sizing: border-box;
-  ">
-    <div style="
-      background: #c0392b;
-      padding: 40px;
-      border-radius: 15px;
-      max-width: 700px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-      animation: fadeIn 0.5s ease-out;
-    ">
-      <h2 style="font-size: 2.5em; margin-bottom: 20px;">Welcome to Bushfire Palette!</h2>
-      <p style="font-size: 1.2em; line-height: 1.6; margin-bottom: 30px;">
-        Your comprehensive tool for bushfire management and emergency response.
-        Explore modules like:
-      </p>
-      <ul style="list-style: none; padding: 0; margin-bottom: 30px; font-size: 1.1em;">
-        <li style="margin-bottom: 10px;"><strong>AI Weather Predictor:</strong> Get real-time weather insights and fire risk forecasts.</li>
-        <li style="margin-bottom: 10px;"><strong>Fire Spread Zones:</strong> Visualize potential fire paths and affected areas on the map.</li>
-        <li style="margin-bottom: 10px;"><strong>Medical Dispatch Coordination:</strong> Manage medical resources and emergency responses efficiently.</li>
-        <li><strong>Roster & Vehicle Management:</strong> Track personnel and vehicles for optimal deployment.</li>
-      </ul>
-      <button id="getStartedBtn" style="
-        background: #2ecc71;
-        color: white;
-        border: none;
-        padding: 15px 30px;
-        font-size: 1.3em;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-      ">Get Started</button>
-    </div>
+  <div id="app">
+    <aside id="sidebar">
+      <h1>Kimberley WA — Live Multi‑Fire Simulation</h1>
+      <div class="card" id="global-card">
+        <div class="row"><div>Step (sim minutes)</div><div><span id="stepLabel" class="pill">0</span></div></div>
+        <div class="row"><div>Tick speed (ms)</div><div><input id="tickMs" type="number" min="200" step="100" value="1200" style="width:100%"></div></div>
+        <div class="row"><div>Step size (mins)</div><div><input id="stepMins" type="number" min="5" step="5" value="30" style="width:100%"></div></div>
+        <div class="controls" style="margin-top:8px">
+          <button id="playBtn" class="primary">Play</button>
+          <button id="pauseBtn">Pause</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+        <div style="margin-top:8px" class="muted">Tip: 30 mins per tick is recommended. Increase tick speed for smoother animation.</div>
+      </div>
+
+      <div class="card">
+        <h2>Environment</h2>
+        <div class="row"><label>Humidity (%)</label><input id="hum" type="range" min="5" max="90" value="25"></div>
+        <div class="row"><label>Temperature (°C)</label><input id="temp" type="range" min="20" max="50" value="38"></div>
+        <div class="row"><label>Fuel Load (%)</label><input id="fuel" type="range" min="0" max="100" value="60"></div>
+        <div class="row"><label>Aggression (0–100)</label><input id="agg" type="range" min="0" max="100" value="65"></div>
+        <div class="muted" style="margin-top:6px">These act as global multipliers applied to all fires.</div>
+      </div>
+
+      <div class="card">
+        <h2>Fires</h2>
+        <div id="firesPanel"></div>
+      </div>
+
+      <div class="card">
+        <h2>Impact — Population & Infrastructure (inside latest fire polygons)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Fire</th>
+              <th>Pop</th>
+              <th>Houses</th>
+              <th>Infra</th>
+            </tr>
+          </thead>
+          <tbody id="impactBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card legend">
+        <div><span class="dot" style="background:#ef4444"></span>Broome Fire</div>
+        <div><span class="dot" style="background:#f59e0b"></span>Derby Fire</div>
+        <div><span class="dot" style="background:#10b981"></span>Kununurra Fire</div>
+        <div style="margin-top:6px" class="muted">Town markers include rough population & estimated dwellings for demo purposes.
+        Replace with your official datasets (ABS grid, G-NAF, critical assets, etc.).</div>
+      </div>
+    </aside>
+
+    <div id="map"></div>
   </div>
 
+<<<<<<< HEAD
   <style>
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-20px); }
@@ -927,517 +450,228 @@
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="script.js"></script>
   <script src="recovery.js"></script>
+=======
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js"></script>
+>>>>>>> 23f438e2197588f6bbc8b5a72b39e17651f7243d
   <script>
-    // Chat popup controls
-    document.getElementById('openWeatherChatBtn').addEventListener('click', function() {
-      document.getElementById('weatherChatPopup').style.display = 'flex';
-    });
-    
-    document.getElementById('closeWeatherChatBtn').addEventListener('click', function() {
-      document.getElementById('weatherChatPopup').style.display = 'none';
-    });
-    // --- Accessibility & Language ---
-    document.getElementById('darkModeToggle').onclick = function() {
-      document.body.classList.toggle('dark-mode');
-      this.classList.toggle('active');
-    };
-    document.getElementById('contrastToggle').onclick = function() {
-      document.body.classList.toggle('high-contrast');
-      this.classList.toggle('active');
-    };
-    document.getElementById('languageSelect').onchange = function() {
-      // Simple demo: just change html lang attribute
-      document.documentElement.lang = this.value;
-    };
+    // --- Map ---
+    const map = L.map('map', { zoomControl: true }).setView([-17.8, 122.2], 6);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    }).addTo(map);
 
-    // --- Feedback Form ---
-    document.getElementById('feedbackForm').onsubmit = function(e) {
-      e.preventDefault();
-      const val = document.getElementById('feedbackInput').value.trim();
-      if (!val) return;
-      document.getElementById('feedbackStatus').textContent = 'Thank you for your feedback!';
-      setTimeout(() => { document.getElementById('feedbackStatus').textContent = ''; }, 4000);
-      document.getElementById('feedbackInput').value = '';
-      // Optionally send to backend
-      // fetch('/api/feedback', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({feedback:val})});
-    };
+    // --- Demo data: towns / infrastructure ---
+    const towns = [
+      { name: 'Broome', lat: -17.9614, lng: 122.2359, population: 14500, houses: 6000 },
+      { name: 'Derby', lat: -17.3012, lng: 123.6300, population: 3500, houses: 1500 },
+      { name: 'Kununurra', lat: -15.7740, lng: 128.7384, population: 6000, houses: 2500 },
+      { name: 'Fitzroy Crossing', lat: -18.1965, lng: 125.5669, population: 1200, houses: 500 },
+      { name: 'Halls Creek', lat: -18.2247, lng: 127.6698, population: 1400, houses: 600 }
+    ];
 
-    // --- Alerts: Color-coded, last updated, auto-refresh ---
-    let alertsLastFetched = Date.now();
+    const infrastructure = [
+      { type: 'Power Substation', lat: -17.955, lng: 122.24 },
+      { type: 'Airport', lat: -17.948, lng: 122.235 },
+      { type: 'Telecom Hub', lat: -17.303, lng: 123.633 },
+      { type: 'Water Treatment', lat: -15.775, lng: 128.742 }
+    ];
 
-    const dummyAlerts = [
+    // Markers for towns & infrastructure
+    const townMarkers = towns.map(t => L.marker([t.lat, t.lng]).bindPopup(`<b>${t.name}</b><br>Pop ${t.population.toLocaleString()}<br>Houses ${t.houses.toLocaleString()}`).addTo(map));
+    const infraMarkers = infrastructure.map(i => L.circleMarker([i.lat, i.lng], { radius: 6, color: '#3b82f6' }).bindPopup(`<b>${i.type}</b>`).addTo(map));
+
+    // --- Fire model helpers ---
+    const KM_IN_DEG_LAT = 110.574; // ~km per deg latitude
+    function metersToDegLat(m) { return (m / 1000) / KM_IN_DEG_LAT; }
+    function metersToDegLng(m, latDeg) { return (m / 1000) / (111.320 * Math.cos(latDeg * Math.PI/180)); }
+
+    function ellipsePolygon(lat, lng, majorM, minorM, angleDeg, steps = 90) {
+      const pts = [];
+      const c = Math.cos(angleDeg * Math.PI/180);
+      const s = Math.sin(angleDeg * Math.PI/180);
+      for (let i = 0; i < steps; i++) {
+        const theta = (i / steps) * Math.PI * 2;
+        let x = majorM * Math.cos(theta);
+        let y = minorM * Math.sin(theta);
+        // rotate
+        const xr = x * c - y * s;
+        const yr = x * s + y * c;
+        // convert to lat/lng
+        const lat2 = lat + metersToDegLat(yr);
+        const lng2 = lng + metersToDegLng(xr, lat);
+        pts.push([lat2, lng2]);
+      }
+      return pts;
+    }
+
+    // Simple rate‑of‑spread function (demo only). Replace with your model.
+    function calcAxesMeters(hours, windKmh, fuelPct, aggrPct, humidityPct, tempC) {
+      const base = Math.max(0.2, (tempC - humidityPct * 0.1) * 0.02); // warm + dry => faster
+      const wind = 0.8 + (windKmh / 40); // 40 km/h doubles ROS approx.
+      const fuel = 0.5 + (fuelPct / 200);
+      const aggr = 0.5 + (aggrPct / 150);
+      const ros = base * wind * fuel * aggr; // km/h equivalent (demo)
+      const majorKm = hours * ros * (1.6 + windKmh / 60); // stretch downwind
+      const minorKm = hours * ros * 0.7; // crosswind slower
+      return { majorM: majorKm * 1000, minorM: minorKm * 1000 };
+    }
+
+    // --- Fire definitions (different regions of Kimberley) ---
+    const fires = [
       {
+<<<<<<< HEAD
         title: "Bushfire",
         level: "Emergency",
         status: "Immediate Threat",
         locationDesc: "PERTH METROPOLITAN, CITY OF SWAN",
         updated: Date.now() - 1000 * 60 * 5, // 5 minutes ago
         details: "There is a bushfire in your area. You are in danger and need to act immediately to survive. Leave now if the path is clear. If you cannot leave, you need to shelter."
+=======
+        id: 'broome', name: 'Broome Fire', color: '#ef4444', center: [-17.95, 122.24],
+        params: { windKmh: 25, windDir: 100 }, layer: null, step: 0
+>>>>>>> 23f438e2197588f6bbc8b5a72b39e17651f7243d
       },
       {
-        title: "Bushfire Watch and Act",
-        level: "Watch and Act",
-        status: "High Alert",
-        locationDesc: "SOUTH WEST, SHIRE OF AUGUSTA-MARGARET RIVER",
-        updated: Date.now() - 1000 * 60 * 30, // 30 minutes ago
-        details: "A bushfire is burning and conditions are changing. There is a possible threat to lives and homes. Stay alert and monitor your surroundings. Prepare to leave or defend."
+        id: 'derby', name: 'Derby Fire', color: '#f59e0b', center: [-17.30, 123.63],
+        params: { windKmh: 35, windDir: 60 }, layer: null, step: 0
       },
       {
-        title: "Storm Advice",
-        level: "Advice",
-        status: "Monitor Conditions",
-        locationDesc: "LOWER SOUTH WEST, CITY OF ALBANY",
-        updated: Date.now() - 1000 * 60 * 60 * 2, // 2 hours ago
-        details: "A severe thunderstorm is possible. Stay informed and be aware of the situation. Take precautions such as securing loose items and preparing an emergency kit."
-      },
-      {
-        title: "Bushfire Advice",
-        level: "Advice",
-        status: "Threat Reduced",
-        locationDesc: "ROEBUCK, SHIRE OF BROOME",
-        updated: Date.now() - 1000 * 60 * 60 * 6, // 6 hours ago
-        details: "The immediate threat has passed, but remain vigilant. There may still be smoke and hazards in the area. Stay up to date with official information."
+        id: 'kununurra', name: 'Kununurra Fire', color: '#10b981', center: [-15.78, 128.74],
+        params: { windKmh: 18, windDir: 120 }, layer: null, step: 0
       }
     ];
 
-    function getAlertIcon(alert) {
-      if (alert.title.includes('Bushfire')) {
-        return 'assets/icon-bushfire.svg';
-      }
-      if (alert.title.includes('Storm')) {
-        return 'assets/icon-storm.svg';
-      }
-      // Fallback to level-based icons if no specific hazard icon
-      if (alert.level === 'Emergency') {
-        return 'assets/emergency-icon.svg';
-      }
-      if (alert.level === 'Watch and Act') {
-        return 'assets/watch-icon.svg';
-      }
-      if (alert.level === 'Advice') {
-        return 'assets/advice-icon.svg';
-      }
-      return 'assets/advice-icon.svg'; // Default fallback
-    }
+    // Per‑fire UI in sidebar
+    const firesPanel = document.getElementById('firesPanel');
+    fires.forEach((f, idx) => {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.style.margin = '8px 0';
+      el.innerHTML = `
+        <div class="row"><div><span class="dot" style="background:${f.color}"></span><b>${f.name}</b></div><div></div></div>
+        <div class="row"><label>Wind (km/h)</label><input type="range" min="0" max="80" value="${f.params.windKmh}" data-fire="${idx}" data-k="windKmh"></div>
+        <div class="row"><label>Wind Dir (° from N)</label><input type="range" min="0" max="359" value="${f.params.windDir}" data-fire="${idx}" data-k="windDir"></div>
+      `;
+      firesPanel.appendChild(el);
+    });
 
-    function renderAlerts(alerts) {
-      const container = document.getElementById('alertsList');
-      container.innerHTML = '';
-      alerts.forEach(alert => {
-        const card = document.createElement('div');
-        card.className = 'alert-card';
-        card.setAttribute('data-level', alert.level || 'Advice');
-        card.setAttribute('data-expanded', 'false'); // Default to collapsed
-        card.innerHTML = `
-          <div class="alert-header">
-            <img src="${getAlertIcon(alert)}" alt="${alert.level} icon" class="alert-icon" width="24" height="24">
-            <div class="alert-title">
-              ${alert.title || 'Bushfire Alert'}
-              ${(alert.level === 'Emergency' || alert.level === 'Watch and Act') ? '<span class="live-indicator"></span>' : ''}
-            </div>
-            <button class="toggle-btn" aria-expanded="false">▼</button>
-          </div>
-          <div class="alert-content">
-            <div class="alert-status"><strong>Status:</strong> ${alert.status || 'Unknown'} (${alert.level || 'Advice'})</div>
-            <div><strong>Location:</strong> ${alert.locationDesc || ''}</div>
-            <div class="alert-updated">Updated ${timeAgo(alert.updated || Date.now())}</div>
-            <p>${alert.details || 'No additional details provided.'}</p>
-          </div>
-        `;
-        container.appendChild(card);
+    firesPanel.addEventListener('input', (e) => {
+      if (e.target && e.target.dataset && e.target.dataset.fire !== undefined) {
+        const fire = fires[Number(e.target.dataset.fire)];
+        fire.params[e.target.dataset.k] = Number(e.target.value);
+      }
+    });
 
-        // Add event listener to toggle button
-        const toggleBtn = card.querySelector('.toggle-btn');
-        toggleBtn.addEventListener('click', () => {
-          const isExpanded = card.getAttribute('data-expanded') === 'true';
-          card.setAttribute('data-expanded', !isExpanded);
-          toggleBtn.setAttribute('aria-expanded', !isExpanded);
-          toggleBtn.textContent = isExpanded ? '▼' : '▲';
-        });
+    // Global environment sliders
+    const hum = document.getElementById('hum');
+    const temp = document.getElementById('temp');
+    const fuel = document.getElementById('fuel');
+    const agg  = document.getElementById('agg');
+
+    // Simulation timing
+    let timer = null;
+    const stepLabel = document.getElementById('stepLabel');
+
+    function tick() {
+      const stepMins = Number(document.getElementById('stepMins').value);
+      fires.forEach(fire => {
+        fire.step += stepMins; // minutes per tick
+        const hours = fire.step / 60;
+        const { majorM, minorM } = calcAxesMeters(
+          hours, fire.params.windKmh, Number(fuel.value), Number(agg.value), Number(hum.value), Number(temp.value)
+        );
+        const poly = ellipsePolygon(fire.center[0], fire.center[1], majorM, minorM, fire.params.windDir);
+
+        // Draw / update polygon
+        if (fire.layer) map.removeLayer(fire.layer);
+        fire.layer = L.polygon(poly, {
+          color: fire.color, weight: 2, fillColor: fire.color, fillOpacity: 0.25
+        }).addTo(map);
+
+        fire.geojson = turf.polygon([[...poly.map(p=>[p[1], p[0]]), [poly[0][1], poly[0][0]]]]); // lng,lat order
       });
-      document.getElementById('alertsLastUpdated').textContent = 'Updated ' + timeAgo(alertsLastFetched);
-    }
-    function timeAgo(ts) {
-      const now = Date.now();
-      const diff = Math.floor((now - ts) / 1000);
-      if (diff < 60) return `${diff}s ago`;
-      if (diff < 3600) return `${Math.floor(diff/60)} mins ago`;
-      return `${Math.floor(diff/3600)} hrs ago`;
-    }
-    
-    // Function to update summary cards (dummy data)
-    function updateSummaryCards(alerts) {
-      // Dummy data for summary cards
-      const activeFires = alerts.filter(a => a.title.includes('Bushfire') && a.level !== 'Advice').length;
-      const highRiskAreas = alerts.filter(a => a.level === 'Emergency' || a.level === 'Watch and Act').length;
-      const medicalResources = 5; // Example dummy value
-      const weatherRisk = Math.round(Math.random() * 100); // Example dummy value
 
-      // Update elements (if they exist, as they are commented out in HTML)
-      const summaryActiveFires = document.getElementById('summaryActiveFires');
-      if (summaryActiveFires) summaryActiveFires.textContent = activeFires;
-      const summaryHighRisk = document.getElementById('summaryHighRisk');
-      if (summaryHighRisk) summaryHighRisk.textContent = highRiskAreas;
-      const summaryMedResources = document.getElementById('summaryMedResources');
-      if (summaryMedResources) summaryMedResources.textContent = medicalResources;
-      const summaryWeatherRisk = document.getElementById('summaryWeatherRisk');
-      if (summaryWeatherRisk) summaryWeatherRisk.textContent = weatherRisk;
+      // Update impacts
+      recalcImpacts();
+      // UI label
+      stepLabel.textContent = fires[0].step + ' min';
     }
 
-    // Dummy function for rendering trend graphs
-    function renderTrendGraph(elementId, data, color) {
-      const element = document.getElementById(elementId);
-      if (element) {
-        element.innerHTML = `[Graph for ${elementId} with data: ${data.join(', ')}]`;
-        // In a real scenario, you'd use a charting library like Chart.js or D3.js here
-      }
+    function play() {
+      if (timer) return;
+      const tickMs = Number(document.getElementById('tickMs').value);
+      timer = setInterval(tick, tickMs);
     }
 
-    // Dummy function for alerts feed
-    function renderAlertsFeed(alerts) {
-      const feedContainer = document.getElementById('alertsFeed');
-      if (feedContainer) {
-        feedContainer.innerHTML = `<p>Latest feed updates: ${alerts.length} new alerts.</p>`;
-      }
+    function pause() { if (timer) { clearInterval(timer); timer = null; } }
+
+    function reset() {
+      pause();
+      fires.forEach(f => { f.step = 0; if (f.layer) { map.removeLayer(f.layer); f.layer = null; } });
+      stepLabel.textContent = '0';
+      impactBody.innerHTML = '';
+      // reset marker styles
+      townMarkers.forEach(m => m.setIcon(new L.Icon.Default()));
+      infraMarkers.forEach(m => m.setStyle({ color: '#3b82f6' }));
     }
 
-    function refreshAlerts() {
-      alertsLastFetched = Date.now();
-      renderAlerts(dummyAlerts);
-      updateSummaryCards(dummyAlerts);
-      renderTrendGraph('trendFireIncidents', [2,3,5,4,6,7,8], '#c0392b');
-      renderTrendGraph('trendResourceUse', [1,2,2,3,4,3,2], '#1976d2');
-      renderTrendGraph('trendMedicalCalls', [0,1,2,1,3,2,1], '#27ae60');
-      renderAlertsFeed(dummyAlerts);
-    }
-    
-    // Initial render on DOMContentLoaded
-    document.addEventListener('DOMContentLoaded', () => {
-      refreshAlerts(); // Call refreshAlerts to render dummy data initially
-    });
+    document.getElementById('playBtn').onclick = play;
+    document.getElementById('pauseBtn').onclick = pause;
+    document.getElementById('resetBtn').onclick = reset;
 
-    // Collapsible alerts section
-    document.getElementById('toggle-alerts').onclick = function() {
-      document.querySelector('.alerts-list-section').classList.toggle('collapsed');
-    };
+    // --- Impacts ---
+    const impactBody = document.getElementById('impactBody');
 
-    // --- AI Weather Chat: Voice input, confidence, graph placeholder ---
-    let isLoading = false;
-    let recognition;
-function addMessage(content, isUser = false) {
-      const messagesContainer = document.getElementById('chatMessages');
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+    function recalcImpacts() {
+      impactBody.innerHTML = '';
+      const totals = {};
 
-      if (isUser) {
-        messageDiv.textContent = content;
-        messagesContainer.appendChild(messageDiv);
-      } else {
-        // Create cursor element
-        const cursor = document.createElement('span');
-        cursor.className = 'typing-cursor';
-        cursor.textContent = '|';
-        
-        // Add initial cursor
-        messageDiv.appendChild(cursor);
-        messagesContainer.appendChild(messageDiv);
-        
-        // Typewriter effect
-        let index = 0;
-        const formattedContent = content
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\n/g, '<br>');
-        
-        function typeCharacter() {
-          if (index < formattedContent.length) {
-            messageDiv.insertBefore(
-              document.createTextNode(formattedContent[index]),
-              cursor
-            );
-            index++;
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            setTimeout(typeCharacter, 20);
-          } else {
-            cursor.remove();
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      fires.forEach((fire, idx) => {
+        if (!fire.geojson) return;
+        let pop = 0, houses = 0, infra = 0;
+
+        towns.forEach((t, i) => {
+          const pt = turf.point([t.lng, t.lat]);
+          if (turf.booleanPointInPolygon(pt, fire.geojson)) {
+            pop += t.population; houses += t.houses;
+            // highlight marker (simple style change)
+            townMarkers[i].setIcon(new L.Icon({
+              iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+              iconSize: [25,41], iconAnchor: [12,41], popupAnchor: [1,-34],
+              shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', shadowSize: [41,41]
+            }));
           }
-        }
-        
-        typeCharacter();
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-      
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function addLoadingMessage() {
-      const messagesContainer = document.getElementById('chatMessages');
-      const loadingDiv = document.createElement('div');
-      loadingDiv.className = 'message loading';
-      loadingDiv.id = 'loading-message';
-      loadingDiv.textContent = '🤖 Analyzing weather patterns...';
-      messagesContainer.appendChild(loadingDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function removeLoadingMessage() {
-      const loadingMsg = document.getElementById('loading-message');
-      if (loadingMsg) {
-        loadingMsg.remove();
-      }
-    }
-
-    async function sendMessage() {
-      const input = document.getElementById('chatInput');
-      const sendBtn = document.getElementById('chatSendBtn');
-      const message = input.value.trim();
-      
-      if (!message || isLoading) return;
-      
-      // Add user message
-      addMessage(message, true);
-      
-      // Clear input and disable button
-      input.value = '';
-      sendBtn.disabled = true;
-      isLoading = true;
-      
-      // Add loading message
-      addLoadingMessage();
-      
-      try {
-        const response = await fetch('/api/weather-chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ message }),
         });
-        
-        if (!response.ok) {
-          throw new Error('Failed to get weather prediction');
-        }
-        
-        const data = await response.json();
-        removeLoadingMessage();
-        addMessage(data.response + (data.confidence ? `<br><strong>Confidence:</strong> ${data.confidence}` : ''));
-        if (data.riskGraphData) renderFireRiskGraph(data.riskGraphData);
-        
-      } catch (error) {
-        console.error('Chat error:', error);
-        removeLoadingMessage();
-        addMessage('Sorry, I encountered an error while processing your request. Please try again later.');
-      } finally {
-        sendBtn.disabled = false;
-        isLoading = false;
-        input.focus();
-      }
+
+        infrastructure.forEach((i, j) => {
+          const pt = turf.point([i.lng, i.lat]);
+          if (turf.booleanPointInPolygon(pt, fire.geojson)) {
+            infra += 1;
+            infraMarkers[j].setStyle({ color: fire.color });
+          }
+        });
+
+        totals[fire.id] = { pop, houses, infra };
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="dot" style="background:${fire.color}"></span>${fire.name}</td>
+          <td>${pop.toLocaleString()}</td>
+          <td>${houses.toLocaleString()}</td>
+          <td>${infra}</td>
+        `;
+        impactBody.appendChild(tr);
+      });
     }
 
-    function askWeatherQuestion(question) {
-      document.getElementById('chatInput').value = question;
-      sendMessage();
-    }
-
-    // Voice input integration
-    document.getElementById('voiceBtn').onclick = function() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert('Voice input not supported in this browser.');
-        return;
-      }
-      if (recognition && recognition.recognizing) {
-        recognition.stop();
-        this.classList.remove('listening');
-        return;
-      }
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = document.documentElement.lang || 'en-US';
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.onstart = () => this.classList.add('listening');
-      recognition.onend = () => this.classList.remove('listening');
-      recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById('chatInput').value = transcript;
-        sendMessage();
-      };
-      recognition.start();
-    };
-    // Fire risk graph rendering (placeholder)
-    function renderFireRiskGraph(data) {
-      // For demo, just show JSON or simple SVG
-      const graph = document.getElementById('fireRiskGraph');
-      if (!data || !Array.isArray(data)) {
-        graph.textContent = '[Fire risk trend graph will appear here]';
-        return;
-      }
-      // Simple SVG line graph
-      const max = Math.max(...data.map(d=>d.value));
-      const min = Math.min(...data.map(d=>d.value));
-      const points = data.map((d,i) => `${i*30+10},${120-((d.value-min)/(max-min+0.01))*100}`).join(' ');
-      graph.innerHTML = `<svg width="100%" height="120"><polyline points="${points}" fill="none" stroke="#c0392b" stroke-width="3"/><text x="10" y="20" font-size="14" fill="#333">Risk</text></svg>`;
-    }
-    // Enter key support
-    document.getElementById('chatInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter' && !isLoading) {
-        sendMessage();
-      }
-    });
-
-    // Auto-focus on input when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('chatInput').focus();
-    });
-
-    // --- Medical Dispatch Coordination Panel ---
-    let medDispatchTab = 0;
-    let medIncidentStatus = "Pending";
-    let medIncidentMessages = [
-      { sender: "Fire Command", text: "Medical request created.", ts: Date.now() }
-    ];
-    let medTriageList = [
-      { name: "Patient A", level: "Yellow", ts: Date.now() },
-      { name: "Patient B", level: "Green", ts: Date.now() }
-    ];
-    let medReport = {
-      injured: 2,
-      treated: 2,
-      green: 1,
-      yellow: 1,
-      red: 0,
-      transport: "Royal Perth Hospital",
-      dispatchTime: Date.now() - 1000*60*8,
-      arrivalTime: Date.now() - 1000*60*2,
-      treatmentStart: Date.now() - 1000*60*1
-    };
-    let offlineQueue = [
-      { type: "message", data: "Need 2 additional ambulances", ts: Date.now()-1000*60 }
-    ];
-    function statusBadge(status) {
-      const map = {
-        "Pending": 'bg-gray-200 text-gray-800',
-        "En Route": 'bg-blue-100 text-blue-800',
-        "On Scene": 'bg-orange-100 text-orange-800',
-        "Completed": 'bg-green-100 text-green-800'
-      };
-      return `<span class="${map[status]||'bg-gray-200 text-gray-800'} px-2 py-1 rounded text-sm" style="font-weight:bold;">${status}</span>`;
-    }
-    function triageBadge(level) {
-      const map = {
-        "Green": 'bg-green-100 text-green-800',
-        "Yellow": 'bg-yellow-100 text-yellow-800',
-        "Red": 'bg-red-100 text-red-800'
-      };
-      return `<span class="${map[level]||'bg-gray-200 text-gray-800'} px-2 py-1 rounded text-sm">${level}</span>`;
-    }
-    function showMedDispatchTab(idx) {
-      medDispatchTab = idx;
-      document.querySelectorAll('.med-dispatch-tabs button').forEach((btn,i)=>btn.classList.toggle('active',i===idx));
-      const c = document.getElementById('med-dispatch-content');
-      if (idx===0) {
-        // Dispatch Workflow
-        c.innerHTML = `
-          <div><strong>Status:</strong> ${statusBadge(medIncidentStatus)}</div>
-          <div style="margin:1em 0;">
-            <button onclick="setMedStatus('Pending')">🕓 Pending</button>
-            <button onclick="setMedStatus('En Route')">🚑 En Route</button>
-            <button onclick="setMedStatus('On Scene')">📍 On Scene</button>
-            <button onclick="setMedStatus('Completed')">✅ Completed</button>
-          </div>
-          <div><em>${{
-            "Pending":"Request created, not yet accepted.",
-            "En Route":"Medical team assigned and on the way.",
-            "On Scene":"Team arrived at incident location.",
-            "Completed":"Incident resolved, report submitted."
-          }[medIncidentStatus]}</em></div>
-        `;
-      } else if (idx===1) {
-        // Communication Log
-        c.innerHTML = `<div style="max-height:120px;overflow-y:auto;border:1px solid #eee;padding:0.5em;">
-          ${medIncidentMessages.map(m=>`
-            <div style="margin-bottom:0.5em;">
-              <span style="font-weight:bold;">${m.sender}:</span>
-              <span>${m.text}</span>
-              <span style="color:#888;font-size:0.9em;">(${timeAgo(m.ts)})</span>
-            </div>
-          `).join('')}
-        </div>
-        <input type="text" id="medMsgInput" placeholder="Send message..." style="width:70%;margin-top:0.5em;" aria-label="Send message" />
-        <button onclick="sendMedMessage()">Send</button>
-        `;
-      } else if (idx===2) {
-        // Triage Tracker
-        c.innerHTML = `
-          <div>
-            ${medTriageList.map(p=>`
-              <div style="margin-bottom:0.5em;">
-                <span style="font-weight:bold;">${p.name}</span>
-                ${triageBadge(p.level)}
-                <span style="color:#888;font-size:0.9em;">(${timeAgo(p.ts)})</span>
-              </div>
-            `).join('')}
-          </div>
-          <div style="margin-top:0.5em;">
-            <input type="text" id="triageName" placeholder="Patient name" style="width:40%;" />
-            <select id="triageLevel">
-              <option value="Green">Green</option>
-              <option value="Yellow">Yellow</option>
-              <option value="Red">Red</option>
-            </select>
-            <button onclick="addTriage()">Add</button>
-          </div>
-          <div style="margin-top:1em;">
-            <strong>Triage Summary:</strong>
-            🟢 ${medTriageList.filter(p=>p.level==="Green").length}
-            🟡 ${medTriageList.filter(p=>p.level==="Yellow").length}
-            🔴 ${medTriageList.filter(p=>p.level==="Red").length}
-          </div>
-        `;
-      } else if (idx===3) {
-        // Post-Incident Report
-        c.innerHTML = `
-          <div><strong>Number injured:</strong> ${medReport.injured}</div>
-          <div><strong>Treated:</strong> ${medReport.treated}</div>
-          <div><strong>Triage breakdown:</strong> 🟢 ${medReport.green}, 🟡 ${medReport.yellow}, 🔴 ${medReport.red}</div>
-          <div><strong>Transport:</strong> ${medReport.transport}</div>
-          <div><strong>Dispatch → Arrival:</strong> ${Math.round((medReport.arrivalTime-medReport.dispatchTime)/60000)} min</div>
-          <div><strong>Arrival → Treatment:</strong> ${Math.round((medReport.treatmentStart-medReport.arrivalTime)/60000)} min</div>
-          <div style="margin-top:1em;"><em>Report auto-saved for analytics.</em></div>
-        `;
-      } else if (idx===4) {
-        // Offline Sync
-        c.innerHTML = `
-          <div><strong>Offline Records Queued:</strong></div>
-          <ul>
-            ${offlineQueue.map(r=>`<li>${r.type}: ${r.data} <span style="color:#888;">(${timeAgo(r.ts)})</span></li>`).join('')}
-          </ul>
-          <div style="margin-top:1em;"><em>Records will auto-sync when connection resumes.</em></div>
-        `;
-      }
-    }
-    function setMedStatus(status) {
-      medIncidentStatus = status;
-      showMedDispatchTab(medDispatchTab);
-    }
-    function sendMedMessage() {
-      const inp = document.getElementById('medMsgInput');
-      const val = inp.value.trim();
-      if (!val) return;
-      medIncidentMessages.push({ sender: "Medical Team", text: val, ts: Date.now() });
-      inp.value = '';
-      showMedDispatchTab(medDispatchTab);
-      // Optionally push to backend or offline queue
-    }
-    function addTriage() {
-      const name = document.getElementById('triageName').value.trim();
-      const level = document.getElementById('triageLevel').value;
-      if (!name) return;
-      medTriageList.push({ name, level, ts: Date.now() });
-      showMedDispatchTab(medDispatchTab);
-    }
-    // Show first tab by default
-    showMedDispatchTab(0);
-    // --- Medical Integration Demo Data ---
+    // Fit map to all content
+    const group = L.featureGroup([
+      ...townMarkers,
+      ...infraMarkers,
+      ...fires.map(f => L.marker(f.center))
+    ]);
+    map.fitBounds(group.getBounds().pad(0.2));
   </script>
 </body>
 </html>
