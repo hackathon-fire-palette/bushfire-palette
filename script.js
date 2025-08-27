@@ -362,32 +362,59 @@ function renderMap() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
-  // Temporarily remove RFS data fetching to check map initialization
-  // fetch('/api/rfs-incidents.js')
-  //   .then(response => response.json())
-  //   .then(data => {
-  //     L.geoJSON(data, {
-  //       pointToLayer: function (feature, latlng) {
-  //         const category = feature.properties.category;
-  //         let iconUrl = 'assets/icon-bushfire.svg'; // Default icon
-  //         if (category.includes('Fire')) {
-  //           iconUrl = 'assets/icon-bushfire.svg';
-  //         }
-  //         const icon = L.icon({
-  //           iconUrl: iconUrl,
-  //           iconSize: [40, 40],
-  //           iconAnchor: [20, 40],
-  //           popupAnchor: [0, -35],
-  //         });
-  //         return L.marker(latlng, { icon: icon });
-  //       },
-  //       onEachFeature: function (feature, layer) {
-  //         if (feature.properties && feature.properties.title) {
-  //           layer.bindPopup(`<h3>${feature.properties.title}</h3><p><strong>Category:</strong> ${feature.properties.category}</p><div>${feature.properties.description}</div>`);
-  //         }
-  //       }
-  //     }).addTo(map);
-  //   });
+  // --- Fire Spread Prediction Visualization ---
+  // Example: Replace with your real GeoJSON data for each interval
+  const fireSpreadGeoJsons = [
+    // { interval: '1h', geojson: {...} }, { interval: '2h', geojson: {...} }, ...
+    // Example dummy polygons:
+    { interval: '1h', geojson: { "type": "FeatureCollection", "features": [] } },
+    { interval: '2h', geojson: { "type": "FeatureCollection", "features": [] } },
+    { interval: '3h', geojson: { "type": "FeatureCollection", "features": [] } },
+    { interval: '4h', geojson: { "type": "FeatureCollection", "features": [] } },
+    { interval: '5h', geojson: { "type": "FeatureCollection", "features": [] } },
+  ];
+  // Color gradient blue-green-yellow-orange-red
+  const intervalColors = [
+    '#3498db', // 1h - blue
+    '#27ae60', // 2h - green
+    '#f1c40f', // 3h - yellow
+    '#e67e22', // 4h - orange
+    '#e74c3c', // 5h+ - red
+  ];
+  // Create a layer group for each interval
+  const fireSpreadLayers = {};
+  fireSpreadGeoJsons.forEach((item, idx) => {
+    const color = intervalColors[idx] || intervalColors[intervalColors.length - 1];
+    fireSpreadLayers[item.interval] = L.geoJSON(item.geojson, {
+      style: {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.35,
+        weight: 2,
+      }
+    });
+    // Optionally add to map by default:
+    // fireSpreadLayers[item.interval].addTo(map);
+  });
+  // Add to layer control
+  const overlayMaps = {};
+  Object.keys(fireSpreadLayers).forEach(interval => {
+    overlayMaps[`Fire Spread ${interval}`] = fireSpreadLayers[interval];
+  });
+  L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
+  // Add a legend
+  const legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function (map) {
+    const div = L.DomUtil.create('div', 'info legend');
+    div.innerHTML = '<b>Fire Spread Prediction</b><br>';
+    fireSpreadGeoJsons.forEach((item, idx) => {
+      const color = intervalColors[idx] || intervalColors[intervalColors.length - 1];
+      div.innerHTML +=
+        `<i style="background:${color};opacity:0.7;width:18px;height:18px;display:inline-block;margin-right:6px;"></i> ${item.interval}<br>`;
+    });
+    return div;
+  };
+  legend.addTo(map);
 
   setTimeout(() => { map.invalidateSize(); }, 200);
 }
