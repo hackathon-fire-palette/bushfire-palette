@@ -392,6 +392,168 @@ function renderMap() {
   setTimeout(() => { map.invalidateSize(); }, 200);
 }
 
+let fireSpreadLayer = null;
+let riskLayer = null;
+
+// Placeholder for fire spread prediction data
+let currentFireSpreadData = null;
+
+async function fetchAndRenderFireSpread() {
+  console.log('Fetching fire spread predictions...');
+  // Default parameters for demonstration
+  const defaultIgnitionPoint = { lat: -33.8688, lng: 151.2093 }; // Sydney
+  const defaultFuelMap = 'forest'; // Example fuel type
+  const defaultWind = { speed: 20, direction: 270 }; // 20 km/h from the East (blowing West)
+  const defaultHumidity = 40; // 40% humidity
+  const defaultTerrainSlope = 5; // 5 degrees slope
+
+  try {
+    const response = await fetch('/api/fire-spread-model', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ignitionPoint: defaultIgnitionPoint,
+        fuelMap: defaultFuelMap,
+        wind: defaultWind,
+        humidity: defaultHumidity,
+        terrainSlope: defaultTerrainSlope,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('Fire spread prediction data:', data);
+    currentFireSpreadData = data.predictedPolygons; // Store the raw predictions
+
+    // If the fire spread layer is currently active, re-render it
+    if (fireSpreadLayer && window.map.hasLayer(fireSpreadLayer)) {
+      toggleFireSpreadLayer(); // Remove old layer
+      toggleFireSpreadLayer(); // Add new layer
+    }
+    if (riskLayer && window.map.hasLayer(riskLayer)) {
+      toggleRiskLayer(); // Remove old layer
+      toggleRiskLayer(); // Add new layer
+    }
+
+  } catch (error) {
+    console.error('Error fetching fire spread data:', error);
+  }
+}
+
+function toggleFireSpreadLayer() {
+  if (!window.map) {
+    console.warn('Map not initialized yet.');
+    return;
+  }
+
+  if (fireSpreadLayer) {
+    window.map.removeLayer(fireSpreadLayer);
+    fireSpreadLayer = null;
+    document.getElementById('fireSpreadBtn').textContent = 'Show Fire Spread Zones';
+  } else if (currentFireSpreadData) {
+    const geojsonFeatures = currentFireSpreadData.flatMap(prediction => prediction.geojson.features);
+    fireSpreadLayer = L.geoJSON(geojsonFeatures, {
+      style: function (feature) {
+        const timeToImpact = feature.properties.time_to_impact;
+        let color = '#ff0000'; // Default red
+        let opacity = 0.5;
+        if (timeToImpact.includes('0-5m')) {
+          color = '#ff0000'; // Red for immediate
+          opacity = 0.7;
+        } else if (timeToImpact.includes('5-10m')) {
+          color = '#ff4500'; // Orange-red
+          opacity = 0.6;
+        } else if (timeToImpact.includes('10-15m')) {
+          color = '#ffa500'; // Orange
+          opacity = 0.5;
+        }
+        return {
+          color: color,
+          weight: 2,
+          opacity: opacity,
+          fillOpacity: opacity
+        };
+      },
+      onEachFeature: function (feature, layer) {
+        if (feature.properties) {
+          layer.bindPopup(`
+            <h3>Fire Spread Prediction</h3>
+            <strong>Time to Impact:</strong> ${feature.properties.time_to_impact}<br>
+            <strong>Estimated Radius:</strong> ${feature.properties.estimatedRadius}<br>
+            <strong>Rate of Spread:</strong> ${feature.properties.rateOfSpread}<br>
+            <strong>Wind:</strong> ${feature.properties.windSpeed} km/h (${feature.properties.windDirection}°)<br>
+            <strong>Humidity:</strong> ${feature.properties.humidity}%<br>
+            <strong>Terrain:</strong> ${feature.properties.terrain}
+          `);
+        }
+      }
+    }).addTo(window.map);
+    document.getElementById('fireSpreadBtn').textContent = 'Hide Fire Spread Zones';
+  } else {
+    console.warn('No fire spread data available to display.');
+  }
+}
+
+function toggleRiskLayer() {
+  if (!window.map) {
+    console.warn('Map not initialized yet.');
+    return;
+  }
+
+  if (riskLayer) {
+    window.map.removeLayer(riskLayer);
+    riskLayer = null;
+    document.getElementById('riskLayerBtn').textContent = 'Show Predicted Risk Areas';
+  } else if (currentFireSpreadData) {
+    // For simplicity, let's use the same data as fire spread but with a different style
+    const geojsonFeatures = currentFireSpreadData.flatMap(prediction => prediction.geojson.features);
+    riskLayer = L.geoJSON(geojsonFeatures, {
+      style: function (feature) {
+        const timeToImpact = feature.properties.time_to_impact;
+        let color = '#8b0000'; // Darker red for risk
+        let opacity = 0.3;
+        if (timeToImpact.includes('0-5m')) {
+          color = '#8b0000';
+          opacity = 0.5;
+        } else if (timeToImpact.includes('5-10m')) {
+          color = '#a0522d'; // Sienna
+          opacity = 0.4;
+        } else if (timeToImpact.includes('10-15m')) {
+          color = '#b8860b'; // DarkGoldenRod
+          opacity = 0.3;
+        }
+        return {
+          color: color,
+          weight: 1,
+          opacity: opacity,
+          fillOpacity: opacity
+        };
+      },
+      onEachFeature: function (feature, layer) {
+        if (feature.properties) {
+          layer.bindPopup(`
+            <h3>Predicted Risk Area</h3>
+            <strong>Time to Impact:</strong> ${feature.properties.time_to_impact}<br>
+            <strong>Estimated Radius:</strong> ${feature.properties.estimatedRadius}<br>
+            <strong>Risk Level:</strong> High (based on spread prediction)
+          `);
+        }
+      }
+    }).addTo(window.map);
+    document.getElementById('riskLayerBtn').textContent = 'Hide Predicted Risk Areas';
+  } else {
+    console.warn('No risk data available to display.');
+  }
+}
+
+// Set up periodic fetching of fire spread data
+setInterval(fetchAndRenderFireSpread, 5 * 60 * 1000); // Every 5 minutes
+
 // Page routing
 document.addEventListener('DOMContentLoaded', function() {
   // Welcome Overlay Logic
@@ -412,6 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
     renderAlertsList();
     setTimeout(renderMap, 0); // Ensure Leaflet is loaded
+    fetchAndRenderFireSpread(); // Initial fetch of fire spread data
 
     // Render a sample fire risk graph on load
     renderFireRiskGraph([
@@ -439,6 +602,32 @@ const medicalIncidents = [
   { id: 2, type: 'Evacuation Support', location: 'Community Hall B', priority: 'Medium', status: 'On Scene', assigned: 'Ambulance 22', patients: 15, notes: 'Elderly and children requiring assistance.' },
   { id: 3, type: 'Heat Stroke', location: 'Sector C', priority: 'Low', status: 'Completed', assigned: 'Ambulance 33', patients: 1, notes: 'Minor heat exhaustion.' },
 ];
+
+const hospitals = [
+  { name: 'Royal Perth Hospital', status: 'Green', capacity: 70, erLoad: 85 },
+  { name: 'Fiona Stanley Hospital', status: 'Yellow', capacity: 90, erLoad: 95 },
+  { name: 'Sir Charles Gairdner Hospital', status: 'Green', capacity: 60, erLoad: 70 },
+];
+
+const ambulances = [
+  { name: 'Ambulance 12', status: 'En Route', location: [-33.8, 150.2] },
+  { name: 'Ambulance 22', status: 'On Scene', location: [-33.9, 150.3] },
+  { name: 'Ambulance 33', status: 'Available', location: [-33.7, 150.1] },
+];
+
+function hospitalStatusColor(status) {
+  if (status === 'Green') return 'color: #28a745; font-weight: bold;';
+  if (status === 'Yellow') return 'color: #ffc107; font-weight: bold;';
+  if (status === 'Red') return 'color: #dc3545; font-weight: bold;';
+  return '';
+}
+
+function ambulanceStatusColor(status) {
+  if (status === 'Available') return 'color: #28a745; font-weight: bold;';
+  if (status === 'En Route') return 'color: #007bff; font-weight: bold;';
+  if (status === 'On Scene') return 'color: #ffc107; font-weight: bold;';
+  return '';
+}
 
 function showMedCoordTab(idx) {
   medCoordTab = idx;
