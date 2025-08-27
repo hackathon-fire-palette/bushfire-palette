@@ -17,11 +17,20 @@ export default async function handler(req, res) {
   // Placeholder for NASA FIRMS API URL - actual URL needs to be determined
   // Example: https://firms.modaps.eosdis.nasa.gov/api/area/csv/YOUR_API_KEY/MODIS_NRT/world/1/2024-01-01
   // This will likely require an API key and specific parameters for the region (WA) and time frame.
-  const nasaFirmsApiUrl = 'https://firms.modaps.eosdis.nasa.gov/api/country/csv/YOUR_API_KEY/VIIRS_SNPP_NRT/AUS/1/2024-01-01'; // Placeholder
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
+
+  // IMPORTANT: Replace 'YOUR_API_KEY' with a valid NASA FIRMS API key.
+  // For Western Australia (WA) specific data, you might need to use bounding box coordinates
+  // or a different API endpoint if available, as 'AUS' is too broad.
+  const nasaFirmsApiUrl = `https://firms.modaps.eosdis.nasa.gov/api/country/csv/YOUR_API_KEY/VIIRS_SNPP_NRT/AUS/1/${formattedDate}`; // Placeholder
 
   try {
     // In a real implementation, you'd need to handle API keys securely (e.g., environment variables)
-    // and construct the URL with dynamic dates and potentially bounding box for WA.
+    // and construct the URL with dynamic dates and bounding box for WA.
     const response = await fetch(nasaFirmsApiUrl);
     if (!response.ok) {
       return res.status(response.status).json({ error: 'Failed to fetch NASA FIRMS data' });

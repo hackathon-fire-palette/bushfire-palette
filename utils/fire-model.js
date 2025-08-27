@@ -26,34 +26,40 @@ export function runFireSpreadModel({ ignitionPoint, fuelMap, wind, humidity }) {
   const baseLng = ignitionPoint.lng || 115.86;
 
   const predictions = [];
-  const timeSteps = [5, 10, 30, 60]; // minutes
+  const timeSteps = [5, 10, 15]; // minutes for simulation intervals
 
   timeSteps.forEach(minutes => {
-    const spreadFactor = minutes / 60; // Scale spread based on time
-    const latOffset = 0.01 * spreadFactor;
-    const lngOffset = 0.01 * spreadFactor;
+    // A very simplified spread model: radius increases with time, influenced by wind
+    const baseSpreadRadiusKm = 0.5 * (minutes / 5); // 0.5 km radius for every 5 minutes
+    const kmPerDegreeLat = 111; // Approx km per degree latitude
+    const kmPerDegreeLng = 111 * Math.cos(baseLat * Math.PI / 180); // Approx km per degree longitude at this latitude
 
-    // Simulate a simple outward spread, potentially influenced by wind direction
-    // (very basic, not actual physics)
-    let currentLat = baseLat;
-    let currentLng = baseLng;
+    let latSpread = baseSpreadRadiusKm / kmPerDegreeLat;
+    let lngSpread = baseSpreadRadiusKm / kmPerDegreeLng;
 
-    // Adjust based on wind direction (simplified)
-    if (wind.direction === 'N') currentLat += latOffset * 0.5;
-    if (wind.direction === 'S') currentLat -= latOffset * 0.5;
-    if (wind.direction === 'E') currentLng += lngOffset * 0.5;
-    if (wind.direction === 'W') currentLng -= lngOffset * 0.5;
+    // Factor in wind speed and direction (simplified influence)
+    // Wind direction is in degrees (0 = N, 90 = E, 180 = S, 270 = W)
+    const windInfluenceFactor = wind.speed / 50; // Max influence at 50 km/h wind
+    const windAngleRad = (wind.direction - 90) * Math.PI / 180; // Convert to radians, adjust for Leaflet's Y-axis (North is up)
+
+    latSpread += latSpread * windInfluenceFactor * Math.sin(windAngleRad);
+    lngSpread += lngSpread * windInfluenceFactor * Math.cos(windAngleRad);
+
+    // Terrain and humidity could further modify spread, but are omitted for this basic example
+    // e.g., if (terrain === 'hilly') spreadFactor *= 1.2;
+    // e.g., if (humidity > 70) spreadFactor *= 0.8;
 
     const polygonCoords = [
-      [currentLng - lngOffset, currentLat - latOffset],
-      [currentLng + lngOffset, currentLat - latOffset],
-      [currentLng + lngOffset, currentLat + latOffset],
-      [currentLng - lngOffset, currentLat + latOffset],
-      [currentLng - lngOffset, currentLat - latOffset], // Close the polygon
+      [baseLng - lngSpread, baseLat - latSpread],
+      [baseLng + lngSpread, baseLat - latSpread],
+      [baseLng + lngSpread, baseLat + latSpread],
+      [baseLng - lngSpread, baseLat + latSpread],
+      [baseLng - lngSpread, baseLat - latSpread], // Close the polygon
     ];
 
     predictions.push({
       time: `${minutes}m`,
+      radius: `${baseSpreadRadiusKm.toFixed(1)} km`, // Store radius for tooltip
       geojson: {
         type: 'FeatureCollection',
         features: [{
@@ -64,6 +70,8 @@ export function runFireSpreadModel({ ignitionPoint, fuelMap, wind, humidity }) {
             windSpeed: wind.speed,
             windDirection: wind.direction,
             humidity: humidity,
+            terrain: fuelMap, // Using fuelMap as terrain for now
+            estimatedRadius: `${baseSpreadRadiusKm.toFixed(1)} km`,
           }
         }]
       }
